@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AndysEng — 영어 공부</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo">🦊 AndysEng</div>
+    <nav class="tabs">
+      <button class="tab active" data-view="conversation">💬 회화</button>
+      <button class="tab" data-view="writing">✍️ 글쓰기</button>
+      <button class="tab" data-view="expression">💡 표현</button>
+      <button class="tab" data-view="progress">📊 공부량</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- 회화 -->
+    <section id="view-conversation" class="view active">
+      <div class="card intro-card" id="conv-intro">
+        <h2>💬 회화 공부</h2>
+        <p>AI가 먼저 말을 걸어요. 자연스럽게 대답해 보세요.<br/>어색하거나 틀린 표현은 바로 알려드려요.</p>
+        <button class="btn-primary" id="conv-start">대화 시작하기</button>
+      </div>
+      <div id="conv-room" class="hidden">
+        <div id="conv-messages" class="chat"></div>
+        <form id="conv-form" class="input-row">
+          <input id="conv-input" type="text" placeholder="영어로 대답해 보세요..." autocomplete="off" />
+          <button class="btn-primary" type="submit">보내기</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 글쓰기 -->
+    <section id="view-writing" class="view">
+      <div class="card intro-card" id="writing-intro">
+        <h2>✍️ 글쓰기 공부</h2>
+        <p>AI가 주는 질문에 3~4문장으로 가볍게 주장해 보세요.<br/>문법 첨삭과 원어민 모범 답안을 받아요.</p>
+        <button class="btn-primary" id="writing-start">질문 받기</button>
+      </div>
+      <div id="writing-room" class="hidden">
+        <div class="card question-card">
+          <span class="chip">오늘의 질문</span>
+          <p id="writing-question" class="question-text"></p>
+        </div>
+        <form id="writing-form">
+          <textarea id="writing-input" rows="5" placeholder="3~4문장으로 자유롭게 써 보세요..."></textarea>
+          <div class="row-end">
+            <button class="btn-primary" type="submit">첨삭 받기</button>
+          </div>
+        </form>
+        <div id="writing-result"></div>
+      </div>
+    </section>
+
+    <!-- 표현 -->
+    <section id="view-expression" class="view">
+      <div class="card intro-card" id="expr-intro">
+        <h2>💡 표현 공부</h2>
+        <p>원어민 표현 하나를 배우고, 직접 예문을 만들어 보세요.</p>
+        <button class="btn-primary" id="expr-start">표현 받기</button>
+      </div>
+      <div id="expr-room" class="hidden">
+        <div class="card expr-card">
+          <span class="chip chip-yellow">오늘의 표현</span>
+          <h3 id="expr-word"></h3>
+          <p id="expr-meaning" class="muted"></p>
+          <p id="expr-example" class="example"></p>
+        </div>
+        <form id="expr-form">
+          <textarea id="expr-input" rows="3" placeholder="이 표현으로 예문을 만들어 보세요..."></textarea>
+          <div class="row-end">
+            <button class="btn-primary" type="submit">첨삭 받기</button>
+          </div>
+        </form>
+        <div id="expr-result"></div>
+        <div class="row-end hidden" id="expr-next-row">
+          <button class="btn-secondary" id="expr-next">다음 표현 →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 공부량 -->
+    <section id="view-progress" class="view">
+      <h2 class="page-title">📊 공부량 체크</h2>
+      <div id="progress-content"><p class="muted">불러오는 중...</p></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="app.js"></script>
+</body>
+</html>
