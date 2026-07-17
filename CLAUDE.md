@@ -10,8 +10,8 @@ CLAUDE.md
 - 정적 PWA (서버 없음, 의존성 0개). public/이 앱 전부이며 GitHub Pages 등 정적 호스팅에 배포한다.
 - 빌드 스텝 없는 vanilla JS (브라우저 네이티브 ES 모듈). 개발 서버는 dev-server.js (node 내장 http).
 - AI: 브라우저에서 Anthropic REST API를 fetch로 직접 호출, 모델 claude-opus-4-8 (public/js/shared/claude.js 경계 뒤에만 존재)
-- API 키: 사용자 개인 키를 비밀번호로 암호화(PBKDF2→AES-GCM)해 localStorage 보관 (public/js/shared/keyvault.js)
-- 저장소: localStorage 단일 JSON (public/js/shared/store.js). 리포트는 File System Access API로 로컬 폴더 저장 (public/js/shared/localfs.js)
+- 로그인 정보(닉네임·GitHub PAT·Claude 키): 비밀번호로 암호화(PBKDF2→AES-GCM)해 localStorage 보관 (public/js/shared/keyvault.js)
+- 저장소: localStorage 단일 JSON (public/js/shared/store.js). 리포트는 File System Access API로 로컬 폴더 저장 (public/js/shared/localfs.js). 학습 기록은 GitHub Contents API로 공유 프라이빗 레포에 수동 저장/불러오기 가능 (public/js/shared/github.js)
 
 자주 쓰는 명령어
 
@@ -104,3 +104,5 @@ npm test           # 전체 테스트 (node --test)
 - 2026-07-17 | 학습 기록은 localStorage 단일 JSON(`andyseng:data`), 리포트는 File System Access API로 사용자가 고른 폴더의 `AndysEng/`에 md+json 저장, 미지원 브라우저는 다운로드 폴백 | 서버·클라우드 없이 데이터 소유권을 사용자에게.
 - 2026-07-17 | SRS 알고리즘은 고정 간격 사다리 SM-2 변형: 정답 시 1→3→7→14→30→60→120일, 오답 시 처음으로(10분 뒤 재도전) | 구현 단순, 검증된 망각곡선 접근. ease factor는 YAGNI로 보류.
 - 2026-07-17 | 복습 퀴즈(빈칸 생성·채점)·통계·리포트는 AI를 쓰지 않고, 표현 공부는 호출 1회에 5개를 받아 큐에 쌓는다 | AI 사용량 최소화 요구.
+- 2026-07-17 | 친구 그룹 공유 지원 — 로그인 시 닉네임·GitHub PAT·Claude 키 3개를 함께 암호화 저장(`keyvault.js` 페이로드를 JSON으로 일반화), 학습 기록을 공유 프라이빗 레포(`Markias21/AndysEng_log`, `shared/github.js`에 상수로 고정)의 `data/<nickname>/andyseng-data.json`에 수동 저장/불러오기 버튼(자동 동기화 없음)으로 push/pull. GitHub PAT는 신뢰된 친구들끼리 공유하며 앱 차원의 권한 격리는 하지 않음(닉네임 폴더 분리는 관례일 뿐 GitHub 권한으로 강제되지 않음) — 바로 위 "정적 PWA 전환" ADR의 "멀티유저 제거" 결정을 부분적으로 재개함 | 소수의 신뢰된 친구들과 서버 없이 데이터를 나눠 쓰고 싶다는 요구. 별도 백엔드·인증 시스템 없이 GitHub Contents API를 REST로 직접 호출해 의존성 0개 유지.
+- 2026-07-17 | 코드스페이스 개발 환경에서는 `.env`(gitignored)의 `ANTHROPIC_API_KEY`/`GITHUB_PAT_API_KEY`를 `dev-server.js`가 읽어 `/__dev/session`으로 내려주고, 닉네임 "Andy"로 게이트를 건너뛴다 | 개발 편의. 이 라우트는 dev-server.js에만 존재해 정적 배포(GitHub Pages)에는 영향 없음 — 프로덕션 비밀번호 게이트는 그대로 유지.

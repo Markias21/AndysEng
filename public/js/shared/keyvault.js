@@ -1,5 +1,6 @@
-// API 키 금고. 키를 비밀번호(PBKDF2 → AES-GCM)로 암호화해 localStorage에 보관하고,
-// 비밀번호를 입력한 세션에서만 메모리로 복호화한다. 평문 키는 절대 저장하지 않는다.
+// 정보 금고. 임의의 JSON 페이로드(닉네임·API 키·토큰 등)를 비밀번호(PBKDF2 → AES-GCM)로
+// 암호화해 localStorage에 보관하고, 비밀번호를 입력한 세션에서만 메모리로 복호화한다.
+// 평문은 절대 저장하지 않는다. 이 모듈은 페이로드의 내용을 모른다(호출자가 정의).
 const VAULT_KEY = "andyseng:vault";
 const ITERATIONS = 310000;
 
@@ -32,14 +33,14 @@ export function hasVault() {
   return localStorage.getItem(VAULT_KEY) !== null;
 }
 
-export async function createVault(apiKey, password) {
+export async function createVault(payload, password) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await deriveKey(password, salt, ITERATIONS);
   const ct = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
     key,
-    new TextEncoder().encode(apiKey)
+    new TextEncoder().encode(JSON.stringify(payload))
   );
   localStorage.setItem(
     VAULT_KEY,
@@ -47,10 +48,10 @@ export async function createVault(apiKey, password) {
   );
 }
 
-/** 비밀번호가 틀리면 throw. 맞으면 API 키 문자열 반환. */
+/** 비밀번호가 틀리면 throw. 맞으면 저장된 페이로드 객체 반환. */
 export async function unlockVault(password) {
   const raw = localStorage.getItem(VAULT_KEY);
-  if (!raw) throw new Error("저장된 API 키가 없습니다.");
+  if (!raw) throw new Error("저장된 정보가 없습니다.");
   const vault = JSON.parse(raw);
   const key = await deriveKey(password, fromB64(vault.salt), vault.iter);
   try {
@@ -59,7 +60,7 @@ export async function unlockVault(password) {
       key,
       fromB64(vault.ct)
     );
-    return new TextDecoder().decode(pt);
+    return JSON.parse(new TextDecoder().decode(pt));
   } catch {
     throw new Error("비밀번호가 틀렸습니다.");
   }
