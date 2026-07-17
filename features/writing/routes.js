@@ -77,7 +77,7 @@ router.post("/review", async (req, res, next) => {
     });
 
     // 글쓰기는 피드백 전체를 따로 저장한다 (스펙 요구사항).
-    appendRecord("writing", { score: result.score, question, answer, feedback: result });
+    appendRecord(req.user.id, "writing", { score: result.score, question, answer, feedback: result });
     res.json(result);
   } catch (err) {
     next(err);

@@ -144,6 +144,28 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 .history-item { background: #fafbff; border-radius: 12px; padding: 12px 14px; margin: 8px 0; font-size: 14px; line-height: 1.6; }
 .history-item .hi-date { color: var(--muted); font-size: 12px; }
 
+/* 로그인 게이트 */
+.login-gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.login-card {
+  background: var(--card); border-radius: var(--radius);
+  padding: 48px 40px; text-align: center; max-width: 400px; width: 100%;
+  box-shadow: 0 4px 20px rgba(35, 37, 58, 0.08);
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+.logo.big { font-size: 30px; }
+.login-card .btn-primary { text-decoration: none; display: inline-block; }
+.small { font-size: 13px; line-height: 1.6; }
+.error-text { color: var(--red); }
+.login-card code { background: #eef0ff; color: var(--primary); padding: 1px 6px; border-radius: 6px; font-size: 12px; }
+
+/* 상단 사용자 영역 */
+.userbar { margin-left: auto; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.finish-btn { padding: 8px 16px; font-size: 14px; }
+.andysnote-toggle { font-size: 13px; font-weight: 700; color: var(--muted); display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.andysnote-toggle input { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
+.user-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.logout-btn { padding: 8px 14px; font-size: 13px; }
+
 .toast {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
   background: var(--text); color: #fff; padding: 12px 20px;
@@ -153,5 +175,6 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 
 @media (max-width: 560px) {
   .topbar { flex-direction: column; gap: 10px; }
+  .userbar { margin-left: 0; justify-content: center; }
   .bubble { max-width: 92%; }
 }

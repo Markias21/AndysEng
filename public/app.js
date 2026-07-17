@@ -8,6 +8,10 @@ async function api(path, body) {
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const data = await res.json();
+  if (res.status === 401) {
+    showLoginGate();
+    throw new Error(data.error || "로그인이 필요합니다.");
+  }
   if (!res.ok) throw new Error(data.error || `요청 실패 (${res.status})`);
   return data;
 }
@@ -266,3 +270,71 @@ async function loadProgress() {
     box.innerHTML = `<p class="muted">${esc(e.message)}</p>`;
   }
 }
+
+// ===== 로그인 / 세션 =====
+function showLoginGate({ configured = true } = {}) {
+  $("#app").classList.add("hidden");
+  $("#login-gate").classList.remove("hidden");
+  $("#login-btn").classList.toggle("hidden", !configured);
+  $("#login-unconfigured").classList.toggle("hidden", configured);
+}
+
+function showApp(me) {
+  $("#login-gate").classList.add("hidden");
+  $("#app").classList.remove("hidden");
+  $("#user-name").textContent = me.user.name;
+  $("#andysnote-toggle").checked = Boolean(me.settings?.andysNoteLinked);
+}
+
+$("#logout-btn").addEventListener("click", async () => {
+  try {
+    await api("/auth/logout", {});
+  } catch (e) {
+    /* 실패해도 로그인 화면으로 보낸다 */
+  }
+  showLoginGate();
+});
+
+$("#finish-btn").addEventListener("click", async () => {
+  const btn = $("#finish-btn");
+  btn.disabled = true;
+  try {
+    const r = await api("/report/finish", {});
+    toast(`드라이브에 저장했어요: ${r.file} (${r.count}문장)`);
+  } catch (e) {
+    toast(e.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+$("#andysnote-toggle").addEventListener("change", async (ev) => {
+  const linked = ev.target.checked;
+  ev.target.disabled = true;
+  try {
+    await api("/report/andysnote", { linked });
+    toast(linked ? "AndysNote 폴더로 연동했어요." : "연동을 해제했어요.");
+  } catch (e) {
+    ev.target.checked = !linked; // 롤백
+    toast(e.message);
+  } finally {
+    ev.target.disabled = false;
+  }
+});
+
+async function init() {
+  if (new URLSearchParams(location.search).get("login") === "error") {
+    $("#login-error").classList.remove("hidden");
+    history.replaceState(null, "", location.pathname);
+  }
+  try {
+    const me = await api("/auth/me");
+    if (!me.configured) return showLoginGate({ configured: false });
+    if (!me.user) return showLoginGate();
+    showApp(me);
+  } catch (e) {
+    showLoginGate();
+  }
+}
+
+init();

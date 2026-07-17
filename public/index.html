@@ -7,6 +7,21 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <!-- 로그인 게이트 -->
+  <section id="login-gate" class="login-gate hidden">
+    <div class="login-card">
+      <div class="logo big">🦊 AndysEng</div>
+      <p class="muted">구글 계정으로 로그인하고 학습 기록을 내 드라이브에 저장하세요.</p>
+      <a id="login-btn" class="btn-primary" href="/api/auth/google">구글로 로그인</a>
+      <p id="login-unconfigured" class="muted small hidden">
+        아직 구글 로그인이 설정되지 않았습니다. <code>.env</code>에 <code>GOOGLE_CLIENT_ID</code>와
+        <code>GOOGLE_CLIENT_SECRET</code>을 추가하면 바로 사용할 수 있어요.
+      </p>
+      <p id="login-error" class="small error-text hidden">로그인에 실패했어요. 다시 시도해 주세요.</p>
+    </div>
+  </section>
+
+  <div id="app" class="hidden">
   <header class="topbar">
     <div class="logo">🦊 AndysEng</div>
     <nav class="tabs">
@@ -15,6 +30,14 @@
       <button class="tab" data-view="expression">💡 표현</button>
       <button class="tab" data-view="progress">📊 공부량</button>
     </nav>
+    <div class="userbar">
+      <button class="btn-primary finish-btn" id="finish-btn">🏁 공부 끝내기</button>
+      <label class="andysnote-toggle" title="켜면 드라이브의 AndysNote 폴더 안에 저장합니다.">
+        <input type="checkbox" id="andysnote-toggle" /> AndysNote 연동
+      </label>
+      <span class="user-name" id="user-name"></span>
+      <button class="btn-secondary logout-btn" id="logout-btn">로그아웃</button>
+    </div>
   </header>
 
   <main>
@@ -89,6 +112,7 @@
       <div id="progress-content"><p class="muted">불러오는 중...</p></div>
     </section>
   </main>
+  </div>
 
   <div id="toast" class="toast hidden"></div>
   <script src="app.js"></script>

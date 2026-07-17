@@ -80,7 +80,7 @@ You also review the learner's latest message:
       schema: REPLY_SCHEMA,
     });
 
-    appendRecord("conversation", { score: result.score, sentence: userMessage });
+    appendRecord(req.user.id, "conversation", { score: result.score, sentence: userMessage });
     res.json(result);
   } catch (err) {
     next(err);

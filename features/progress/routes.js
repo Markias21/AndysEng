@@ -7,9 +7,9 @@ const router = Router();
 
 router.get("/", (req, res, next) => {
   try {
-    const conversation = getRecords("conversation");
-    const writing = getRecords("writing");
-    const expression = getRecords("expression");
+    const conversation = getRecords(req.user.id, "conversation");
+    const writing = getRecords(req.user.id, "writing");
+    const expression = getRecords(req.user.id, "expression");
     res.json({
       conversation: summarize(conversation),
       writing: { ...summarize(writing), history: writing.slice().reverse() },
