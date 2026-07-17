@@ -1,0 +1,25 @@
+{
+  "name": "AndysEng — 영어 공부",
+  "short_name": "AndysEng",
+  "description": "회화·글쓰기·표현 학습과 망각곡선 복습을 지원하는 영어 학습 앱",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f7fb",
+  "theme_color": "#5b5fed",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

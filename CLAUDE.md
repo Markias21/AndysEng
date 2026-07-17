@@ -7,9 +7,11 @@ CLAUDE.md
 
 기술 스택
 
-- Node.js 24 + Express (ESM), 빌드 스텝 없는 정적 프론트엔드(public/ — vanilla JS)
-- AI: @anthropic-ai/sdk, 모델 claude-opus-4-8 (shared/claude.js 경계 뒤에만 존재)
-- 저장소: data/store.json 파일 (shared/store.js). ANTHROPIC_API_KEY는 .env로 주입 (--env-file-if-exists)
+- 정적 PWA (서버 없음, 의존성 0개). public/이 앱 전부이며 GitHub Pages 등 정적 호스팅에 배포한다.
+- 빌드 스텝 없는 vanilla JS (브라우저 네이티브 ES 모듈). 개발 서버는 dev-server.js (node 내장 http).
+- AI: 브라우저에서 Anthropic REST API를 fetch로 직접 호출, 모델 claude-opus-4-8 (public/js/shared/claude.js 경계 뒤에만 존재)
+- API 키: 사용자 개인 키를 비밀번호로 암호화(PBKDF2→AES-GCM)해 localStorage 보관 (public/js/shared/keyvault.js)
+- 저장소: localStorage 단일 JSON (public/js/shared/store.js). 리포트는 File System Access API로 로컬 폴더 저장 (public/js/shared/localfs.js)
 
 자주 쓰는 명령어
 
@@ -66,7 +68,7 @@ npm test           # 전체 테스트 (node --test)
 6. 네이밍과 도메인 용어
 
 
-코드에서 도메인 용어를 통일한다: word(단어), deck(단어장), reviewSession(복습 세션), interval(복습 간격). 동의어 혼용 금지.
+코드에서 도메인 용어를 통일한다: word(단어), deck(단어장), card(복습 카드), reviewSession(복습 세션), interval(복습 간격), streak(연속 정답/연속 학습일), due(다음 복습 시각). 동의어 혼용 금지.
 새 도메인 용어가 필요하면 이 섹션에 추가한다.
 
 
@@ -97,3 +99,8 @@ npm test           # 전체 테스트 (node --test)
 - 2026-07-17 | 세션은 외부 라이브러리 없이 랜덤 불투명 토큰 + HttpOnly 쿠키(`shared/session.js`) | 의존성 최소화, YAGNI.
 - 2026-07-17 | 구글 인증은 `google-auth-library`, 드라이브는 REST를 fetch로 직접 호출(`shared/drive.js`) | OAuth·토큰갱신은 라이브러리에 맡기고 드라이브는 의존성 최소화.
 - 2026-07-17 | 드라이브 접근에 전체 `drive` 스코프 사용 | AndysNote 폴더를 이름으로 검색·이동하려면 `drive.file`로는 부족.
+- 2026-07-17 | **정적 PWA 전환** — Express 서버·구글 로그인·드라이브·멀티유저를 모두 제거 (위 4개 ADR을 대체) | GitHub Pages 등 정적 호스팅 배포 및 개인 로컬 실행 요구. 서버 유지 비용 없음.
+- 2026-07-17 | API 키는 사용자 개별 키를 브라우저에서 직접 사용 (`anthropic-dangerous-direct-browser-access`), PBKDF2(310k)→AES-GCM으로 암호화해 localStorage 보관, 비밀번호 입력 시에만 메모리 복호화 | 서버 없이 쓰되 평문 저장 금지. CSP meta + 외부 스크립트 0개로 XSS 표면 최소화.
+- 2026-07-17 | 학습 기록은 localStorage 단일 JSON(`andyseng:data`), 리포트는 File System Access API로 사용자가 고른 폴더의 `AndysEng/`에 md+json 저장, 미지원 브라우저는 다운로드 폴백 | 서버·클라우드 없이 데이터 소유권을 사용자에게.
+- 2026-07-17 | SRS 알고리즘은 고정 간격 사다리 SM-2 변형: 정답 시 1→3→7→14→30→60→120일, 오답 시 처음으로(10분 뒤 재도전) | 구현 단순, 검증된 망각곡선 접근. ease factor는 YAGNI로 보류.
+- 2026-07-17 | 복습 퀴즈(빈칸 생성·채점)·통계·리포트는 AI를 쓰지 않고, 표현 공부는 호출 1회에 5개를 받아 큐에 쌓는다 | AI 사용량 최소화 요구.

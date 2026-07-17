@@ -1,4 +1,4 @@
-// 학습 리포트 도메인 로직. 순수 함수만 — 프레임워크/드라이브/저장소를 import하지 않는다.
+// 학습 리포트 도메인 로직. 순수 함수만 — 프레임워크/파일시스템/저장소를 import하지 않는다.
 
 /** 점수 배열의 평균(반올림). 없으면 null. */
 function avg(scores) {
@@ -45,13 +45,25 @@ function expressionSection(records) {
   return lines;
 }
 
+function quizSection(records) {
+  if (records.length === 0) return [];
+  const correct = records.filter((r) => r.correct).length;
+  const rate = Math.round((correct / records.length) * 100);
+  const lines = [`## 🔁 복습 퀴즈 (${records.length}문제, 정답률 ${rate}%)`, ""];
+  for (const r of records) {
+    lines.push(`- ${r.correct ? "✅" : "❌"} ${r.expression}`);
+  }
+  lines.push("");
+  return lines;
+}
+
 /**
  * 한 세션의 학습 기록을 마크다운 리포트로 만든다.
- * records: { conversation, writing, expression } (각각 배열)
- * meta: { dateLabel, userName }
+ * records: { conversation, writing, expression, quiz } (각각 배열)
+ * meta: { dateLabel, userName? }
  */
 export function buildReport(records, meta) {
-  const { conversation = [], writing = [], expression = [] } = records;
+  const { conversation = [], writing = [], expression = [], quiz = [] } = records;
   const total = conversation.length + writing.length + expression.length;
   const lines = [`# AndysEng 학습 리포트 — ${meta.dateLabel}`, ""];
   if (meta.userName) lines.push(`- 학습자: ${meta.userName}`);
@@ -59,6 +71,7 @@ export function buildReport(records, meta) {
   lines.push(...conversationSection(conversation));
   lines.push(...writingSection(writing));
   lines.push(...expressionSection(expression));
+  lines.push(...quizSection(quiz));
   return lines.join("\n").replace(/\n+$/, "\n");
 }
 

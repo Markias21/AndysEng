@@ -124,6 +124,10 @@ textarea {
 }
 textarea:focus { border-color: var(--primary); }
 .row-end { display: flex; justify-content: flex-end; margin-bottom: 16px; gap: 10px; }
+.row-start { display: flex; justify-content: flex-start; gap: 10px; }
+.card-title { margin-bottom: 10px; }
+.card-desc { margin-bottom: 12px; }
+.mt-6 { margin-top: 6px; }
 .question-text { font-size: 17px; font-weight: 700; line-height: 1.6; }
 .expr-card h3 { font-size: 24px; color: var(--primary); margin-bottom: 6px; }
 .muted { color: var(--muted); }
@@ -172,6 +176,38 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
   border-radius: 999px; font-size: 14px; z-index: 100;
   max-width: 90vw;
 }
+
+/* 키 게이트 */
+.gate-form { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.gate-form input {
+  border: 2px solid #e4e6f2; border-radius: 999px;
+  padding: 12px 18px; font-size: 15px; outline: none;
+  transition: border-color .15s;
+}
+.gate-form input:focus { border-color: var(--primary); }
+.btn-text {
+  border: none; background: transparent; cursor: pointer;
+  color: var(--muted); font-size: 13px; text-decoration: underline;
+}
+.btn-text:hover { color: var(--red); }
+
+/* 복습 퀴즈 */
+.srs-answer {
+  width: 100%; border: 2px solid #e4e6f2; border-radius: 999px;
+  padding: 12px 18px; font-size: 15px; outline: none; margin-bottom: 10px;
+  transition: border-color .15s; background: var(--card);
+}
+.srs-answer:focus { border-color: var(--primary); }
+.srs-answer:disabled { background: #f0f1f7; color: var(--muted); }
+.due-now { color: var(--green); font-weight: 700; }
+
+/* 차트 */
+.chart { width: 100%; height: auto; display: block; }
+.chart-line { fill: none; stroke: var(--primary); stroke-width: 2.5; stroke-linejoin: round; }
+.chart-dot { fill: var(--primary); }
+.chart-grid { stroke: #eceef6; stroke-width: 1; }
+.chart-ylabel { fill: var(--muted); font-size: 11px; text-anchor: end; }
+.chart-xlabel { fill: var(--muted); font-size: 11px; text-anchor: middle; }
 
 @media (max-width: 560px) {
   .topbar { flex-direction: column; gap: 10px; }

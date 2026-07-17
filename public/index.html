@@ -3,21 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; connect-src 'self' https://api.anthropic.com; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self'" />
+  <meta name="theme-color" content="#5b5fed" />
   <title>AndysEng — 영어 공부</title>
   <link rel="stylesheet" href="styles.css" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
 </head>
 <body>
-  <!-- 로그인 게이트 -->
-  <section id="login-gate" class="login-gate hidden">
+  <!-- API 키 게이트: 키는 비밀번호로 암호화되어 이 브라우저에만 저장된다 -->
+  <section id="key-gate" class="login-gate">
     <div class="login-card">
       <div class="logo big">🦊 AndysEng</div>
-      <p class="muted">구글 계정으로 로그인하고 학습 기록을 내 드라이브에 저장하세요.</p>
-      <a id="login-btn" class="btn-primary" href="/api/auth/google">구글로 로그인</a>
-      <p id="login-unconfigured" class="muted small hidden">
-        아직 구글 로그인이 설정되지 않았습니다. <code>.env</code>에 <code>GOOGLE_CLIENT_ID</code>와
-        <code>GOOGLE_CLIENT_SECRET</code>을 추가하면 바로 사용할 수 있어요.
-      </p>
-      <p id="login-error" class="small error-text hidden">로그인에 실패했어요. 다시 시도해 주세요.</p>
+
+      <form id="gate-setup" class="gate-form hidden">
+        <p class="muted">Anthropic API 키를 등록하세요.<br/>키는 비밀번호로 암호화되어 <b>이 브라우저에만</b> 저장돼요.</p>
+        <input id="setup-key" type="password" placeholder="sk-ant-..." autocomplete="off" />
+        <input id="setup-password" type="password" placeholder="잠금 비밀번호" autocomplete="new-password" />
+        <input id="setup-password2" type="password" placeholder="비밀번호 확인" autocomplete="new-password" />
+        <button class="btn-primary" type="submit">암호화해서 저장</button>
+        <p class="small muted">⚠️ 공용 컴퓨터에서는 사용을 마친 뒤 꼭 키를 삭제하세요.</p>
+      </form>
+
+      <form id="gate-unlock" class="gate-form hidden">
+        <p class="muted">비밀번호를 입력해 API 키 잠금을 해제하세요.</p>
+        <input id="unlock-password" type="password" placeholder="잠금 비밀번호" autocomplete="current-password" />
+        <button class="btn-primary" type="submit">잠금 해제</button>
+      </form>
+
+      <button class="btn-text" id="gate-reset" type="button">키 삭제 후 다시 설정</button>
     </div>
   </section>
 
@@ -28,15 +43,12 @@
       <button class="tab active" data-view="conversation">💬 회화</button>
       <button class="tab" data-view="writing">✍️ 글쓰기</button>
       <button class="tab" data-view="expression">💡 표현</button>
-      <button class="tab" data-view="progress">📊 공부량</button>
+      <button class="tab" data-view="srs">🔁 복습</button>
+      <button class="tab" data-view="stats">📊 통계</button>
     </nav>
     <div class="userbar">
-      <button class="btn-primary finish-btn" id="finish-btn">🏁 공부 끝내기</button>
-      <label class="andysnote-toggle" title="켜면 드라이브의 AndysNote 폴더 안에 저장합니다.">
-        <input type="checkbox" id="andysnote-toggle" /> AndysNote 연동
-      </label>
-      <span class="user-name" id="user-name"></span>
-      <button class="btn-secondary logout-btn" id="logout-btn">로그아웃</button>
+      <button class="btn-primary finish-btn" id="finish-btn" title="학습 기록을 내 컴퓨터의 AndysEng 폴더에 저장합니다.">🏁 공부 끝내기</button>
+      <button class="btn-secondary logout-btn" id="lock-btn" title="API 키를 메모리에서 지웁니다.">🔒 잠금</button>
     </div>
   </header>
 
@@ -83,7 +95,7 @@
     <section id="view-expression" class="view">
       <div class="card intro-card" id="expr-intro">
         <h2>💡 표현 공부</h2>
-        <p>원어민 표현 하나를 배우고, 직접 예문을 만들어 보세요.</p>
+        <p>원어민 표현 하나를 배우고, 직접 예문을 만들어 보세요.<br/>배운 표현은 복습 덱에 자동으로 쌓여요.</p>
         <button class="btn-primary" id="expr-start">표현 받기</button>
       </div>
       <div id="expr-room" class="hidden">
@@ -106,15 +118,20 @@
       </div>
     </section>
 
-    <!-- 공부량 -->
-    <section id="view-progress" class="view">
-      <h2 class="page-title">📊 공부량 체크</h2>
-      <div id="progress-content"><p class="muted">불러오는 중...</p></div>
+    <!-- 복습 -->
+    <section id="view-srs" class="view">
+      <div id="srs-content"></div>
+    </section>
+
+    <!-- 통계 -->
+    <section id="view-stats" class="view">
+      <h2 class="page-title">📊 학습 통계</h2>
+      <div id="stats-content"><p class="muted">불러오는 중...</p></div>
     </section>
   </main>
   </div>
 
   <div id="toast" class="toast hidden"></div>
-  <script src="app.js"></script>
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>
