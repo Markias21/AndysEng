@@ -37,20 +37,6 @@ async function request(body) {
   return data;
 }
 
-/** 자유 텍스트 응답 (회화 등 빠른 턴). AI 사용량 절약을 위해 effort는 기본 low. */
-export async function chatText({ system, messages, maxTokens = 1024 }) {
-  const response = await request({
-    model: MODEL,
-    max_tokens: maxTokens,
-    thinking: { type: "adaptive" },
-    output_config: { effort: "low" },
-    system,
-    messages,
-  });
-  const block = response.content.find((b) => b.type === "text");
-  return block ? block.text : "";
-}
-
 /** JSON 스키마가 보장된 구조화 응답 (첨삭/채점) */
 export async function chatJSON({ system, messages, schema, maxTokens = 2048 }) {
   const response = await request({

@@ -100,11 +100,14 @@
       <div class="card intro-card" id="expr-intro">
         <h2>💡 표현 공부</h2>
         <p>원어민 표현 하나를 배우고, 직접 예문을 만들어 보세요.<br/>배운 표현은 복습 덱에 자동으로 쌓여요.</p>
-        <button class="btn-primary" id="expr-start">표현 받기</button>
+        <div class="collection-picker">
+          <button class="btn-primary" data-collection="conversation">💬 회화 표현</button>
+          <button class="btn-secondary" data-collection="toefl">🎓 토플 표현</button>
+        </div>
       </div>
       <div id="expr-room" class="hidden">
         <div class="card expr-card">
-          <span class="chip chip-yellow">오늘의 표현</span>
+          <span class="chip chip-yellow" id="expr-collection-label">오늘의 표현</span>
           <h3 id="expr-word"></h3>
           <p id="expr-meaning" class="muted"></p>
           <p id="expr-example" class="example"></p>

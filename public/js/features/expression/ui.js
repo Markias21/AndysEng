@@ -1,30 +1,19 @@
-// 표현 공부: 표현 하나 제시 → 유저가 예문 작성 → 첨삭/채점 → 다음 표현.
-// API 절약을 위해 한 번 호출에 5개를 받아 큐에 쌓아두고, 학습한 표현은 복습 덱에 들어간다.
+// 표현 공부: 로컬 표현 모음(회화/토플)에서 표현 하나 제시 → 유저가 예문 작성 → AI가 첨삭/채점 → 다음 표현.
+// 표현 생성 호출을 없애고 로컬 데이터에서 뽑는다(토큰 절약). 최근에 배운 표현은 피하고, 배운 표현은 복습 덱에 쌓인다.
 import { chatJSON } from "../../shared/claude.js";
-import { appendRecord, getRecords, addToDeck, takeQueuedExpression, queueExpressions } from "../../shared/store.js";
+import { appendRecord, getRecords, addToDeck } from "../../shared/store.js";
+import { pickFresh } from "../../shared/pick.js";
+import { conversationExpressions } from "./conversation-expressions.js";
+import { toeflExpressions } from "./toefl-expressions.js";
 import { $, esc, toast, scoreBadge, correctionsHTML } from "../../shared/dom.js";
 
-const BATCH_SIZE = 5;
+// 최근 이 개수만큼 배운 표현은 다시 나오지 않게 피한다.
+const RECENT_EXPRESSIONS = 20;
 
-const BATCH_SCHEMA = {
-  type: "object",
-  properties: {
-    expressions: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          expression: { type: "string" },
-          meaning: { type: "string", description: "뜻을 한국어로" },
-          example: { type: "string", description: "영어 예문 하나" },
-        },
-        required: ["expression", "meaning", "example"],
-        additionalProperties: false,
-      },
-    },
-  },
-  required: ["expressions"],
-  additionalProperties: false,
+// 컬렉션은 분리해서 관리한다. 유저가 회화/토플 중 하나를 골라 학습한다.
+const COLLECTIONS = {
+  conversation: { label: "💬 회화 표현", data: conversationExpressions },
+  toefl: { label: "🎓 토플 표현", data: toeflExpressions },
 };
 
 const REVIEW_SCHEMA = {
@@ -52,32 +41,21 @@ const REVIEW_SCHEMA = {
 };
 
 let current = null; // {expression, meaning, example}
+let currentCollection = null; // "conversation" | "toefl"
 
-async function refillQueue() {
-  const recent = getRecords("expression").slice(-30).map((r) => r.expression);
-  const result = await chatJSON({
-    system: `You teach useful, high-frequency native English expressions (idioms, phrasal verbs, collocations) to a Korean intermediate learner. Give exactly ${BATCH_SIZE} different expressions, each with its Korean meaning and one natural example sentence that contains the expression verbatim.`,
-    messages: [
-      {
-        role: "user",
-        content: recent.length
-          ? `Give me ${BATCH_SIZE} new expressions. Do NOT repeat any of these: ${recent.join(", ")}`
-          : `Give me ${BATCH_SIZE} new expressions.`,
-      },
-    ],
-    schema: BATCH_SCHEMA,
-  });
-  queueExpressions(result.expressions);
+function recentExpressions(collection) {
+  return getRecords("expression")
+    .filter((r) => r.collection === collection)
+    .slice(-RECENT_EXPRESSIONS)
+    .map((r) => r.expression);
 }
 
-async function nextExpression() {
-  let expr = takeQueuedExpression();
-  if (!expr) {
-    await refillQueue();
-    expr = takeQueuedExpression();
-  }
-  if (!expr) throw new Error("표현을 받아오지 못했습니다. 다시 시도해 주세요.");
+function nextExpression() {
+  const { data } = COLLECTIONS[currentCollection];
+  const expr = pickFresh(data, recentExpressions(currentCollection), (e) => e.expression);
+  if (!expr) return toast("표현을 불러오지 못했습니다.");
   current = expr;
+  $("#expr-collection-label").textContent = COLLECTIONS[currentCollection].label;
   $("#expr-word").textContent = expr.expression;
   $("#expr-meaning").textContent = expr.meaning;
   $("#expr-example").textContent = `예문: ${expr.example}`;
@@ -98,25 +76,27 @@ async function review(sentence) {
     messages: [{ role: "user", content: `Learner's sentence: "${sentence}"` }],
     schema: REVIEW_SCHEMA,
   });
-  appendRecord("expression", { score: result.score, expression: current.expression, sentence });
-  addToDeck([{ ...current, source: "expression" }]);
+  appendRecord("expression", {
+    score: result.score,
+    expression: current.expression,
+    collection: currentCollection,
+    sentence,
+  });
+  addToDeck([{ ...current, source: `expression:${currentCollection}` }]);
   return result;
 }
 
+function startCollection(collection) {
+  currentCollection = collection;
+  nextExpression();
+}
+
 export function init() {
-  $("#expr-start").addEventListener("click", async () => {
-    const btn = $("#expr-start");
-    btn.disabled = true;
-    try {
-      await nextExpression();
-    } catch (e) {
-      toast(e.message);
-    } finally {
-      btn.disabled = false;
-    }
+  document.querySelectorAll("#expr-intro [data-collection]").forEach((btn) => {
+    btn.addEventListener("click", () => startCollection(btn.dataset.collection));
   });
 
-  $("#expr-next").addEventListener("click", () => nextExpression().catch((e) => toast(e.message)));
+  $("#expr-next").addEventListener("click", nextExpression);
 
   $("#expr-form").addEventListener("submit", async (ev) => {
     ev.preventDefault();

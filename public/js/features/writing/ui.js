@@ -1,8 +1,13 @@
-// 글쓰기 공부: AI가 질문 제시 → 유저가 3~4문장 논설문 작성 → 문법 첨삭 + 교정문 + 원어민 답안 + 표현 제시.
-// 첨삭에서 나온 표현들은 복습 덱에 자동으로 쌓인다.
-import { chatText, chatJSON } from "../../shared/claude.js";
-import { appendRecord, addToDeck } from "../../shared/store.js";
+// 글쓰기 공부: 로컬 질문 제시 → 유저가 3~4문장 논설문 작성 → 문법 첨삭 + 교정문 + 원어민 답안 + 표현 제시.
+// 질문은 로컬 데이터에서 뽑아 토큰을 아끼고, AI 호출은 첨삭에만 쓴다. 첨삭에서 나온 표현들은 복습 덱에 자동으로 쌓인다.
+import { chatJSON } from "../../shared/claude.js";
+import { appendRecord, addToDeck, getRecords } from "../../shared/store.js";
+import { pickFresh } from "../../shared/pick.js";
+import { writingPrompts } from "./prompts.js";
 import { $, esc, toast, scoreBadge, correctionsHTML } from "../../shared/dom.js";
+
+// 최근 이 개수만큼의 질문은 다시 나오지 않게 피한다.
+const RECENT_PROMPTS = 20;
 
 const REVIEW_SCHEMA = {
   type: "object",
@@ -41,13 +46,15 @@ const REVIEW_SCHEMA = {
   additionalProperties: false,
 };
 
-async function newQuestion() {
-  const question = await chatText({
-    system:
-      "You create short opinion-essay prompts for a Korean English learner. Output only the prompt itself in English (one or two sentences), answerable with a light argumentative answer of 3-4 sentences. Vary topics widely: society, technology, daily life, culture, education.",
-    messages: [{ role: "user", content: "Give me one new essay prompt." }],
-    maxTokens: 300,
-  });
+function recentQuestions() {
+  return getRecords("writing")
+    .slice(-RECENT_PROMPTS)
+    .map((r) => r.question);
+}
+
+function newQuestion() {
+  const question = pickFresh(writingPrompts, recentQuestions());
+  if (!question) return toast("글쓰기 질문을 불러오지 못했습니다.");
   $("#writing-question").textContent = question;
   $("#writing-input").value = "";
   $("#writing-result").innerHTML = "";
@@ -74,17 +81,7 @@ async function review(question, answer) {
 }
 
 export function init() {
-  $("#writing-start").addEventListener("click", async () => {
-    const btn = $("#writing-start");
-    btn.disabled = true;
-    try {
-      await newQuestion();
-    } catch (e) {
-      toast(e.message);
-    } finally {
-      btn.disabled = false;
-    }
-  });
+  $("#writing-start").addEventListener("click", newQuestion);
 
   $("#writing-form").addEventListener("submit", async (ev) => {
     ev.preventDefault();
@@ -109,7 +106,7 @@ export function init() {
             .join("")}</ul></div>
           <div class="row-end"><button class="btn-secondary" id="writing-next">다음 질문 →</button></div>
         </div>`;
-      $("#writing-next").addEventListener("click", () => newQuestion().catch((e) => toast(e.message)));
+      $("#writing-next").addEventListener("click", newQuestion);
     } catch (e) {
       toast(e.message);
     } finally {

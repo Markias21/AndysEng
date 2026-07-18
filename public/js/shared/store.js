@@ -7,7 +7,7 @@ const RECORD_KINDS = ["conversation", "writing", "expression", "quiz", "sessions
 function emptyData() {
   const records = {};
   for (const kind of RECORD_KINDS) records[kind] = [];
-  return { version: 2, records, deck: [], exprQueue: [], lastReportAt: null };
+  return { version: 2, records, deck: [], lastReportAt: null };
 }
 
 let cache = null;
@@ -86,19 +86,6 @@ export function addToDeck(items) {
   }
   if (added) save();
   return added;
-}
-
-// ===== 표현 큐 (API 호출 절약: 한 번에 여러 개 받아서 쌓아둠) =====
-export function takeQueuedExpression() {
-  const data = load();
-  const next = data.exprQueue.shift() || null;
-  if (next) save();
-  return next;
-}
-
-export function queueExpressions(list) {
-  load().exprQueue.push(...list);
-  save();
 }
 
 // ===== 백업 =====
