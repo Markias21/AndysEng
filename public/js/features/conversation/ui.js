@@ -3,8 +3,9 @@
 import { chatJSON } from "../../shared/claude.js";
 import { appendRecord, getRecords } from "../../shared/store.js";
 import { pickFresh } from "../../shared/pick.js";
+import { scoreDetail } from "../../shared/scoring.js";
 import { conversationTopics } from "./topics.js";
-import { $, esc, toast, scoreBadge, correctionsHTML } from "../../shared/dom.js";
+import { $, esc, toast, scoreBreakdownHTML, rubricGuideHTML, correctionsHTML } from "../../shared/dom.js";
 
 // 최근 이 개수만큼의 주제는 새로고침해도 다시 나오지 않게 피한다.
 const RECENT_TOPICS = 20;
@@ -29,10 +30,20 @@ const REPLY_SCHEMA = {
       type: "string",
       description: "원어민이라면 이렇게 말했을 문장. 이미 자연스러우면 빈 문자열.",
     },
-    score: { type: "integer", description: "0-100, 문법과 자연스러움 종합 점수" },
+    grades: {
+      type: "object",
+      description: "각 배점 요소를 S/A/B/C/F로 채점",
+      properties: {
+        naturalness: { type: "string", enum: ["S", "A", "B", "C", "F"] },
+        grammar: { type: "string", enum: ["S", "A", "B", "C", "F"] },
+        structure: { type: "string", enum: ["S", "A", "B", "C", "F"] },
+      },
+      required: ["naturalness", "grammar", "structure"],
+      additionalProperties: false,
+    },
     reply: { type: "string", description: "대화를 자연스럽게 이어가는 영어 답변, 1-3문장, 질문으로 끝내기" },
   },
-  required: ["corrections", "natural_alternative", "score", "reply"],
+  required: ["corrections", "natural_alternative", "grades", "reply"],
   additionalProperties: false,
 };
 
@@ -47,7 +58,7 @@ Speak natural, everyday English. Keep each message to 1-3 sentences and always e
 You also review the learner's latest message:
 - List grammar mistakes and unnatural (non-native) phrasings as corrections. Explain each reason briefly in Korean.
 - If the message is already natural, return an empty corrections array and an empty natural_alternative.
-- Score 0-100 (grammar + naturalness). A short but perfectly natural reply can still score high.
+- Grade each rubric component S/A/B/C/F (S excellent, F poor): naturalness, grammar, structure (clarity of sentence structure). A short but perfectly natural reply can still earn S.
 - Then continue the conversation naturally in "reply", reacting to what the learner said and staying in the scene.`;
 }
 
@@ -80,11 +91,10 @@ function addUserTurn(text) {
   return turn;
 }
 
-function feedbackHTML({ corrections, natural_alternative, score }) {
+function feedbackHTML({ corrections, natural_alternative, grades }) {
   const good = (!corrections || corrections.length === 0) && !natural_alternative;
-  return good
-    ? `<div class="fb-title">✅ 자연스러워요! ${scoreBadge(score)}</div>`
-    : `<div class="fb-title">📝 피드백 ${scoreBadge(score)}</div>
+  return `<div class="fb-title">${good ? "✅ 자연스러워요!" : "📝 피드백"}</div>
+       ${scoreBreakdownHTML("conversation", grades)}
        ${correctionsHTML(corrections)}
        ${natural_alternative ? `<div>💬 원어민이라면: <span class="fixed">${esc(natural_alternative)}</span></div>` : ""}`;
 }
@@ -135,11 +145,13 @@ async function reply(text) {
     ],
     schema: REPLY_SCHEMA,
   });
-  appendRecord("conversation", { score: result.score, sentence: text });
+  const total = scoreDetail("conversation", result.grades).total;
+  appendRecord("conversation", { score: total, grades: result.grades, sentence: text });
   return result;
 }
 
 export function init() {
+  $("#conv-rubric").innerHTML = rubricGuideHTML("conversation");
   $("#conv-start").addEventListener("click", start);
 
   $("#conv-form").addEventListener("submit", async (ev) => {

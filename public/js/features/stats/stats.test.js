@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { avgLastN, summarize, dailyStats, streak, toSeoulDate } from "./stats.js";
+import { avgLastN, summarize, dailyStats, streak, toSeoulDate, calendarMonth } from "./stats.js";
 
 test("avgLastN: 기록이 없으면 null", () => {
   assert.equal(avgLastN([], 10), null);
@@ -80,6 +80,54 @@ test("dailyStats: 날짜별로 주제/발화/작문/점수를 집계한다", () 
   assert.equal(d2.avgScore, 80);
   assert.equal(d2.quizCount, 2);
   assert.equal(d2.quizCorrect, 1);
+});
+
+test("dailyStats: 기능별 평균 점수를 따로 집계한다", () => {
+  const ts = "2026-07-15T03:00:00Z";
+  const records = {
+    conversation: [
+      { ts, score: 80, sentence: "a" },
+      { ts, score: 100, sentence: "b" },
+    ],
+    writing: [{ ts, score: 60, question: "q", answer: "a" }],
+    expression: [{ ts, score: 90, expression: "e", sentence: "s" }],
+  };
+  const [d] = dailyStats(records);
+  assert.equal(d.convAvg, 90); // (80+100)/2
+  assert.equal(d.writeAvg, 60);
+  assert.equal(d.exprAvg, 90);
+  assert.equal(d.avgScore, 82.5); // 전체 평균
+});
+
+test("calendarMonth: 격자 구조와 빈칸/날짜 셀", () => {
+  const daily = dailyStats({
+    conversation: [{ ts: "2026-07-15T03:00:00Z", score: 90, sentence: "a" }],
+  });
+  const cal = calendarMonth(daily, 2026, 7);
+  assert.equal(cal.year, 2026);
+  assert.equal(cal.month, 7);
+  // 모든 주는 7칸
+  for (const week of cal.weeks) assert.equal(week.length, 7);
+  // 날짜 셀(비어있지 않은 칸) 개수 = 7월 일수(31)
+  const dayCells = cal.weeks.flat().filter((c) => c.date);
+  assert.equal(dayCells.length, 31);
+  // 학습한 날 셀에 기능별 평균이 담긴다
+  const d15 = cal.weeks.flat().find((c) => c.date === "2026-07-15");
+  assert.equal(d15.day, 15);
+  assert.equal(d15.convAvg, 90);
+  assert.equal(d15.avgScore, 90);
+  assert.equal(d15.hasStudy, true);
+  // 학습 안 한 날
+  const d16 = cal.weeks.flat().find((c) => c.date === "2026-07-16");
+  assert.equal(d16.hasStudy, false);
+  assert.equal(d16.avgScore, null);
+});
+
+test("calendarMonth: 첫 주 앞 빈칸 수 = 1일의 요일", () => {
+  const cal = calendarMonth([], 2026, 7);
+  const firstWeekday = new Date(2026, 6, 1).getDay();
+  const leadingBlanks = cal.weeks[0].filter((c) => !c.date).length;
+  assert.equal(leadingBlanks, firstWeekday);
 });
 
 test("dailyStats: 빈 기록이면 빈 배열", () => {

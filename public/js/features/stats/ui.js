@@ -1,11 +1,69 @@
-// 통계 화면: 스트릭, 오늘 요약, 꺾은선그래프(평균 점수/학습량), 기능별 요약, 기록, 백업.
-import { summarize, dailyStats, streak, toSeoulDate } from "./stats.js";
+// 통계 화면: 스트릭, 오늘 요약, 학습 달력, 꺾은선그래프, 기능별 요약, 기록, 백업.
+import { summarize, dailyStats, streak, toSeoulDate, calendarMonth } from "./stats.js";
 import { lineChartSVG } from "./chart.js";
+import { overallGrade } from "../../shared/scoring.js";
 import { getAllRecords, exportJSON, importJSON } from "../../shared/store.js";
 import { download } from "../../shared/localfs.js";
 import { $, esc, toast, scoreBadge } from "../../shared/dom.js";
 
 const CHART_DAYS = 30;
+const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+
+// 현재 보고 있는 달력의 연/월(1~12). 월 이동 버튼으로 바뀐다.
+let calView = null;
+
+function shiftMonth(delta) {
+  let { year, month } = calView;
+  month += delta;
+  if (month < 1) {
+    month = 12;
+    year -= 1;
+  } else if (month > 12) {
+    month = 1;
+    year += 1;
+  }
+  calView = { year, month };
+}
+
+function calCell(cell, today) {
+  if (!cell.date) return `<div class="cal-cell cal-empty"></div>`;
+  const grade = cell.avgScore != null ? overallGrade(cell.avgScore / 100) : null;
+  const cls = grade ? `cal-${grade}` : "cal-none";
+  const isToday = cell.date === today ? " cal-today" : "";
+  const chip = (emoji, v) => (v != null ? `<span class="cal-chip">${emoji}${Math.round(v)}</span>` : "");
+  const chips = chip("💬", cell.convAvg) + chip("✍️", cell.writeAvg) + chip("💡", cell.exprAvg);
+  const title = cell.avgScore != null ? `${cell.date} · 평균 ${cell.avgScore}점 (${grade})` : cell.date;
+  return `<div class="cal-cell ${cls}${isToday}" title="${title}">
+      <div class="cal-day">${cell.day}</div>
+      <div class="cal-chips">${chips}</div>
+    </div>`;
+}
+
+function calendarSection(daily, today) {
+  if (!calView) {
+    const [y, m] = today.split("-").map(Number);
+    calView = { year: y, month: m };
+  }
+  const cal = calendarMonth(daily, calView.year, calView.month);
+  const head = WEEKDAYS.map(
+    (w, i) => `<div class="cal-head${i === 0 ? " cal-sun" : ""}${i === 6 ? " cal-sat" : ""}">${w}</div>`
+  ).join("");
+  const body = cal.weeks.map((week) => week.map((c) => calCell(c, today)).join("")).join("");
+  const legend = ["S", "A", "B", "C", "F"].map((g) => `<span class="cal-leg cal-${g}">${g}</span>`).join("");
+  return `
+    <div class="card">
+      <div class="cal-nav">
+        <button class="cal-arrow" data-cal-prev aria-label="이전 달">◀</button>
+        <h3 class="cal-title">📅 ${cal.year}년 ${cal.month}월</h3>
+        <button class="cal-arrow" data-cal-next aria-label="다음 달">▶</button>
+      </div>
+      <div class="cal-grid">${head}${body}</div>
+      <div class="cal-legend">
+        ${legend}
+        <span class="muted small">칸 색 = 그날 평균 등급 · 💬회화 ✍️글쓰기 💡표현</span>
+      </div>
+    </div>`;
+}
 
 function statBlock(title, s) {
   return `
@@ -84,6 +142,7 @@ export function render() {
 
   $("#stats-content").innerHTML = `
     ${summaryGrid(daily, today, streakDays)}
+    ${calendarSection(daily, today)}
     ${charts(daily)}
     ${statBlock("💬 회화", summarize(records.conversation))}
     ${statBlock("✍️ 글쓰기", summarize(records.writing))}
@@ -98,6 +157,15 @@ export function render() {
         <input type="file" id="backup-file" accept="application/json" class="hidden" />
       </div>
     </div>`;
+
+  $("[data-cal-prev]").addEventListener("click", () => {
+    shiftMonth(-1);
+    render();
+  });
+  $("[data-cal-next]").addEventListener("click", () => {
+    shiftMonth(1);
+    render();
+  });
 
   $("#backup-export").addEventListener("click", () => {
     download(`andyseng-backup-${today}.json`, exportJSON(), "application/json");

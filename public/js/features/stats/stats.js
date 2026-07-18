@@ -53,31 +53,39 @@ export function dailyStats(records) {
         quizCorrect: 0,
         scoreSum: 0,
         scoreCount: 0,
+        // 기능별 점수 합/개수 (달력에서 그날의 회화/글쓰기/표현 평균을 보여주기 위해)
+        conv: { sum: 0, count: 0 },
+        write: { sum: 0, count: 0 },
+        expr: { sum: 0, count: 0 },
       });
     }
     return days.get(key);
+  };
+
+  const addScore = (d, bucket, score) => {
+    d.scoreSum += score;
+    d.scoreCount += 1;
+    d[bucket].sum += score;
+    d[bucket].count += 1;
   };
 
   for (const r of records.sessions || []) day(r.ts).topics += 1;
   for (const r of records.conversation || []) {
     const d = day(r.ts);
     d.spoken += 1;
-    d.scoreSum += r.score;
-    d.scoreCount += 1;
+    addScore(d, "conv", r.score);
   }
   for (const r of records.writing || []) {
     const d = day(r.ts);
     d.topics += 1;
     d.written += 1;
-    d.scoreSum += r.score;
-    d.scoreCount += 1;
+    addScore(d, "write", r.score);
   }
   for (const r of records.expression || []) {
     const d = day(r.ts);
     d.topics += 1;
     d.written += 1;
-    d.scoreSum += r.score;
-    d.scoreCount += 1;
+    addScore(d, "expr", r.score);
   }
   for (const r of records.quiz || []) {
     const d = day(r.ts);
@@ -85,12 +93,53 @@ export function dailyStats(records) {
     if (r.correct) d.quizCorrect += 1;
   }
 
+  const bucketAvg = (b) => (b.count ? round1(b.sum / b.count) : null);
   return [...days.values()]
     .sort((a, b) => (a.date < b.date ? -1 : 1))
-    .map(({ scoreSum, scoreCount, ...rest }) => ({
+    .map(({ scoreSum, scoreCount, conv, write, expr, ...rest }) => ({
       ...rest,
       avgScore: scoreCount ? round1(scoreSum / scoreCount) : null,
+      convAvg: bucketAvg(conv),
+      writeAvg: bucketAvg(write),
+      exprAvg: bucketAvg(expr),
     }));
+}
+
+function pad2(n) {
+  return String(n).padStart(2, "0");
+}
+
+/**
+ * 월별 달력 격자를 만든다. daily는 dailyStats()의 결과, month는 1~12.
+ * 반환: { year, month, weeks: [[cell,...7], ...] }
+ * cell(빈칸): { date: null }
+ * cell(날짜): { date, day, avgScore, convAvg, writeAvg, exprAvg, hasStudy }
+ */
+export function calendarMonth(daily, year, month) {
+  const byDate = new Map(daily.map((d) => [d.date, d]));
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const firstWeekday = new Date(year, month - 1, 1).getDay(); // 0=일 … 6=토
+
+  const cells = [];
+  for (let i = 0; i < firstWeekday; i++) cells.push({ date: null });
+  for (let dayNum = 1; dayNum <= daysInMonth; dayNum++) {
+    const date = `${year}-${pad2(month)}-${pad2(dayNum)}`;
+    const d = byDate.get(date);
+    cells.push({
+      date,
+      day: dayNum,
+      avgScore: d?.avgScore ?? null,
+      convAvg: d?.convAvg ?? null,
+      writeAvg: d?.writeAvg ?? null,
+      exprAvg: d?.exprAvg ?? null,
+      hasStudy: !!d && (d.spoken + d.written + d.quizCount > 0 || d.topics > 0),
+    });
+  }
+  while (cells.length % 7 !== 0) cells.push({ date: null });
+
+  const weeks = [];
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+  return { year, month, weeks };
 }
 
 function prevDate(dateStr) {

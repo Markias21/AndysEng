@@ -3,8 +3,9 @@
 import { chatJSON } from "../../shared/claude.js";
 import { appendRecord, addToDeck, getRecords } from "../../shared/store.js";
 import { pickFresh } from "../../shared/pick.js";
+import { scoreDetail } from "../../shared/scoring.js";
 import { writingPrompts } from "./prompts.js";
-import { $, esc, toast, scoreBadge, correctionsHTML } from "../../shared/dom.js";
+import { $, esc, toast, scoreBreakdownHTML, rubricGuideHTML, correctionsHTML } from "../../shared/dom.js";
 
 // 최근 이 개수만큼의 질문은 다시 나오지 않게 피한다.
 const RECENT_PROMPTS = 20;
@@ -40,9 +41,20 @@ const REVIEW_SCHEMA = {
         additionalProperties: false,
       },
     },
-    score: { type: "integer", description: "0-100" },
+    grades: {
+      type: "object",
+      description: "각 배점 요소를 S/A/B/C/F로 채점",
+      properties: {
+        essay_structure: { type: "string", enum: ["S", "A", "B", "C", "F"] },
+        grammar: { type: "string", enum: ["S", "A", "B", "C", "F"] },
+        comprehension: { type: "string", enum: ["S", "A", "B", "C", "F"] },
+        modifier_naturalness: { type: "string", enum: ["S", "A", "B", "C", "F"] },
+      },
+      required: ["essay_structure", "grammar", "comprehension", "modifier_naturalness"],
+      additionalProperties: false,
+    },
   },
-  required: ["corrections", "corrected_answer", "native_answer", "native_expressions", "score"],
+  required: ["corrections", "corrected_answer", "native_answer", "native_expressions", "grades"],
   additionalProperties: false,
 };
 
@@ -69,18 +81,20 @@ async function review(question, answer) {
 2. corrected_answer: the learner's own answer with only grammatical fixes applied (keep their voice and argument).
 3. native_answer: the same argument rewritten as a fluent native speaker would write it (3-4 sentences).
 4. native_expressions: 3-5 useful native-like expressions related to this topic or taken from the native answer, each with Korean meaning and an example sentence.
-5. score: 0-100 for grammar, naturalness, and clarity.`,
+5. grades: grade each rubric component S/A/B/C/F (S excellent, F poor): essay_structure (organization and flow), grammar, comprehension (clarity of sentence structure), modifier_naturalness (natural use of adjectives, adverbs, and expressions).`,
     messages: [{ role: "user", content: `Prompt: ${question}\n\nLearner's answer:\n${answer}` }],
     schema: REVIEW_SCHEMA,
     maxTokens: 8192,
   });
   // 글쓰기는 피드백 전체를 따로 저장한다 (스펙 요구사항).
-  appendRecord("writing", { score: result.score, question, answer, feedback: result });
+  const total = scoreDetail("writing", result.grades).total;
+  appendRecord("writing", { score: total, grades: result.grades, question, answer, feedback: result });
   addToDeck(result.native_expressions.map((e) => ({ ...e, source: "writing" })));
   return result;
 }
 
 export function init() {
+  $("#writing-rubric").innerHTML = rubricGuideHTML("writing");
   $("#writing-start").addEventListener("click", newQuestion);
 
   $("#writing-form").addEventListener("submit", async (ev) => {
@@ -94,7 +108,9 @@ export function init() {
       const r = await review($("#writing-question").textContent, answer);
       $("#writing-result").innerHTML = `
         <div class="result-section">
-          <h4>📝 문법 첨삭 ${scoreBadge(r.score)}</h4>
+          <h4>🏅 점수</h4>
+          <div class="card">${scoreBreakdownHTML("writing", r.grades)}</div>
+          <h4>📝 문법 첨삭</h4>
           <div class="card">${r.corrections.length ? correctionsHTML(r.corrections) : "✅ 문법 오류가 없어요!"}</div>
           <h4>✔️ 교정된 답안</h4>
           <div class="card">${esc(r.corrected_answer)}</div>

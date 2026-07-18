@@ -131,6 +131,76 @@ main { max-width: 760px; margin: 0 auto; padding: 28px 16px 80px; }
 .score-mid { background: #fff4cc; color: #a07800; }
 .score-low { background: #fdecee; color: var(--red); }
 
+/* S/A/B/C/F 등급 배지 */
+.grade-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 22px; padding: 0 6px;
+  font-weight: 800; font-size: 13px; color: #fff;
+  border-radius: 7px; line-height: 1;
+}
+.grade-S { background: #7c3aed; }
+.grade-A { background: #22c07a; }
+.grade-B { background: #3b82f6; }
+.grade-C { background: #f59e0b; }
+.grade-F { background: #ef5b6c; }
+
+/* 요소별 점수 분해 */
+.score-detail { margin: 8px 0 10px; }
+.score-overall { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.score-overall b { font-size: 18px; }
+.score-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 4px 0; font-size: 13px; border-top: 1px solid rgba(0,0,0,.05);
+}
+.sc-label { color: var(--text); }
+.sc-val { display: inline-flex; align-items: center; gap: 8px; }
+.sc-pts { color: var(--muted); font-weight: 700; min-width: 52px; text-align: right; }
+
+/* 배점 안내(접이식) */
+.rubric-guide { margin-top: 16px; text-align: left; font-size: 13px; }
+.rubric-guide summary { cursor: pointer; font-weight: 700; color: var(--primary); }
+.rubric-guide ul { margin: 8px 0 6px 18px; }
+.rubric-guide li { margin-bottom: 3px; }
+
+/* 학습 달력 */
+.cal-nav { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 14px; }
+.cal-title { font-size: 18px; }
+.cal-arrow {
+  border: none; background: #eef0ff; color: var(--primary); cursor: pointer;
+  width: 34px; height: 34px; border-radius: 50%; font-size: 14px; font-weight: 800;
+}
+.cal-arrow:hover { background: #e0e3ff; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.cal-head { text-align: center; font-size: 12px; font-weight: 800; color: var(--muted); padding-bottom: 4px; }
+.cal-head.cal-sun { color: var(--red); }
+.cal-head.cal-sat { color: var(--primary); }
+.cal-cell {
+  min-height: 62px; border-radius: 10px; padding: 5px 6px;
+  background: #f6f7fb; border: 1.5px solid transparent; overflow: hidden;
+}
+.cal-empty { background: transparent; }
+.cal-none { background: #f6f7fb; }
+.cal-day { font-size: 12px; font-weight: 700; color: var(--text); }
+.cal-chips { display: flex; flex-direction: column; gap: 1px; margin-top: 2px; }
+.cal-chip { font-size: 10.5px; font-weight: 700; color: #3a3c55; white-space: nowrap; }
+.cal-today { border-color: var(--primary); }
+/* 등급별 칸 배경 (연한 톤) */
+.cal-S { background: #ede9fe; }
+.cal-A { background: #dcfce7; }
+.cal-B { background: #dbeafe; }
+.cal-C { background: #fef3c7; }
+.cal-F { background: #fee2e2; }
+.cal-legend { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+.cal-leg {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 6px; font-size: 11px; font-weight: 800; color: #fff;
+}
+.cal-legend .cal-S { background: #7c3aed; }
+.cal-legend .cal-A { background: #22c07a; }
+.cal-legend .cal-B { background: #3b82f6; }
+.cal-legend .cal-C { background: #f59e0b; }
+.cal-legend .cal-F { background: #ef5b6c; }
+
 .input-row { display: flex; gap: 10px; }
 .input-row input {
   flex: 1; border: 2px solid #e4e6f2; border-radius: 999px;
@@ -238,4 +308,8 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
   .topbar { flex-direction: column; gap: 10px; }
   .userbar { margin-left: 0; justify-content: center; }
   .bubble { max-width: 92%; }
+  .cal-grid { gap: 3px; }
+  .cal-cell { min-height: 52px; padding: 3px 4px; border-radius: 8px; }
+  .cal-chip { font-size: 9px; }
+  .card { padding: 18px 14px; }
 }

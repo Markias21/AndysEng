@@ -3,9 +3,10 @@
 import { chatJSON } from "../../shared/claude.js";
 import { appendRecord, getRecords, addToDeck } from "../../shared/store.js";
 import { pickFresh } from "../../shared/pick.js";
+import { scoreDetail } from "../../shared/scoring.js";
 import { conversationExpressions } from "./conversation-expressions.js";
 import { toeflExpressions } from "./toefl-expressions.js";
-import { $, esc, toast, scoreBadge, correctionsHTML } from "../../shared/dom.js";
+import { $, esc, toast, scoreBreakdownHTML, rubricGuideHTML, correctionsHTML } from "../../shared/dom.js";
 
 // 최근 이 개수만큼 배운 표현은 다시 나오지 않게 피한다.
 const RECENT_EXPRESSIONS = 20;
@@ -34,9 +35,19 @@ const REVIEW_SCHEMA = {
     },
     natural_version: { type: "string", description: "원어민이라면 이렇게 쓸 문장" },
     comment: { type: "string", description: "표현을 제대로 활용했는지 한국어로 한두 문장 평가" },
-    score: { type: "integer", description: "0-100" },
+    grades: {
+      type: "object",
+      description: "각 배점 요소를 S/A/B/C/F로 채점",
+      properties: {
+        naturalness: { type: "string", enum: ["S", "A", "B", "C", "F"] },
+        grammar: { type: "string", enum: ["S", "A", "B", "C", "F"] },
+        comprehension: { type: "string", enum: ["S", "A", "B", "C", "F"] },
+      },
+      required: ["naturalness", "grammar", "comprehension"],
+      additionalProperties: false,
+    },
   },
-  required: ["corrections", "natural_version", "comment", "score"],
+  required: ["corrections", "natural_version", "comment", "grades"],
   additionalProperties: false,
 };
 
@@ -72,12 +83,14 @@ async function review(sentence) {
 - corrections: grammar errors and unnatural phrasings, reasons in Korean.
 - natural_version: how a native speaker would write the same idea using the expression.
 - comment: one or two sentences in Korean on whether the expression was used correctly.
-- score: 0-100 (grammar, naturalness, and correct use of the expression).`,
+- grades: grade each rubric component S/A/B/C/F (S excellent, F poor): naturalness (natural use of the target expression), grammar, comprehension (clarity of sentence structure).`,
     messages: [{ role: "user", content: `Learner's sentence: "${sentence}"` }],
     schema: REVIEW_SCHEMA,
   });
+  const total = scoreDetail("expression", result.grades).total;
   appendRecord("expression", {
-    score: result.score,
+    score: total,
+    grades: result.grades,
     expression: current.expression,
     collection: currentCollection,
     sentence,
@@ -92,6 +105,7 @@ function startCollection(collection) {
 }
 
 export function init() {
+  $("#expr-rubric").innerHTML = rubricGuideHTML("expression");
   document.querySelectorAll("#expr-intro [data-collection]").forEach((btn) => {
     btn.addEventListener("click", () => startCollection(btn.dataset.collection));
   });
@@ -109,7 +123,8 @@ export function init() {
       const r = await review(sentence);
       $("#expr-result").innerHTML = `
         <div class="feedback ${r.corrections.length ? "" : "good"}">
-          <div class="fb-title">📝 피드백 ${scoreBadge(r.score)}</div>
+          <div class="fb-title">📝 피드백</div>
+          ${scoreBreakdownHTML("expression", r.grades)}
           ${correctionsHTML(r.corrections)}
           <div>💬 원어민이라면: <span class="fixed">${esc(r.natural_version)}</span></div>
           <div class="reason mt-6">${esc(r.comment)}</div>
