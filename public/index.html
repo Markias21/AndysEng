@@ -48,19 +48,10 @@
       <button class="tab" data-view="stats">📊 통계</button>
     </nav>
     <div class="userbar">
-      <label class="level-picker" title="내 CEFR 학습 레벨. 회화·글쓰기·복습 난이도에 공통 적용돼요.">레벨
-        <select id="level-select">
-          <option value="A1">A1</option>
-          <option value="A2">A2</option>
-          <option value="B1">B1</option>
-          <option value="B2">B2</option>
-          <option value="C1">C1</option>
-          <option value="C2">C2</option>
-        </select>
-      </label>
       <button class="btn-primary finish-btn" id="finish-btn" title="학습 기록을 내 컴퓨터의 AndysEng 폴더에 저장합니다.">🏁 공부 끝내기</button>
       <button class="btn-secondary" id="sync-save-btn" title="학습 기록을 GitHub에 저장합니다.">☁️ 저장</button>
       <button class="btn-secondary" id="sync-load-btn" title="GitHub에서 학습 기록을 불러옵니다.">📥 불러오기</button>
+      <button class="btn-secondary icon-btn" id="settings-btn" title="설정" aria-label="설정">⚙️</button>
       <button class="btn-secondary logout-btn" id="lock-btn" title="API 키를 메모리에서 지웁니다.">🔒 잠금</button>
     </div>
   </header>
@@ -72,13 +63,6 @@
         <h2>💬 회화 공부</h2>
         <p>AI가 먼저 말을 걸어요. 자연스럽게 대답해 보세요.<br/>어색하거나 틀린 표현은 바로 알려드려요.</p>
         <button class="btn-primary" id="conv-start">대화 시작하기</button>
-        <label class="expr-count" title="회화 3턴마다 복습 덱에 쌓을 표현 개수">복습에 쌓을 표현 수
-          <select id="conv-expr-count">
-            <option value="1">1개</option>
-            <option value="2">2개</option>
-            <option value="3">3개</option>
-          </select>
-        </label>
         <div id="conv-rubric"></div>
       </div>
       <div id="conv-room" class="hidden">
@@ -126,6 +110,58 @@
       <div id="stats-content"><p class="muted">불러오는 중...</p></div>
     </section>
   </main>
+  </div>
+
+  <!-- 설정 모달 -->
+  <div id="settings-modal" class="modal-overlay hidden">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="설정">
+      <div class="modal-head">
+        <h2>⚙️ 설정</h2>
+        <button class="btn-text modal-close" id="settings-close" aria-label="닫기">✕</button>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">화면 테마
+          <span class="setting-desc">밝게 또는 어둡게 볼 수 있어요.</span>
+        </div>
+        <select id="set-theme" class="setting-select">
+          <option value="light">☀️ 라이트</option>
+          <option value="dark">🌙 다크</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">AI 모델
+          <span class="setting-desc">첨삭·채점에 쓰는 Claude 모델이에요.</span>
+        </div>
+        <select id="set-model" class="setting-select"></select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">학습 레벨 (CEFR)
+          <span class="setting-desc">회화·글쓰기·복습 난이도에 공통 적용돼요.</span>
+        </div>
+        <select id="set-level" class="setting-select">
+          <option value="A1">A1</option>
+          <option value="A2">A2</option>
+          <option value="B1">B1</option>
+          <option value="B2">B2</option>
+          <option value="C1">C1</option>
+          <option value="C2">C2</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">복습에 쌓을 표현 수
+          <span class="setting-desc">회화 3턴마다 복습 덱에 쌓는 개수예요.</span>
+        </div>
+        <select id="set-expr-count" class="setting-select">
+          <option value="1">1개</option>
+          <option value="2">2개</option>
+          <option value="3">3개</option>
+        </select>
+      </div>
+    </div>
   </div>
 
   <div id="toast" class="toast hidden"></div>

@@ -1,9 +1,23 @@
 // 외부 서비스(Claude API) 경계. 기능 코드는 이 모듈의 함수만 사용한다.
 // 브라우저에서 직접 호출하며, 키는 메모리에만 존재한다 (keyvault가 복호화해 넘겨줌).
-const MODEL = "claude-sonnet-5";
+// 선택 가능한 모델. 설정에서 고른 값이 profile.model로 저장되고 setModel으로 반영된다.
+export const MODELS = {
+  "claude-sonnet-5": "Sonnet (더 똑똑함)",
+  "claude-haiku-4-5-20251001": "Haiku (더 빠르고 저렴)",
+};
+const DEFAULT_MODEL = "claude-sonnet-5";
 const API_URL = "https://api.anthropic.com/v1/messages";
 
 let apiKey = null;
+let model = DEFAULT_MODEL;
+
+export function setModel(id) {
+  model = MODELS[id] ? id : DEFAULT_MODEL;
+}
+
+export function getModel() {
+  return model;
+}
 
 export function setApiKey(key) {
   apiKey = key;
@@ -40,7 +54,7 @@ async function request(body) {
 /** JSON 스키마가 보장된 구조화 응답 (첨삭/채점) */
 export async function chatJSON({ system, messages, schema, maxTokens = 2048 }) {
   const response = await request({
-    model: MODEL,
+    model,
     max_tokens: maxTokens,
     thinking: { type: "adaptive" },
     output_config: {

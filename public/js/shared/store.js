@@ -4,8 +4,9 @@ const DATA_KEY = "andyseng:data";
 
 const RECORD_KINDS = ["conversation", "writing", "expression", "quiz", "sessions"];
 
-// 유저 프로필(설정): CEFR 학습 레벨과 회화 표현 수집 개수. 회화/글쓰기/복습에 공통 적용.
-const DEFAULT_PROFILE = { level: "B1", exprPerConv: 2 };
+// 유저 프로필(설정): CEFR 학습 레벨, 회화 표현 수집 개수, 화면 테마, AI 모델.
+// 레벨/표현수는 회화·글쓰기·복습에 공통 적용. theme는 화면 색, model은 Claude 호출 모델.
+const DEFAULT_PROFILE = { level: "B1", exprPerConv: 2, theme: "light", model: "claude-sonnet-5" };
 
 function emptyData() {
   const records = {};
