@@ -17,14 +17,24 @@ function conversationSection(records) {
   return lines;
 }
 
+/** 문장 단위 답안([{sentence, translation}])을 리포트용 여러 줄 텍스트로 편다. 밑줄 마커는 뺀다. */
+function answerLines(value) {
+  if (!value) return [];
+  const sentences = typeof value === "string" ? [{ sentence: value }] : value;
+  return sentences.flatMap((s) => {
+    const en = s.sentence.replace(/\[\[|\]\]/g, "");
+    return s.translation ? [en, `> ${s.translation}`, ""] : [en, ""];
+  });
+}
+
 function writingSection(records) {
   if (records.length === 0) return [];
   const lines = [`## ✍️ 글쓰기 (${records.length}편, 평균 ${avg(records.map((r) => r.score))}점)`, ""];
   for (const r of records) {
     lines.push(`### (${r.score}점) ${r.question}`, "");
     lines.push(`**내 답안**`, "", r.answer, "");
-    if (r.feedback?.corrected_answer) lines.push(`**교정된 답안**`, "", r.feedback.corrected_answer, "");
-    if (r.feedback?.native_answer) lines.push(`**원어민 모범 답안**`, "", r.feedback.native_answer, "");
+    if (r.feedback?.corrected_answer) lines.push(`**교정된 답안**`, "", ...answerLines(r.feedback.corrected_answer));
+    if (r.feedback?.native_answer) lines.push(`**원어민 모범 답안**`, "", ...answerLines(r.feedback.native_answer));
     const exprs = r.feedback?.native_expressions || [];
     if (exprs.length) {
       lines.push(`**익혀둘 표현**`, "");

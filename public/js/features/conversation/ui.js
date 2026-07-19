@@ -1,12 +1,15 @@
 // 회화 공부: 로컬 주제로 시작(영어 배경설명 + 파트너 첫 대사)하고, 유저 답변마다 AI가 첨삭/채점 후 대화를 이어간다.
 // 주제·오프닝은 로컬 데이터에서 뽑아 토큰을 아끼고, AI 호출은 턴별 첨삭/이어가기에만 쓴다.
 import { chatJSON } from "../../shared/claude.js";
-import { appendRecord, getRecords, getProfile, addToDeck } from "../../shared/store.js";
+import { appendRecord, getRecords, getProfile } from "../../shared/store.js";
 import { pickFresh } from "../../shared/pick.js";
 import { scoreDetail } from "../../shared/scoring.js";
 import { CONV_GUIDANCE } from "../../shared/levels.js";
 import { conversationTopics } from "./topics.js";
-import { $, esc, toast, scoreBreakdownHTML, rubricGuideHTML, correctionsHTML } from "../../shared/dom.js";
+import {
+  $, esc, toast, scoreBreakdownHTML, rubricGuideHTML, correctionsHTML,
+  expressionAddHTML, wireExpressionAdds,
+} from "../../shared/dom.js";
 
 // 최근 이 개수만큼의 주제는 새로고침해도 다시 나오지 않게 피한다.
 const RECENT_TOPICS = 20;
@@ -116,12 +119,13 @@ function addUserTurn(text) {
   return turn;
 }
 
-function feedbackHTML({ corrections, natural_alternative, grades }) {
+function feedbackHTML({ corrections, natural_alternative, grades, expressions }) {
   const good = (!corrections || corrections.length === 0) && !natural_alternative;
   return `<div class="fb-title">${good ? "✅ 자연스러워요!" : "📝 피드백"}</div>
        ${scoreBreakdownHTML("conversation", grades)}
        ${correctionsHTML(corrections)}
-       ${natural_alternative ? `<div>💬 원어민이라면: <span class="fixed">${esc(natural_alternative)}</span></div>` : ""}`;
+       ${natural_alternative ? `<div>💬 원어민이라면: <span class="fixed">${esc(natural_alternative)}</span></div>` : ""}
+       ${expressions?.length ? `<div class="fb-title">💡 익혀두면 좋은 표현</div>${expressionAddHTML(expressions)}` : ""}`;
 }
 
 function attachFeedback(turn, result) {
@@ -129,6 +133,7 @@ function attachFeedback(turn, result) {
   const el = document.createElement("div");
   el.className = `feedback ${good ? "good" : ""}`;
   el.innerHTML = feedbackHTML(result);
+  if (result.expressions?.length) wireExpressionAdds(el, result.expressions, "conversation");
   // 말풍선 앞에 넣어 데스크탑에서 왼쪽(빈 공간)에 오도록 한다. 모바일은 CSS가 아래로 쌓는다.
   turn.insertBefore(el, turn.firstChild);
   el.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -183,9 +188,6 @@ async function reply(text) {
   });
   const total = scoreDetail("conversation", result.grades).total;
   appendRecord("conversation", { score: total, grades: result.grades, sentence: text });
-  if (result.expressions?.length) {
-    addToDeck(result.expressions.map((e) => ({ ...e, source: "conversation" })));
-  }
   return result;
 }
 

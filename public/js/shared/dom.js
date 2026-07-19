@@ -1,5 +1,6 @@
 // DOM 공통 유틸.
 import { RUBRICS, scoreDetail } from "./scoring.js";
+import { addToDeck } from "./store.js";
 
 export const $ = (sel) => document.querySelector(sel);
 
@@ -64,4 +65,58 @@ export function correctionsHTML(corrections) {
         `<li><span class="strike">${esc(c.original)}</span> → <span class="fixed">${esc(c.corrected)}</span><br/><span class="reason">${esc(c.reason)}</span></li>`
     )
     .join("")}</ul>`;
+}
+
+/** 오타·대소문자 교정. 점수에 반영하지 않고 이유 설명 없이 원문→교정만 나열한다. */
+export function spellingHTML(items) {
+  if (!items || items.length === 0) return "";
+  return `<ul>${items
+    .map((c) => `<li><span class="strike">${esc(c.original)}</span> → <span class="fixed">${esc(c.corrected)}</span></li>`)
+    .join("")}</ul>`;
+}
+
+/** [[...]]로 감싼 부분을 밑줄로 렌더한다(HTML 이스케이프 후 마커만 태그로 치환). */
+export function underlineHTML(text) {
+  return esc(text).replace(/\[\[/g, '<u class="mark">').replace(/\]\]/g, "</u>");
+}
+
+/**
+ * 답안을 한 문장씩 줄바꿈해 보여 준다. 문장마다 한국어 해석을 아래에 붙이고, [[...]] 부분은 밑줄.
+ * items: [{sentence, translation}] (구버전 문자열도 허용).
+ */
+export function sentenceLinesHTML(items) {
+  if (typeof items === "string") return `<div class="answer-line">${underlineHTML(items)}</div>`;
+  if (!items || !items.length) return "";
+  return items
+    .map(
+      (it) =>
+        `<div class="answer-line">${underlineHTML(it.sentence)}<span class="answer-ko">${esc(it.translation)}</span></div>`
+    )
+    .join("");
+}
+
+/** 표현 목록을 개별 ➕ 버튼과 함께 렌더한다(유저가 담을 것만 복습에 추가). */
+export function expressionAddHTML(expressions) {
+  if (!expressions || !expressions.length) return "";
+  return `<ul class="expr-list">${expressions
+    .map(
+      (e, i) =>
+        `<li><div class="expr-head"><b>${esc(e.expression)}</b>${e.level ? ` <span class="cefr">${esc(e.level)}</span>` : ""} — ${esc(e.meaning)}</div>
+          <div class="reason">${esc(e.example)}</div>
+          <button class="btn-secondary expr-add" type="button" data-i="${i}">➕ 복습에 추가</button></li>`
+    )
+    .join("")}</ul>`;
+}
+
+/** expressionAddHTML로 그린 ➕ 버튼들을 복습 덱 추가와 연결한다. */
+export function wireExpressionAdds(root, expressions, source) {
+  root.querySelectorAll(".expr-add").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const e = expressions[Number(btn.dataset.i)];
+      const added = addToDeck([{ expression: e.expression, meaning: e.meaning, example: e.example, level: e.level, source }]);
+      toast(added ? `복습에 담았어요: ${e.expression}` : "이미 복습 목록에 있어요.");
+      btn.disabled = true;
+      btn.textContent = added ? "✓ 담김" : "이미 있음";
+    });
+  });
 }

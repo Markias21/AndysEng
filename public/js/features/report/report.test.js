@@ -75,6 +75,33 @@ test("buildReport: 글쓰기 피드백을 펼쳐 담는다", () => {
   assert.match(md, /clear upsides.*분명한 장점/);
 });
 
+test("buildReport: 문장 단위 답안은 해석과 함께 줄을 나누고 밑줄 마커는 뺀다", () => {
+  const md = buildReport(
+    {
+      writing: [
+        {
+          score: 80,
+          question: "Is social media good?",
+          answer: "I think yes.",
+          feedback: {
+            corrected_answer: [
+              { sentence: "I [[think so]].", translation: "나는 그렇게 생각한다." },
+              { sentence: "It helps people connect.", translation: "그것은 사람들이 연결되도록 돕는다." },
+            ],
+            native_answer: [{ sentence: "Social media has [[clear upsides]].", translation: "소셜 미디어에는 분명한 장점이 있다." }],
+          },
+        },
+      ],
+    },
+    { dateLabel: "2026-07-19 20:00" }
+  );
+  assert.match(md, /^I think so\.$/m);
+  assert.match(md, /^> 나는 그렇게 생각한다\.$/m);
+  assert.match(md, /^It helps people connect\.$/m);
+  assert.match(md, /^Social media has clear upsides\.$/m);
+  assert.ok(!md.includes("[["), "밑줄 마커가 리포트에 남으면 안 된다");
+});
+
 test("buildReport: 복습 퀴즈 결과를 정답률과 함께 담는다", () => {
   const md = buildReport(
     {

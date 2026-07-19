@@ -383,6 +383,20 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 .dict-add { padding: 7px 14px; font-size: 13px; }
 .dict-add:disabled { background: #d7f5e6; color: var(--green); cursor: default; }
 
+/* 답안을 한 문장씩 줄바꿈 + 문장별 한국어 해석. [[..]]로 표시된 부분은 밑줄. */
+.answer-line { margin-bottom: 12px; line-height: 1.6; }
+.answer-line:last-child { margin-bottom: 0; }
+.answer-line .mark { text-decoration: underline; text-underline-offset: 3px; font-weight: 700; color: var(--green); }
+.answer-ko { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+/* 표현 목록: 항목마다 복습에 담는 ➕ 버튼 */
+.expr-list { list-style: none; margin: 0; }
+.expr-list li { border-top: 1px solid var(--border); padding: 12px 0; }
+.expr-list li:first-child { border-top: none; }
+.expr-head { margin-bottom: 4px; line-height: 1.5; }
+.expr-add { padding: 6px 12px; font-size: 13px; margin-top: 8px; }
+.expr-add:disabled { background: #d7f5e6; color: var(--green); cursor: default; }
+
 /* 단어장·복습 목록의 오른쪽(예정일 + 빼기), 자가평가 버튼 줄 */
 .row-actions { display: inline-flex; align-items: center; gap: 8px; }
 .row-actions .btn-text { text-decoration: none; font-size: 15px; }
@@ -414,6 +428,7 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 :root[data-theme="dark"] .writing-tip { background: #22243a; color: #b9bbe0; }
 :root[data-theme="dark"] .cal-arrow { background: #2a2c44; }
 :root[data-theme="dark"] .dict-add:disabled { background: #16281f; color: var(--green); }
+:root[data-theme="dark"] .expr-add:disabled { background: #16281f; color: var(--green); }
 :root[data-theme="dark"] .cal-arrow:hover { background: #343652; }
 :root[data-theme="dark"] .cal-cell,
 :root[data-theme="dark"] .cal-none { background: #24263a; }
