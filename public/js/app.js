@@ -133,7 +133,9 @@ async function init() {
   }
 
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js").catch(() => {
+    // updateViaCache: "none" — GitHub Pages가 sw.js에 max-age 캐시 헤더를 붙이므로,
+    // 지정하지 않으면 브라우저가 그 캐시 기간 동안 새 배포를 감지하지 못한다.
+    navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).catch(() => {
       /* 오프라인 셸은 부가 기능 — 등록 실패해도 앱은 동작한다 */
     });
   }

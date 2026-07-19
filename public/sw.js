@@ -1,5 +1,5 @@
 // 오프라인 앱 셸. 정적 자산만 캐시하고 API 호출(api.anthropic.com)은 절대 캐시하지 않는다.
-const VERSION = "v3";
+const VERSION = "v4";
 const CACHE = `andyseng-${VERSION}`;
 const ASSETS = [
   "./",
@@ -42,10 +42,19 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// 네트워크 우선 + 캐시 보강(오프라인 폴백). 캐시 우선 방식은 배포 직후에도 새로고침이
+// 예전 버전을 계속 보여주는 문제(서비스 워커가 활성화되기 전까지 최소 한 번은 구버전을
+// 캐시에서 응답)가 있어, 온라인일 땐 항상 최신을 받고 오프라인일 때만 캐시로 폴백한다.
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (event.request.method !== "GET" || url.origin !== self.location.origin) return;
   event.respondWith(
-    caches.match(event.request).then((hit) => hit || fetch(event.request))
+    fetch(event.request, { cache: "no-store" })
+      .then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+        return res;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
