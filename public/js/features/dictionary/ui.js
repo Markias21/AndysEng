@@ -1,7 +1,7 @@
 // 사전: 회화·글쓰기에서 📖 버튼으로 여는 모달. 양방향(한↔영) 조회.
 // 뜻이 크게 다른 범주만 분리해 각 범주 예문 1개를 준다. AI 호출은 Haiku 고정(빠르고 저렴),
 // 결과는 영구 캐시(store.dict)에 저장해 같은 단어는 평생 한 번만 토큰을 쓴다.
-// 각 항목은 개별적으로 단어장(store.words)에 담을 수 있다.
+// 각 항목은 개별적으로 복습 목록(store.words)에 담을 수 있다.
 import { chatJSON } from "../../shared/claude.js";
 import { getCachedLookup, setCachedLookup, addWord } from "../../shared/store.js";
 import { detectDirection, cacheKey } from "./detect.js";
@@ -69,7 +69,7 @@ function entryHTML(entry, i) {
       </div>
       <div class="dict-meaning">${esc(entry.meaning)}</div>
       <div class="dict-example">${esc(entry.example)}</div>
-      <button class="btn-secondary dict-add" type="button" data-i="${i}">➕ 단어장에 추가</button>
+      <button class="btn-secondary dict-add" type="button" data-i="${i}">➕ 복습에 추가</button>
     </div>`;
 }
 
@@ -85,7 +85,7 @@ function renderResults(entries) {
     btn.addEventListener("click", () => {
       const entry = lastEntries[Number(btn.dataset.i)];
       const added = addWord({ word: entry.word, pos: entry.pos, meaning: entry.meaning, example: entry.example });
-      toast(added ? `단어장에 담았어요: ${entry.word}` : "이미 단어장에 있는 단어예요.");
+      toast(added ? `복습에 담았어요: ${entry.word}` : "이미 복습 목록에 있는 단어예요.");
       btn.disabled = true;
       btn.textContent = added ? "✓ 담김" : "이미 있음";
     });
