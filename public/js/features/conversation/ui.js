@@ -71,8 +71,10 @@ const convHistory = []; // {role: "ai"|"user", text}
 let currentTopic = null;
 let userTurns = 0;
 
-function tutorSystem(topic, level, extractCount) {
-  const base = `You are a friendly native English conversation partner for a Korean learner.
+// 시스템 프롬프트는 턴마다 절대 바뀌지 않아야 프롬프트 캐시가 유지된다.
+// 표현 추출 지시처럼 턴마다 달라지는 내용은 여기 넣지 말고 유저 메시지 쪽(항상 캐시되지 않는 부분)에 넣는다.
+function tutorSystem(topic, level) {
+  return `You are a friendly native English conversation partner for a Korean learner.
 The current scene is: ${topic.scene}
 Stay in that setting and keep the conversation consistent with it.
 The learner's level is CEFR ${level}. Pitch your English to that level: ${CONV_GUIDANCE[level] || CONV_GUIDANCE.B1}.
@@ -81,10 +83,8 @@ You also review the learner's latest message:
 - List grammar mistakes and unnatural (non-native) phrasings as corrections. Explain each reason briefly in Korean.
 - If the message is already natural, return an empty corrections array and an empty natural_alternative.
 - Grade each rubric component S/A/B/C/F (S excellent, F poor): naturalness, grammar, structure (clarity of sentence structure). A short but perfectly natural reply can still earn S.
-- Then continue the conversation naturally in "reply", reacting to what the learner said and staying in the scene.`;
-  if (!extractCount) return base;
-  return `${base}
-- Also fill "expressions": up to ${extractCount} useful native-like expression(s) from your reply or this conversation that are worth reviewing at around level ${level}. Each needs a Korean meaning, an example sentence, and its CEFR level.`;
+- Then continue the conversation naturally in "reply", reacting to what the learner said and staying in the scene.
+- When the learner's message ends with an extraction request in parentheses, also fill "expressions" with that many useful native-like expression(s) from your reply or this conversation, worth reviewing at around the learner's level. Each needs a Korean meaning, an example sentence, and its CEFR level.`;
 }
 
 function addScene(topic) {
@@ -157,21 +157,28 @@ function start() {
   $("#conv-input").focus();
 }
 
+// 이전 턴까지의 히스토리를 멀티턴 messages로 바꾸고, 마지막 기존 메시지에 캐시 breakpoint를 찍는다.
+// 다음 요청부터는 이 지점까지 전부 캐시에서 읽어 오고, 새로 추가되는 턴만 정가로 처리된다.
+function buildMessages(newUserText, extractCount) {
+  const messages = convHistory.map((m, i) => {
+    const role = m.role === "user" ? "user" : "assistant";
+    if (i !== convHistory.length - 1) return { role, content: m.text };
+    return { role, content: [{ type: "text", text: m.text, cache_control: { type: "ephemeral" } }] };
+  });
+  const userText = extractCount
+    ? `${newUserText}\n\n(Extract ${extractCount} useful expression(s) from this exchange now.)`
+    : newUserText;
+  messages.push({ role: "user", content: userText });
+  return messages;
+}
+
 async function reply(text) {
   const { level, exprPerConv } = getProfile();
   // EXTRACT_EVERY 턴마다 한 번 표현을 뽑는다. 뽑을 개수는 유저 설정(1~3).
   const extractCount = userTurns % EXTRACT_EVERY === 0 ? Math.max(1, Math.min(3, exprPerConv || 1)) : 0;
-  const transcript = convHistory
-    .map((m) => `${m.role === "user" ? "Learner" : "Partner"}: ${m.text}`)
-    .join("\n");
   const result = await chatJSON({
-    system: tutorSystem(currentTopic, level, extractCount),
-    messages: [
-      {
-        role: "user",
-        content: `Conversation so far:\n${transcript}\n\nLearner's latest message: "${text}"`,
-      },
-    ],
+    system: [{ type: "text", text: tutorSystem(currentTopic, level), cache_control: { type: "ephemeral" } }],
+    messages: buildMessages(text, extractCount),
     schema: buildReplySchema(extractCount > 0),
   });
   const total = scoreDetail("conversation", result.grades).total;
