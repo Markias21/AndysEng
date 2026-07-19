@@ -66,7 +66,7 @@
         <div id="conv-rubric"></div>
       </div>
       <div id="conv-room" class="hidden">
-        <div class="room-toolbar"><button class="btn-text" id="conv-reroll" type="button">🔄 다른 주제</button><button class="btn-text dict-open-btn" type="button">📖 사전</button></div>
+        <div class="room-toolbar"><button class="btn-secondary btn-chip" id="conv-reroll" type="button">🔄 다른 주제</button><button class="btn-secondary btn-chip dict-open-btn" type="button">📖 사전</button></div>
         <div id="conv-messages" class="chat"></div>
         <form id="conv-form" class="input-row">
           <input id="conv-input" type="text" placeholder="영어로 대답해 보세요..." autocomplete="off" />
@@ -85,7 +85,7 @@
       </div>
       <div id="writing-room" class="hidden">
         <div class="card question-card">
-          <div class="room-toolbar"><span class="chip">오늘의 질문</span><span class="toolbar-actions"><button class="btn-text dict-open-btn" type="button">📖 사전</button><button class="btn-text" id="writing-reroll" type="button">🔄 다른 질문</button></span></div>
+          <div class="room-toolbar"><span class="chip">오늘의 질문</span><span class="toolbar-actions"><button class="btn-secondary btn-chip dict-open-btn" type="button">📖 사전</button><button class="btn-secondary btn-chip" id="writing-reroll" type="button">🔄 다른 질문</button></span></div>
           <p id="writing-question" class="question-text"></p>
           <p id="writing-tip" class="writing-tip"></p>
         </div>
@@ -160,6 +160,13 @@
           <option value="2">2개</option>
           <option value="3">3개</option>
         </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">AI 사용 비용
+          <span class="setting-desc">지금까지 쓴 Claude API 누적 비용 추정치예요.</span>
+        </div>
+        <div class="setting-value" id="usage-total">$0.0000</div>
       </div>
     </div>
   </div>

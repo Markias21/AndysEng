@@ -2,9 +2,9 @@
 import { summarize, dailyStats, streak, toSeoulDate, calendarMonth } from "./stats.js";
 import { lineChartSVG } from "./chart.js";
 import { overallGrade } from "../../shared/scoring.js";
-import { getAllRecords, exportJSON, importJSON } from "../../shared/store.js";
+import { getAllRecords, exportJSON, importJSON, unsyncedCounts } from "../../shared/store.js";
 import { download } from "../../shared/localfs.js";
-import { $, esc, toast, scoreBadge } from "../../shared/dom.js";
+import { $, esc, toast, scoreBadge, sentenceLinesHTML } from "../../shared/dom.js";
 
 const CHART_DAYS = 30;
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -65,6 +65,29 @@ function calendarSection(daily, today) {
     </div>`;
 }
 
+const UNSYNCED_LABELS = {
+  conversation: "💬 회화 기록",
+  writing: "✍️ 글쓰기 기록",
+  expression: "💡 표현 기록",
+  quiz: "🔁 복습 결과",
+  sessions: "📌 학습 시작 기록",
+  deck: "🔁 복습 카드",
+  words: "📖 단어장 카드",
+};
+
+function unsyncedSection() {
+  const entries = Object.entries(unsyncedCounts()).filter(([, n]) => n > 0);
+  if (!entries.length) return "";
+  const rows = entries
+    .map(([kind, n]) => `<div class="stat-row"><span>${UNSYNCED_LABELS[kind] || kind}</span><b>${n}개</b></div>`)
+    .join("");
+  return `
+    <div class="card">
+      <h3 class="card-title">☁️ 아직 GitHub에 저장 안 한 항목</h3>
+      ${rows}
+    </div>`;
+}
+
 function statBlock(title, s) {
   return `
     <div class="card">
@@ -114,8 +137,8 @@ function historyDetails(records) {
       (h) => `<div class="history-item">
         <div class="hi-date">${new Date(h.ts).toLocaleString("ko-KR")} ${scoreBadge(h.score)}</div>
         <b>Q.</b> ${esc(h.question)}<br/><b>A.</b> ${esc(h.answer)}<br/>
-        <b>교정:</b> ${esc(h.feedback.corrected_answer)}<br/>
-        <b>모범 답안:</b> ${esc(h.feedback.native_answer)}
+        <b>교정:</b> ${sentenceLinesHTML(h.feedback.corrected_answer)}
+        <b>모범 답안:</b> ${sentenceLinesHTML(h.feedback.native_answer)}
       </div>`
     )
     .join("");
@@ -141,6 +164,7 @@ export function render() {
   const streakDays = streak(daily.map((d) => d.date), today);
 
   $("#stats-content").innerHTML = `
+    ${unsyncedSection()}
     ${summaryGrid(daily, today, streakDays)}
     ${calendarSection(daily, today)}
     ${charts(daily)}

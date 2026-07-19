@@ -155,7 +155,7 @@ function nextQuestion() {
         <button class="btn-secondary" id="srs-forgot" type="button">😵 까먹었어요</button>
         <button class="btn-primary" id="srs-recall" type="button">🙂 기억나요</button>
       </div>
-      <div class="row-end"><button class="btn-text" id="srs-remove" type="button">🗑 이 ${nounFor(current.kind)} 빼기</button></div>
+      <div class="row-end"><button class="btn-secondary btn-chip" id="srs-remove" type="button">🗑 이 ${nounFor(current.kind)} 빼기</button></div>
     </div>`;
   $("#srs-recall").addEventListener("click", () => showChoice(true));
   $("#srs-forgot").addEventListener("click", () => showChoice(false));

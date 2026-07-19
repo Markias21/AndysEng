@@ -1,5 +1,7 @@
 // 외부 서비스(Claude API) 경계. 기능 코드는 이 모듈의 함수만 사용한다.
 // 브라우저에서 직접 호출하며, 키는 메모리에만 존재한다 (keyvault가 복호화해 넘겨줌).
+import { recordUsage } from "./store.js";
+import { costUsd } from "./usage.js";
 // 선택 가능한 모델. 설정에서 고른 값이 profile.model로 저장되고 setModel으로 반영된다.
 export const MODELS = {
   "claude-sonnet-5": "Sonnet (더 똑똑함)",
@@ -48,6 +50,7 @@ async function request(body) {
     if (res.status === 401) throw new Error("API 키가 올바르지 않습니다. 키를 다시 설정하세요.");
     throw new Error(data.error?.message || `Claude API 요청 실패 (${res.status})`);
   }
+  if (data.usage) recordUsage(body.model, costUsd(body.model, data.usage));
   return data;
 }
 

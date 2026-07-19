@@ -1,6 +1,6 @@
 // 설정: 톱니바퀴 → 모달. 테마(라이트/다크)·AI 모델·CEFR 레벨·표현 수집 개수를 한 곳에서 관리한다.
 // 설정 값은 store.profile에 저장되고, 앱 시작 시 적용된다.
-import { getProfile, setProfile } from "../../shared/store.js";
+import { getProfile, setProfile, getUsage } from "../../shared/store.js";
 import { setModel, MODELS } from "../../shared/claude.js";
 import { $ } from "../../shared/dom.js";
 
@@ -12,7 +12,13 @@ export function applyTheme(theme) {
   document.documentElement.dataset.theme = theme === "dark" ? "dark" : "light";
 }
 
+function renderUsage() {
+  const total = Object.values(getUsage()).reduce((sum, cost) => sum + cost, 0);
+  $("#usage-total").textContent = `$${total.toFixed(4)}`;
+}
+
 function openModal() {
+  renderUsage();
   $("#settings-modal").classList.remove("hidden");
 }
 

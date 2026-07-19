@@ -12,7 +12,18 @@ function emptyData() {
   const records = {};
   for (const kind of RECORD_KINDS) records[kind] = [];
   // deck: 표현 복습 카드. words: 단어장 카드. dict: 사전 조회 영구 캐시(질의 → entries).
-  return { version: 3, records, deck: [], words: [], dict: {}, profile: { ...DEFAULT_PROFILE }, lastReportAt: null };
+  // usage: 모델별 누적 AI 비용(달러, 추정치).
+  return {
+    version: 4,
+    records,
+    deck: [],
+    words: [],
+    dict: {},
+    usage: {},
+    profile: { ...DEFAULT_PROFILE },
+    lastReportAt: null,
+    lastSyncedAt: null,
+  };
 }
 
 let cache = null;
@@ -32,6 +43,7 @@ function normalize(data) {
     records: { ...base.records, ...(data.records || {}) },
     words: Array.isArray(data.words) ? data.words : [],
     dict: data.dict && typeof data.dict === "object" ? data.dict : {},
+    usage: data.usage && typeof data.usage === "object" ? data.usage : {},
     profile: { ...base.profile, ...(data.profile || {}) },
   };
 }
@@ -61,6 +73,31 @@ export function getLastReportAt() {
 export function setLastReportAt(ts) {
   load().lastReportAt = ts;
   save();
+}
+
+export function getLastSyncedAt() {
+  return load().lastSyncedAt;
+}
+
+export function setLastSyncedAt(ts) {
+  load().lastSyncedAt = ts;
+  save();
+}
+
+/**
+ * 마지막 GitHub 동기화(저장/불러오기) 이후 새로 쌓인 항목을 부분별로 센다.
+ * 한 번도 동기화하지 않았다면(lastSyncedAt=null) 전체를 미저장으로 센다.
+ */
+export function unsyncedCounts() {
+  const data = load();
+  const since = data.lastSyncedAt || 0;
+  const counts = {};
+  for (const kind of RECORD_KINDS) {
+    counts[kind] = data.records[kind].filter((r) => new Date(r.ts).getTime() > since).length;
+  }
+  counts.deck = data.deck.filter((c) => c.addedAt > since).length;
+  counts.words = data.words.filter((w) => w.addedAt > since).length;
+  return counts;
 }
 
 // ===== 프로필(설정) =====
@@ -174,6 +211,18 @@ export function getCachedLookup(key) {
 export function setCachedLookup(key, entries) {
   load().dict[key] = entries;
   save();
+}
+
+// ===== AI 사용 비용 =====
+export function recordUsage(model, costUsd) {
+  if (!costUsd) return;
+  const data = load();
+  data.usage[model] = (data.usage[model] || 0) + costUsd;
+  save();
+}
+
+export function getUsage() {
+  return load().usage;
 }
 
 // ===== 백업 =====

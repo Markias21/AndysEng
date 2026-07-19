@@ -268,8 +268,6 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 
 /* 회화/글쓰기 방 상단 툴바 (다른 주제 받기 등) */
 .room-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
-.room-toolbar .btn-text { color: var(--primary); }
-.room-toolbar .btn-text:hover { color: var(--primary-dark); }
 
 /* 글쓰기 레벨 목표 팁 */
 .writing-tip {
@@ -361,8 +359,9 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 
 /* 툴바 액션 묶음 (사전·리롤 버튼) */
 .toolbar-actions { display: flex; align-items: center; gap: 12px; }
-.dict-open-btn { color: var(--primary) !important; }
-.dict-open-btn:hover { color: var(--primary-dark) !important; }
+
+/* 작은 보조 버튼(사전 열기·다른 주제/질문·항목 빼기): 밑줄 텍스트 대신 알약형 버튼 */
+.btn-chip { padding: 7px 14px; font-size: 13px; border-radius: 999px; }
 
 /* 사전 모달 */
 .dict-search { display: flex; gap: 8px; margin: 12px 0 16px; }
