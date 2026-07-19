@@ -62,15 +62,6 @@ export function overallGrade(ratio) {
   return "F";
 }
 
-// 복습 통과 기준: 총점이 이 이상이면 정답 처리(간격 사다리 한 칸 상승), 미만이면 처음으로.
-// B등급 경계(0.5 × 100)에 맞춘다.
-export const REVIEW_PASS_SCORE = 50;
-
-/** 복습에서 이 점수가 간격을 진전시키는 "정답"인지. */
-export function reviewPassed(score) {
-  return Number.isFinite(score) && score >= REVIEW_PASS_SCORE;
-}
-
 /**
  * 기능(feature)과 요소별 등급(grades)으로 요소 점수·총점·종합 등급을 산출한다.
  * grades: { [componentKey]: "S"|"A"|"B"|"C"|"F" }

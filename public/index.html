@@ -45,6 +45,7 @@
       <button class="tab active" data-view="conversation">💬 회화</button>
       <button class="tab" data-view="writing">✍️ 글쓰기</button>
       <button class="tab" data-view="srs">🔁 복습</button>
+      <button class="tab" data-view="words">📖 단어장</button>
       <button class="tab" data-view="stats">📊 통계</button>
     </nav>
     <div class="userbar">
@@ -66,7 +67,7 @@
         <div id="conv-rubric"></div>
       </div>
       <div id="conv-room" class="hidden">
-        <div class="room-toolbar"><button class="btn-text" id="conv-reroll" type="button">🔄 다른 주제</button></div>
+        <div class="room-toolbar"><button class="btn-text" id="conv-reroll" type="button">🔄 다른 주제</button><button class="btn-text dict-open-btn" type="button">📖 사전</button></div>
         <div id="conv-messages" class="chat"></div>
         <form id="conv-form" class="input-row">
           <input id="conv-input" type="text" placeholder="영어로 대답해 보세요..." autocomplete="off" />
@@ -85,7 +86,7 @@
       </div>
       <div id="writing-room" class="hidden">
         <div class="card question-card">
-          <div class="room-toolbar"><span class="chip">오늘의 질문</span><button class="btn-text" id="writing-reroll" type="button">🔄 다른 질문</button></div>
+          <div class="room-toolbar"><span class="chip">오늘의 질문</span><span class="toolbar-actions"><button class="btn-text dict-open-btn" type="button">📖 사전</button><button class="btn-text" id="writing-reroll" type="button">🔄 다른 질문</button></span></div>
           <p id="writing-question" class="question-text"></p>
           <p id="writing-tip" class="writing-tip"></p>
         </div>
@@ -102,6 +103,11 @@
     <!-- 복습 -->
     <section id="view-srs" class="view">
       <div id="srs-content"></div>
+    </section>
+
+    <!-- 단어장 -->
+    <section id="view-words" class="view">
+      <div id="words-content"></div>
     </section>
 
     <!-- 통계 -->
@@ -161,6 +167,22 @@
           <option value="3">3개</option>
         </select>
       </div>
+    </div>
+  </div>
+
+  <!-- 사전 모달 -->
+  <div id="dict-modal" class="modal-overlay hidden">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="사전">
+      <div class="modal-head">
+        <h2>📖 사전</h2>
+        <button class="btn-text modal-close" id="dict-close" aria-label="닫기">✕</button>
+      </div>
+      <p class="small muted">영단어 뜻을 찾거나, 한국어로 알맞은 영단어를 찾을 수 있어요. 마음에 드는 뜻은 ➕로 단어장에 담으세요.</p>
+      <form id="dict-form" class="dict-search">
+        <input id="dict-input" type="text" placeholder="예: make 또는 만들다" autocomplete="off" />
+        <button class="btn-primary" id="dict-search-btn" type="submit">검색</button>
+      </form>
+      <div id="dict-results"></div>
     </div>
   </div>
 

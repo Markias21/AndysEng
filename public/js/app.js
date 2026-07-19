@@ -10,6 +10,8 @@ import * as report from "./features/report/ui.js";
 import * as sync from "./features/sync/ui.js";
 import * as stats from "./features/stats/ui.js";
 import * as srs from "./features/srs/ui.js";
+import * as words from "./features/words/ui.js";
+import * as dictionary from "./features/dictionary/ui.js";
 import * as settings from "./features/settings/ui.js";
 
 // ===== 키 게이트 =====
@@ -91,6 +93,7 @@ function initTabs() {
       $(`#view-${tab.dataset.view}`).classList.add("active");
       if (tab.dataset.view === "stats") stats.render();
       if (tab.dataset.view === "srs") srs.render();
+      if (tab.dataset.view === "words") words.render();
     });
   });
 }
@@ -127,6 +130,7 @@ async function init() {
   writing.init();
   report.init();
   sync.init();
+  dictionary.init();
 
   if (!(await tryDevAutoLogin())) {
     showGate(hasVault() ? "unlock" : "setup");

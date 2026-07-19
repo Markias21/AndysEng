@@ -359,6 +359,37 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 }
 .setting-select:focus { border-color: var(--primary); }
 
+/* 툴바 액션 묶음 (사전·리롤 버튼) */
+.toolbar-actions { display: flex; align-items: center; gap: 12px; }
+.dict-open-btn { color: var(--primary) !important; }
+.dict-open-btn:hover { color: var(--primary-dark) !important; }
+
+/* 사전 모달 */
+.dict-search { display: flex; gap: 8px; margin: 12px 0 16px; }
+.dict-search input {
+  flex: 1; border: 2px solid var(--border); border-radius: 999px;
+  padding: 10px 16px; font-size: 15px; outline: none; background: var(--card); color: var(--text);
+  transition: border-color .15s;
+}
+.dict-search input:focus { border-color: var(--primary); }
+.dict-entry { border-top: 1px solid var(--border); padding: 14px 0; }
+.dict-entry:first-child { border-top: none; }
+.dict-entry-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+.dict-word { font-size: 18px; font-weight: 800; color: var(--primary); }
+.dict-phonetic { font-size: 13px; color: var(--muted); }
+.dict-pos { font-size: 12px; font-weight: 700; color: var(--muted); }
+.dict-meaning { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.dict-example { font-size: 14px; font-style: italic; color: var(--muted); margin-bottom: 10px; }
+.dict-add { padding: 7px 14px; font-size: 13px; }
+.dict-add:disabled { background: #d7f5e6; color: var(--green); cursor: default; }
+
+/* 단어장·복습 목록의 오른쪽(예정일 + 빼기), 자가평가 버튼 줄 */
+.row-actions { display: inline-flex; align-items: center; gap: 8px; }
+.row-actions .btn-text { text-decoration: none; font-size: 15px; }
+.row-rate { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+.row-rate .btn-primary, .row-rate .btn-secondary { padding: 12px 20px; }
+.word-meaning { font-size: 20px; font-weight: 700; text-align: center; margin: 14px 0 4px; color: var(--primary); }
+
 /* 다크 테마 — 변수 재정의 + 밝은 하드코딩 색 보정 */
 :root[data-theme="dark"] {
   --primary: #7c7fff;
@@ -382,6 +413,7 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 :root[data-theme="dark"] .scene-card { background: #22243a; border-color: var(--border); color: #b9bbe0; }
 :root[data-theme="dark"] .writing-tip { background: #22243a; color: #b9bbe0; }
 :root[data-theme="dark"] .cal-arrow { background: #2a2c44; }
+:root[data-theme="dark"] .dict-add:disabled { background: #16281f; color: var(--green); }
 :root[data-theme="dark"] .cal-arrow:hover { background: #343652; }
 :root[data-theme="dark"] .cal-cell,
 :root[data-theme="dark"] .cal-none { background: #24263a; }

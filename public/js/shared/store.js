@@ -11,7 +11,8 @@ const DEFAULT_PROFILE = { level: "B1", exprPerConv: 2, theme: "light", model: "c
 function emptyData() {
   const records = {};
   for (const kind of RECORD_KINDS) records[kind] = [];
-  return { version: 2, records, deck: [], profile: { ...DEFAULT_PROFILE }, lastReportAt: null };
+  // deck: 표현 복습 카드. words: 단어장 카드. dict: 사전 조회 영구 캐시(질의 → entries).
+  return { version: 3, records, deck: [], words: [], dict: {}, profile: { ...DEFAULT_PROFILE }, lastReportAt: null };
 }
 
 let cache = null;
@@ -29,6 +30,8 @@ function normalize(data) {
     ...base,
     ...data,
     records: { ...base.records, ...(data.records || {}) },
+    words: Array.isArray(data.words) ? data.words : [],
+    dict: data.dict && typeof data.dict === "object" ? data.dict : {},
     profile: { ...base.profile, ...(data.profile || {}) },
   };
 }
@@ -98,6 +101,14 @@ export function updateCard(updated) {
   save();
 }
 
+/** 표현 복습 덱에서 카드 하나를 뺀다(마음에 안 드는 표현 제거). */
+export function removeCard(id) {
+  const data = load();
+  const before = data.deck.length;
+  data.deck = data.deck.filter((c) => c.id !== id);
+  if (data.deck.length !== before) save();
+}
+
 /**
  * 배운 표현들을 새 복습 카드로 덱에 추가한다. 같은 표현(대소문자 무시)은 중복 저장하지 않는다.
  * items: [{expression, meaning, example, source}]
@@ -117,6 +128,52 @@ export function addToDeck(items) {
   }
   if (added) save();
   return added;
+}
+
+// ===== 단어장 =====
+export function getWords() {
+  return load().words;
+}
+
+/**
+ * 사전에서 고른 단어(뜻 하나)를 단어장 카드로 추가한다. 같은 단어+뜻(대소문자 무시)은 중복 저장하지 않는다.
+ * item: {word, pos, meaning, example}. 반환: 추가했으면 true.
+ */
+export function addWord(item) {
+  const words = load().words;
+  const key = `${item.word.toLowerCase().trim()}|${item.meaning.trim()}`;
+  if (words.some((w) => `${w.word.toLowerCase().trim()}|${w.meaning.trim()}` === key)) return false;
+  const now = Date.now();
+  // 새 카드는 바로 복습 대상(due=now). 간격 스케줄링은 srs 도메인(scheduler.js)이 맡는다.
+  words.push({ id: crypto.randomUUID(), ...item, addedAt: now, streak: 0, interval: 0, due: now });
+  save();
+  return true;
+}
+
+export function updateWord(updated) {
+  const words = load().words;
+  const i = words.findIndex((w) => w.id === updated.id);
+  if (i >= 0) words[i] = updated;
+  save();
+}
+
+/** 단어장에서 카드 하나를 뺀다(마음에 안 드는 단어 제거). */
+export function removeWord(id) {
+  const data = load();
+  const before = data.words.length;
+  data.words = data.words.filter((w) => w.id !== id);
+  if (data.words.length !== before) save();
+}
+
+// ===== 사전 조회 캐시 =====
+// 같은 질의는 평생 한 번만 AI를 호출하도록 결과(entries)를 영구 보관한다. 키는 정규화된 질의.
+export function getCachedLookup(key) {
+  return load().dict[key] || null;
+}
+
+export function setCachedLookup(key, entries) {
+  load().dict[key] = entries;
+  save();
 }
 
 // ===== 백업 =====

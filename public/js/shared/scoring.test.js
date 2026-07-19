@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { pointsForGrade, overallGrade, scoreDetail, reviewPassed, REVIEW_PASS_SCORE, RUBRICS } from "./scoring.js";
+import { pointsForGrade, overallGrade, scoreDetail, RUBRICS } from "./scoring.js";
 
 test("pointsForGrade: 등급을 만점 비율로 환산", () => {
   assert.equal(pointsForGrade("S", 50), 50); // ×1.0
@@ -71,12 +71,4 @@ test("scoreDetail: 누락된 등급은 F 취급", () => {
 
 test("scoreDetail: 알 수 없는 기능은 에러", () => {
   assert.throws(() => scoreDetail("quiz", {}));
-});
-
-test("reviewPassed: 통과 기준 점수 이상이면 정답", () => {
-  assert.equal(reviewPassed(REVIEW_PASS_SCORE), true);
-  assert.equal(reviewPassed(100), true);
-  assert.equal(reviewPassed(REVIEW_PASS_SCORE - 1), false);
-  assert.equal(reviewPassed(0), false);
-  assert.equal(reviewPassed(NaN), false);
 });

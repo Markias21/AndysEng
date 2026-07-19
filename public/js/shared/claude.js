@@ -51,10 +51,13 @@ async function request(body) {
   return data;
 }
 
-/** JSON 스키마가 보장된 구조화 응답 (첨삭/채점) */
-export async function chatJSON({ system, messages, schema, maxTokens = 2048 }) {
+/**
+ * JSON 스키마가 보장된 구조화 응답 (첨삭/채점).
+ * modelOverride를 주면 설정 모델 대신 그 모델로 호출한다(예: 사전은 Haiku 고정).
+ */
+export async function chatJSON({ system, messages, schema, maxTokens = 2048, modelOverride }) {
   const response = await request({
-    model,
+    model: modelOverride || model,
     max_tokens: maxTokens,
     thinking: { type: "adaptive" },
     output_config: {
