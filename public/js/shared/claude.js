@@ -1,6 +1,6 @@
 // 외부 서비스(Claude API) 경계. 기능 코드는 이 모듈의 함수만 사용한다.
 // 브라우저에서 직접 호출하며, 키는 메모리에만 존재한다 (keyvault가 복호화해 넘겨줌).
-const MODEL = "claude-opus-4-8";
+const MODEL = "claude-sonnet-5";
 const API_URL = "https://api.anthropic.com/v1/messages";
 
 let apiKey = null;

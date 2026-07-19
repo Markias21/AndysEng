@@ -10,7 +10,7 @@ CLAUDE.md
 
 - 정적 PWA (서버 없음, 의존성 0개). public/이 앱 전부이며 GitHub Pages 등 정적 호스팅에 배포한다.
 - 빌드 스텝 없는 vanilla JS (브라우저 네이티브 ES 모듈). 개발 서버는 dev-server.js (node 내장 http).
-- AI: 브라우저에서 Anthropic REST API를 fetch로 직접 호출, 모델 claude-opus-4-8 (public/js/shared/claude.js 경계 뒤에만 존재)
+- AI: 브라우저에서 Anthropic REST API를 fetch로 직접 호출, 모델 claude-sonnet-5 (public/js/shared/claude.js 경계 뒤에만 존재)
 - 로그인 정보(닉네임·GitHub PAT·Claude 키): 비밀번호로 암호화(PBKDF2→AES-GCM)해 localStorage 보관 (public/js/shared/keyvault.js)
 - 저장소: localStorage 단일 JSON (public/js/shared/store.js). 리포트는 File System Access API로 로컬 폴더 저장 (public/js/shared/localfs.js). 학습 기록은 GitHub Contents API로 공유 프라이빗 레포에 수동 저장/불러오기 가능 (public/js/shared/github.js)
 
@@ -119,3 +119,4 @@ npm test           # 전체 테스트 (node --test)
 - 2026-07-19 | **CEFR 레벨(A1~C2) 도입 — 한 곳에서 설정해 회화·글쓰기·복습에 공통 적용.** `shared/levels.js`(순수 도메인: `filterByLevel` ±span, `WRITING_TIPS`, `CONV_GUIDANCE`)+테스트, `store.profile`(`level` 기본 B1, `exprPerConv` 기본 2). 회화는 시스템 프롬프트에 레벨 가이드 주입, 글쓰기는 레벨별 목표 팁 노출+`cefr_level`로 글 품질 레벨 채점, 복습은 내 레벨 ±1 표현만 출제. 표현 난이도는 회화·글쓰기 표현 추출 시 AI가 CEFR `level`을 함께 매겨 덱에 저장 | 레벨에 맞는 공부 방향 제시(기능 6). 모든 표현에 등급을 매기지 않고, 회화·글쓰기에서 나온 표현만 난이도 등급을 매겨 복습에 활용.
 - 2026-07-19 | **회화 표현 수집은 주기적(기본 3턴마다 1회) + 개수 조정 가능(1~3).** `EXTRACT_EVERY=3` 턴마다 유저 설정 `exprPerConv`(1~3)개의 표현을 뽑아 덱에 추가. 추출하지 않는 턴은 응답 스키마에서 `expressions` 필드를 아예 빼 토큰을 아낀다(`buildReplySchema`) | 매 턴 추출은 토큰 낭비. 주기·개수로 사용량 조절.
 - 2026-07-19 | **스킵 기능.** 회화·글쓰기에 `🔄 다른 주제/질문` 리롤 버튼(원치 않거나 중복 주제 회피), 복습에 `건너뛰기 →`(채점·SRS 변화 없이 카드를 세션 뒤로) 추가 | 기능 7.
+- 2026-07-19 | AI 모델을 `claude-opus-4-8` → `claude-sonnet-5`로 변경 | 비용 절감. 문법/구조 채점·CEFR 판정 등 루브릭 기반 등급 매기기에는 소넷으로 충분하다고 판단.
