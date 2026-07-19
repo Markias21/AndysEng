@@ -51,17 +51,21 @@ async function request(body) {
   return data;
 }
 
+// Haiku 4.5는 adaptive thinking·effort를 지원하지 않는다(소넷 계열 전용 기능).
+const SUPPORTS_ADAPTIVE_THINKING = (id) => !id.startsWith("claude-haiku");
+
 /**
  * JSON 스키마가 보장된 구조화 응답 (첨삭/채점).
  * modelOverride를 주면 설정 모델 대신 그 모델로 호출한다(예: 사전은 Haiku 고정).
  */
 export async function chatJSON({ system, messages, schema, maxTokens = 2048, modelOverride }) {
+  const targetModel = modelOverride || model;
   const response = await request({
-    model: modelOverride || model,
+    model: targetModel,
     max_tokens: maxTokens,
-    thinking: { type: "adaptive" },
+    ...(SUPPORTS_ADAPTIVE_THINKING(targetModel) ? { thinking: { type: "adaptive" } } : {}),
     output_config: {
-      effort: "medium",
+      ...(SUPPORTS_ADAPTIVE_THINKING(targetModel) ? { effort: "medium" } : {}),
       format: { type: "json_schema", schema },
     },
     system,
