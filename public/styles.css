@@ -265,6 +265,39 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 .user-name { font-size: 14px; font-weight: 700; color: var(--text); }
 .logout-btn { padding: 8px 14px; font-size: 13px; }
 
+/* CEFR 레벨 선택기 (상단) */
+.level-picker { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--muted); }
+.level-picker select, .expr-count select {
+  border: 2px solid #e4e6f2; border-radius: 999px; padding: 6px 12px;
+  font-size: 13px; font-weight: 700; color: var(--text); background: var(--card);
+  outline: none; cursor: pointer;
+}
+.level-picker select:focus, .expr-count select:focus { border-color: var(--primary); }
+
+/* 회화 인트로의 표현 수집 개수 설정 */
+.expr-count { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--muted); margin-top: 16px; }
+
+/* 회화/글쓰기 방 상단 툴바 (다른 주제 받기 등) */
+.room-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.room-toolbar .btn-text { color: var(--primary); }
+.room-toolbar .btn-text:hover { color: var(--primary-dark); }
+
+/* 글쓰기 레벨 목표 팁 */
+.writing-tip {
+  margin-top: 10px; padding: 10px 14px; font-size: 13.5px; line-height: 1.6;
+  background: #f0f1ff; border-radius: 12px; color: #4a4d75;
+}
+
+/* CEFR 난이도 배지 (표현·글 레벨) */
+.cefr {
+  display: inline-block; font-size: 11px; font-weight: 800;
+  background: #ede9fe; color: #6d28d9;
+  padding: 2px 8px; border-radius: 999px; vertical-align: middle;
+}
+
+/* 복습: 표현 단어 */
+.expr-word { font-size: 24px; color: var(--primary); margin-bottom: 6px; }
+
 .toast {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
   background: var(--text); color: #fff; padding: 12px 20px;

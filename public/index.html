@@ -44,11 +44,20 @@
     <nav class="tabs">
       <button class="tab active" data-view="conversation">💬 회화</button>
       <button class="tab" data-view="writing">✍️ 글쓰기</button>
-      <button class="tab" data-view="expression">💡 표현</button>
       <button class="tab" data-view="srs">🔁 복습</button>
       <button class="tab" data-view="stats">📊 통계</button>
     </nav>
     <div class="userbar">
+      <label class="level-picker" title="내 CEFR 학습 레벨. 회화·글쓰기·복습 난이도에 공통 적용돼요.">레벨
+        <select id="level-select">
+          <option value="A1">A1</option>
+          <option value="A2">A2</option>
+          <option value="B1">B1</option>
+          <option value="B2">B2</option>
+          <option value="C1">C1</option>
+          <option value="C2">C2</option>
+        </select>
+      </label>
       <button class="btn-primary finish-btn" id="finish-btn" title="학습 기록을 내 컴퓨터의 AndysEng 폴더에 저장합니다.">🏁 공부 끝내기</button>
       <button class="btn-secondary" id="sync-save-btn" title="학습 기록을 GitHub에 저장합니다.">☁️ 저장</button>
       <button class="btn-secondary" id="sync-load-btn" title="GitHub에서 학습 기록을 불러옵니다.">📥 불러오기</button>
@@ -63,9 +72,17 @@
         <h2>💬 회화 공부</h2>
         <p>AI가 먼저 말을 걸어요. 자연스럽게 대답해 보세요.<br/>어색하거나 틀린 표현은 바로 알려드려요.</p>
         <button class="btn-primary" id="conv-start">대화 시작하기</button>
+        <label class="expr-count" title="회화 3턴마다 복습 덱에 쌓을 표현 개수">복습에 쌓을 표현 수
+          <select id="conv-expr-count">
+            <option value="1">1개</option>
+            <option value="2">2개</option>
+            <option value="3">3개</option>
+          </select>
+        </label>
         <div id="conv-rubric"></div>
       </div>
       <div id="conv-room" class="hidden">
+        <div class="room-toolbar"><button class="btn-text" id="conv-reroll" type="button">🔄 다른 주제</button></div>
         <div id="conv-messages" class="chat"></div>
         <form id="conv-form" class="input-row">
           <input id="conv-input" type="text" placeholder="영어로 대답해 보세요..." autocomplete="off" />
@@ -84,8 +101,9 @@
       </div>
       <div id="writing-room" class="hidden">
         <div class="card question-card">
-          <span class="chip">오늘의 질문</span>
+          <div class="room-toolbar"><span class="chip">오늘의 질문</span><button class="btn-text" id="writing-reroll" type="button">🔄 다른 질문</button></div>
           <p id="writing-question" class="question-text"></p>
+          <p id="writing-tip" class="writing-tip"></p>
         </div>
         <form id="writing-form">
           <textarea id="writing-input" rows="5" placeholder="3~4문장으로 자유롭게 써 보세요..."></textarea>
@@ -94,37 +112,6 @@
           </div>
         </form>
         <div id="writing-result"></div>
-      </div>
-    </section>
-
-    <!-- 표현 -->
-    <section id="view-expression" class="view">
-      <div class="card intro-card" id="expr-intro">
-        <h2>💡 표현 공부</h2>
-        <p>원어민 표현 하나를 배우고, 직접 예문을 만들어 보세요.<br/>배운 표현은 복습 덱에 자동으로 쌓여요.</p>
-        <div class="collection-picker">
-          <button class="btn-primary" data-collection="conversation">💬 회화 표현</button>
-          <button class="btn-secondary" data-collection="toefl">🎓 토플 표현</button>
-        </div>
-        <div id="expr-rubric"></div>
-      </div>
-      <div id="expr-room" class="hidden">
-        <div class="card expr-card">
-          <span class="chip chip-yellow" id="expr-collection-label">오늘의 표현</span>
-          <h3 id="expr-word"></h3>
-          <p id="expr-meaning" class="muted"></p>
-          <p id="expr-example" class="example"></p>
-        </div>
-        <form id="expr-form">
-          <textarea id="expr-input" rows="3" placeholder="이 표현으로 예문을 만들어 보세요..."></textarea>
-          <div class="row-end">
-            <button class="btn-primary" type="submit">첨삭 받기</button>
-          </div>
-        </form>
-        <div id="expr-result"></div>
-        <div class="row-end hidden" id="expr-next-row">
-          <button class="btn-secondary" id="expr-next">다음 표현 →</button>
-        </div>
       </div>
     </section>
 

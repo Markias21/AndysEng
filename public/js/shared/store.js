@@ -4,10 +4,13 @@ const DATA_KEY = "andyseng:data";
 
 const RECORD_KINDS = ["conversation", "writing", "expression", "quiz", "sessions"];
 
+// 유저 프로필(설정): CEFR 학습 레벨과 회화 표현 수집 개수. 회화/글쓰기/복습에 공통 적용.
+const DEFAULT_PROFILE = { level: "B1", exprPerConv: 2 };
+
 function emptyData() {
   const records = {};
   for (const kind of RECORD_KINDS) records[kind] = [];
-  return { version: 2, records, deck: [], lastReportAt: null };
+  return { version: 2, records, deck: [], profile: { ...DEFAULT_PROFILE }, lastReportAt: null };
 }
 
 let cache = null;
@@ -25,6 +28,7 @@ function normalize(data) {
     ...base,
     ...data,
     records: { ...base.records, ...(data.records || {}) },
+    profile: { ...base.profile, ...(data.profile || {}) },
   };
 }
 
@@ -55,9 +59,35 @@ export function setLastReportAt(ts) {
   save();
 }
 
+// ===== 프로필(설정) =====
+export function getProfile() {
+  return load().profile;
+}
+
+export function setProfile(patch) {
+  const data = load();
+  data.profile = { ...data.profile, ...patch };
+  save();
+  return data.profile;
+}
+
 // ===== 복습 덱 =====
 export function getDeck() {
   return load().deck;
+}
+
+/**
+ * 옛 "표현 공부"에서 쌓인 카드(source가 "expression"으로 시작)를 덱에서 제거한다.
+ * 표현 영역을 없애고 복습이 회화·글쓰기 표현만 다루도록 바꾸면서, 앱 시작 시 한 번 정리한다.
+ * 제거한 개수를 반환한다.
+ */
+export function purgeExpressionCards() {
+  const data = load();
+  const before = data.deck.length;
+  data.deck = data.deck.filter((c) => !String(c.source || "").startsWith("expression"));
+  const removed = before - data.deck.length;
+  if (removed) save();
+  return removed;
 }
 
 export function updateCard(updated) {

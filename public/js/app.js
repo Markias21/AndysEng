@@ -1,11 +1,11 @@
 // 앱 부트스트랩: 키 금고 게이트 → 탭 전환 → 기능 초기화 → 서비스 워커 등록.
 import { hasVault, createVault, unlockVault, deleteVault } from "./shared/keyvault.js";
 import { setApiKey, clearApiKey } from "./shared/claude.js";
+import { getProfile, setProfile, purgeExpressionCards } from "./shared/store.js";
 import * as github from "./shared/github.js";
 import { $, toast } from "./shared/dom.js";
 import * as conversation from "./features/conversation/ui.js";
 import * as writing from "./features/writing/ui.js";
-import * as expression from "./features/expression/ui.js";
 import * as report from "./features/report/ui.js";
 import * as sync from "./features/sync/ui.js";
 import * as stats from "./features/stats/ui.js";
@@ -94,6 +94,21 @@ function initTabs() {
   });
 }
 
+// ===== 설정(레벨·표현 수집 개수) =====
+function initSettings() {
+  const { level, exprPerConv } = getProfile();
+  const levelSel = $("#level-select");
+  levelSel.value = level;
+  levelSel.addEventListener("change", () => {
+    setProfile({ level: levelSel.value });
+    if ($("#view-srs").classList.contains("active")) srs.render();
+  });
+
+  const exprSel = $("#conv-expr-count");
+  exprSel.value = String(exprPerConv);
+  exprSel.addEventListener("change", () => setProfile({ exprPerConv: Number(exprSel.value) }));
+}
+
 /**
  * 개발 서버(dev-server.js)가 .env 기반으로 제공하는 /__dev/session이 있으면 게이트를 건너뛴다.
  * 정적 배포(GitHub Pages 등)에는 이 라우트가 존재하지 않아 항상 실패하고 정상 게이트로 넘어간다.
@@ -113,11 +128,13 @@ async function tryDevAutoLogin() {
 }
 
 async function init() {
+  // 옛 "표현 공부"에서 쌓인 복습 카드를 한 번 정리한다(복습은 이제 회화·글쓰기 표현만 다룬다).
+  purgeExpressionCards();
   initGate();
   initTabs();
+  initSettings();
   conversation.init();
   writing.init();
-  expression.init();
   report.init();
   sync.init();
 
