@@ -46,6 +46,12 @@ export function scoreBreakdownHTML(feature, grades) {
     </div>`;
 }
 
+/** 번역기 사용으로 깎인 점수 안내. 사용하지 않았으면 빈 문자열. */
+export function translatorPenaltyHTML(uses, penalty, finalTotal) {
+  if (!uses) return "";
+  return `<p class="small muted">🌐 번역기 ${uses}회 사용 → -${penalty}점 반영 → 최종 <b>${finalTotal}점</b></p>`;
+}
+
 /** 기능별 배점 안내(접이식). 유저가 배점 요소와 등급 환산 기준을 볼 수 있게. */
 export function rubricGuideHTML(feature) {
   const rubric = RUBRICS[feature];

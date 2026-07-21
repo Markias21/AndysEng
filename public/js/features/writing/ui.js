@@ -2,14 +2,21 @@
 // 질문은 로컬 데이터에서 뽑아 토큰을 아끼고, AI 호출은 첨삭에만 쓴다. 첨삭에서 나온 표현들은 복습 덱에 자동으로 쌓인다.
 import { chatJSON } from "../../shared/claude.js";
 import { appendRecord, getRecords, getProfile } from "../../shared/store.js";
-import { pickFresh } from "../../shared/pick.js";
+import { pickFresh, sampleN } from "../../shared/pick.js";
 import { scoreDetail } from "../../shared/scoring.js";
 import { WRITING_TIPS } from "../../shared/levels.js";
+import { autoSaveToGithub } from "../../shared/autosave.js";
+import { takeTranslatorUses, TRANSLATOR_PENALTY } from "../../shared/translate.js";
 import { writingPrompts } from "./prompts.js";
+import { structureTemplateHTML, structureExpressions } from "./structure.js";
 import {
   $, esc, toast, scoreBreakdownHTML, rubricGuideHTML, correctionsHTML,
   spellingHTML, sentenceLinesHTML, expressionAddHTML, wireExpressionAdds,
+  translatorPenaltyHTML,
 } from "../../shared/dom.js";
+
+// 구조 제시 패널에서 한 번에 보여 줄 표현 개수.
+const STRUCTURE_EXPR_COUNT = 5;
 
 // 최근 이 개수만큼의 질문은 다시 나오지 않게 피한다.
 const RECENT_PROMPTS = 20;
@@ -108,12 +115,30 @@ function showTip() {
 function newQuestion() {
   const question = pickFresh(writingPrompts, recentQuestions());
   if (!question) return toast("글쓰기 질문을 불러오지 못했습니다.");
+  takeTranslatorUses("writing"); // 이전 질문에서 남은 번역기 사용 기록은 새 질문으로 넘기지 않는다.
   $("#writing-question").textContent = question;
   showTip();
   $("#writing-input").value = "";
   $("#writing-result").innerHTML = "";
   $("#writing-intro").classList.add("hidden");
   $("#writing-room").classList.remove("hidden");
+}
+
+function renderStructureExpressions() {
+  const picked = sampleN(structureExpressions, STRUCTURE_EXPR_COUNT);
+  const el = $("#structure-exprs");
+  el.innerHTML = expressionAddHTML(picked);
+  wireExpressionAdds(el, picked, "writing");
+}
+
+function toggleStructure() {
+  const panel = $("#writing-structure");
+  const opening = panel.classList.contains("hidden");
+  panel.classList.toggle("hidden");
+  if (opening) {
+    $("#structure-template").innerHTML = structureTemplateHTML;
+    renderStructureExpressions();
+  }
 }
 
 async function review(question, answer) {
@@ -135,10 +160,13 @@ Typos and capitalization are NOT part of the assessment. Never count them as gra
     schema: REVIEW_SCHEMA,
     maxTokens: 8192,
   });
+  const rawTotal = scoreDetail("writing", result.grades).total;
+  const translatorUses = takeTranslatorUses("writing");
+  const penalty = translatorUses * TRANSLATOR_PENALTY.writing;
+  const total = Math.max(0, rawTotal - penalty);
   // 글쓰기는 피드백 전체를 따로 저장한다 (스펙 요구사항).
-  const total = scoreDetail("writing", result.grades).total;
-  appendRecord("writing", { score: total, grades: result.grades, cefr: result.cefr_level, question, answer, feedback: result });
-  return result;
+  appendRecord("writing", { score: total, grades: result.grades, cefr: result.cefr_level, question, answer, feedback: result, translatorUses });
+  return { ...result, translatorUses, penalty, total };
 }
 
 export function init() {
@@ -146,6 +174,8 @@ export function init() {
   $("#writing-start").addEventListener("click", newQuestion);
   const reroll = $("#writing-reroll");
   if (reroll) reroll.addEventListener("click", newQuestion);
+  $("#writing-structure-btn").addEventListener("click", toggleStructure);
+  $("#structure-refresh").addEventListener("click", renderStructureExpressions);
 
   $("#writing-form").addEventListener("submit", async (ev) => {
     ev.preventDefault();
@@ -160,7 +190,7 @@ export function init() {
       result.innerHTML = `
         <div class="result-section">
           <h4>🏅 점수 <span class="cefr">이 글의 레벨: ${esc(r.cefr_level)}</span></h4>
-          <div class="card">${scoreBreakdownHTML("writing", r.grades)}</div>
+          <div class="card">${scoreBreakdownHTML("writing", r.grades)}${translatorPenaltyHTML(r.translatorUses, r.penalty, r.total)}</div>
           <h4>📝 문법 첨삭</h4>
           <div class="card">${r.corrections.length ? correctionsHTML(r.corrections) : "✅ 문법 오류가 없어요!"}</div>
           ${r.spelling?.length ? `<h4>✏️ 오타·대소문자 <span class="reason">(점수에는 반영하지 않아요)</span></h4>
@@ -175,6 +205,7 @@ export function init() {
         </div>`;
       wireExpressionAdds($("#writing-exprs"), r.native_expressions, "writing");
       $("#writing-next").addEventListener("click", newQuestion);
+      autoSaveToGithub();
     } catch (e) {
       toast(e.message);
     } finally {

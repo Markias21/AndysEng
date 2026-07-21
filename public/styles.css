@@ -107,6 +107,10 @@ main { max-width: 760px; margin: 0 auto; padding: 28px 16px 80px; }
 }
 .scene-card p { font-style: italic; font-size: 14px; }
 
+/* 글쓰기 구조 제시 패널 */
+.structure-steps { margin: 0 0 12px; padding-left: 20px; line-height: 1.7; }
+.structure-steps li { margin-bottom: 6px; }
+
 /* 유저 발화 한 턴: 데스크탑에서 피드백이 말풍선 왼쪽(빈 공간)에 붙는다 */
 .turn { display: flex; }
 .user-turn { justify-content: flex-end; align-items: flex-start; gap: 10px; }
@@ -381,6 +385,9 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 .dict-example { font-size: 14px; font-style: italic; color: var(--muted); margin-bottom: 10px; }
 .dict-add { padding: 7px 14px; font-size: 13px; }
 .dict-add:disabled { background: #d7f5e6; color: var(--green); cursor: default; }
+
+/* 번역기 모달 결과 */
+.translate-en { font-size: 17px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
 
 /* 답안을 한 문장씩 줄바꿈 + 문장별 한국어 해석. [[..]]로 표시된 부분은 밑줄. */
 .answer-line { margin-bottom: 12px; line-height: 1.6; }

@@ -5,10 +5,12 @@ import { appendRecord, getRecords, getProfile } from "../../shared/store.js";
 import { pickFresh } from "../../shared/pick.js";
 import { scoreDetail } from "../../shared/scoring.js";
 import { CONV_GUIDANCE } from "../../shared/levels.js";
+import { autoSaveToGithub } from "../../shared/autosave.js";
+import { takeTranslatorUses, TRANSLATOR_PENALTY } from "../../shared/translate.js";
 import { conversationTopics } from "./topics.js";
 import {
   $, esc, toast, scoreBreakdownHTML, rubricGuideHTML, correctionsHTML,
-  expressionAddHTML, wireExpressionAdds,
+  expressionAddHTML, wireExpressionAdds, translatorPenaltyHTML,
 } from "../../shared/dom.js";
 
 // 최근 이 개수만큼의 주제는 새로고침해도 다시 나오지 않게 피한다.
@@ -119,10 +121,11 @@ function addUserTurn(text) {
   return turn;
 }
 
-function feedbackHTML({ corrections, natural_alternative, grades, expressions }) {
+function feedbackHTML({ corrections, natural_alternative, grades, expressions, translatorUses, penalty, total }) {
   const good = (!corrections || corrections.length === 0) && !natural_alternative;
   return `<div class="fb-title">${good ? "✅ 자연스러워요!" : "📝 피드백"}</div>
        ${scoreBreakdownHTML("conversation", grades)}
+       ${translatorPenaltyHTML(translatorUses, penalty, total)}
        ${correctionsHTML(corrections)}
        ${natural_alternative ? `<div>💬 원어민이라면: <span class="fixed">${esc(natural_alternative)}</span></div>` : ""}
        ${expressions?.length ? `<div class="fb-title">💡 익혀두면 좋은 표현</div>${expressionAddHTML(expressions)}` : ""}`;
@@ -149,6 +152,9 @@ function recentTopicIds() {
 function start() {
   const topic = pickFresh(conversationTopics, recentTopicIds(), (t) => t.id);
   if (!topic) return toast("회화 주제를 불러오지 못했습니다.");
+  // 다른 주제로 전환하기 전, 방금까지의 대화 기록을 GitHub에 저장해 둔다.
+  if (currentTopic && userTurns > 0) autoSaveToGithub();
+  takeTranslatorUses("conversation"); // 이전 대화에서 남은 번역기 사용 기록은 새 대화로 넘기지 않는다.
   currentTopic = topic;
   convHistory.length = 0;
   userTurns = 0;
@@ -186,9 +192,12 @@ async function reply(text) {
     messages: buildMessages(text, extractCount),
     schema: buildReplySchema(extractCount > 0),
   });
-  const total = scoreDetail("conversation", result.grades).total;
-  appendRecord("conversation", { score: total, grades: result.grades, sentence: text });
-  return result;
+  const rawTotal = scoreDetail("conversation", result.grades).total;
+  const translatorUses = takeTranslatorUses("conversation");
+  const penalty = translatorUses * TRANSLATOR_PENALTY.conversation;
+  const total = Math.max(0, rawTotal - penalty);
+  appendRecord("conversation", { score: total, grades: result.grades, sentence: text, translatorUses });
+  return { ...result, translatorUses, penalty, total };
 }
 
 export function init() {

@@ -11,6 +11,7 @@ import * as sync from "./features/sync/ui.js";
 import * as stats from "./features/stats/ui.js";
 import * as srs from "./features/srs/ui.js";
 import * as dictionary from "./features/dictionary/ui.js";
+import * as translate from "./features/translate/ui.js";
 import * as settings from "./features/settings/ui.js";
 
 // ===== 키 게이트 =====
@@ -129,6 +130,7 @@ async function init() {
   report.init();
   sync.init();
   dictionary.init();
+  translate.init();
 
   if (!(await tryDevAutoLogin())) {
     showGate(hasVault() ? "unlock" : "setup");

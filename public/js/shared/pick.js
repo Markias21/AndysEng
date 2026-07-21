@@ -15,3 +15,9 @@ export function pickFresh(pool, recentKeys, keyOf = (x) => x) {
   const candidates = fresh.length ? fresh : pool;
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
+
+/** pool에서 중복 없이 무작위로 n개를 고른다 (n이 pool보다 크면 pool 전체를 섞어 반환). */
+export function sampleN(pool, n) {
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, n);
+}

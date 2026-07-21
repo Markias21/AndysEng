@@ -66,7 +66,7 @@
         <div id="conv-rubric"></div>
       </div>
       <div id="conv-room" class="hidden">
-        <div class="room-toolbar"><button class="btn-secondary btn-chip" id="conv-reroll" type="button">🔄 다른 주제</button><button class="btn-secondary btn-chip dict-open-btn" type="button">📖 사전</button></div>
+        <div class="room-toolbar"><button class="btn-secondary btn-chip" id="conv-reroll" type="button">🔄 다른 주제</button><button class="btn-secondary btn-chip dict-open-btn" type="button">📖 사전</button><button class="btn-secondary btn-chip translate-open-btn" type="button" data-feature="conversation">🌐 번역기</button></div>
         <div id="conv-messages" class="chat"></div>
         <form id="conv-form" class="input-row">
           <input id="conv-input" type="text" placeholder="영어로 대답해 보세요..." autocomplete="off" />
@@ -85,9 +85,15 @@
       </div>
       <div id="writing-room" class="hidden">
         <div class="card question-card">
-          <div class="room-toolbar"><span class="chip">오늘의 질문</span><span class="toolbar-actions"><button class="btn-secondary btn-chip dict-open-btn" type="button">📖 사전</button><button class="btn-secondary btn-chip" id="writing-reroll" type="button">🔄 다른 질문</button></span></div>
+          <div class="room-toolbar"><span class="chip">오늘의 질문</span><span class="toolbar-actions"><button class="btn-secondary btn-chip dict-open-btn" type="button">📖 사전</button><button class="btn-secondary btn-chip translate-open-btn" type="button" data-feature="writing">🌐 번역기</button><button class="btn-secondary btn-chip" id="writing-structure-btn" type="button">🧱 구조 제시</button><button class="btn-secondary btn-chip" id="writing-reroll" type="button">🔄 다른 질문</button></span></div>
           <p id="writing-question" class="question-text"></p>
           <p id="writing-tip" class="writing-tip"></p>
+        </div>
+        <div id="writing-structure" class="card hidden">
+          <h4>🧱 논설문 구조</h4>
+          <div id="structure-template"></div>
+          <div class="room-toolbar"><span class="chip">구조 표현</span><button class="btn-secondary btn-chip" id="structure-refresh" type="button">🔄 다른 표현</button></div>
+          <div id="structure-exprs"></div>
         </div>
         <form id="writing-form">
           <textarea id="writing-input" rows="5" placeholder="3~4문장으로 자유롭게 써 보세요..."></textarea>
@@ -184,6 +190,22 @@
         <button class="btn-primary" id="dict-search-btn" type="submit">검색</button>
       </form>
       <div id="dict-results"></div>
+    </div>
+  </div>
+
+  <!-- 번역기 모달 -->
+  <div id="translate-modal" class="modal-overlay hidden">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="번역기">
+      <div class="modal-head">
+        <h2>🌐 번역기</h2>
+        <button class="btn-text modal-close" id="translate-close" aria-label="닫기">✕</button>
+      </div>
+      <p class="small muted" id="translate-penalty-note"></p>
+      <form id="translate-form" class="dict-search">
+        <input id="translate-input" type="text" placeholder="한국어 문장을 입력하세요" autocomplete="off" />
+        <button class="btn-primary" id="translate-btn" type="submit">번역</button>
+      </form>
+      <div id="translate-result"></div>
     </div>
   </div>
 
