@@ -84,16 +84,16 @@
         <div id="writing-rubric"></div>
       </div>
       <div id="writing-room" class="hidden">
-        <div class="card question-card">
-          <div class="room-toolbar"><span class="chip">오늘의 질문</span><span class="toolbar-actions"><button class="btn-secondary btn-chip dict-open-btn" type="button">📖 사전</button><button class="btn-secondary btn-chip translate-open-btn" type="button" data-feature="writing">🌐 번역기</button><button class="btn-secondary btn-chip" id="writing-structure-btn" type="button">🧱 구조 제시</button><button class="btn-secondary btn-chip" id="writing-reroll" type="button">🔄 다른 질문</button></span></div>
-          <p id="writing-question" class="question-text"></p>
-          <p id="writing-tip" class="writing-tip"></p>
-        </div>
         <div id="writing-structure" class="card hidden">
           <h4>🧱 논설문 구조</h4>
           <div id="structure-template"></div>
           <div class="room-toolbar"><span class="chip">구조 표현</span><button class="btn-secondary btn-chip" id="structure-refresh" type="button">🔄 다른 표현</button></div>
           <div id="structure-exprs"></div>
+        </div>
+        <div class="card question-card">
+          <div class="room-toolbar"><span class="chip">오늘의 질문</span><span class="toolbar-actions"><button class="btn-secondary btn-chip dict-open-btn" type="button">📖 사전</button><button class="btn-secondary btn-chip translate-open-btn" type="button" data-feature="writing">🌐 번역기</button><button class="btn-secondary btn-chip" id="writing-structure-btn" type="button">🧱 구조 제시</button><button class="btn-secondary btn-chip" id="writing-reroll" type="button">🔄 다른 질문</button></span></div>
+          <p id="writing-question" class="question-text"></p>
+          <p id="writing-tip" class="writing-tip"></p>
         </div>
         <form id="writing-form">
           <textarea id="writing-input" rows="5" placeholder="3~4문장으로 자유롭게 써 보세요..."></textarea>
