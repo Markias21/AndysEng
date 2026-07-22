@@ -100,6 +100,56 @@ const REVIEW_SCHEMA = {
   additionalProperties: false,
 };
 
+const QNA_SCHEMA = {
+  type: "object",
+  properties: {
+    answer: { type: "string", description: "학생의 질문에 대한 한국어 답변" },
+  },
+  required: ["answer"],
+  additionalProperties: false,
+};
+
+// 방금 받은 첨삭에 대해 후속 질문을 주고받기 위한 상태. 질문을 새로 받거나 다시 첨삭받으면 초기화된다.
+let qnaContext = null; // { question, answer, feedback }
+let qnaHistory = []; // 모델에 그대로 replay할 messages (질문에는 최초 1회 context를 포함)
+let qnaLog = []; // 화면 표시용 { question, answer }
+
+function resetQna() {
+  qnaContext = null;
+  qnaHistory = [];
+  qnaLog = [];
+}
+
+function qnaContextText(ctx) {
+  return `다음은 학생이 쓴 글쓰기 질문과 답안, 그리고 이미 받은 첨삭 결과입니다.
+
+질문: ${ctx.question}
+학생 답안: ${ctx.answer}
+첨삭 결과(JSON): ${JSON.stringify(ctx.feedback)}
+
+학생이 이 첨삭에 대해 궁금한 점을 물어볼 것입니다.`;
+}
+
+function qnaLogHTML() {
+  return qnaLog
+    .map((t) => `<div class="qna-turn"><div class="qna-q">Q. ${esc(t.question)}</div><div class="qna-a">A. ${esc(t.answer)}</div></div>`)
+    .join("");
+}
+
+async function askQna(question) {
+  const content = qnaHistory.length === 0 ? `${qnaContextText(qnaContext)}\n\n학생의 질문: ${question}` : question;
+  const messages = [...qnaHistory, { role: "user", content }];
+  const result = await chatJSON({
+    system: "You are an English writing tutor answering a Korean learner's follow-up question about feedback they already received on their essay. Answer entirely in Korean, clearly and concisely, referencing the specific corrections or grades when relevant.",
+    messages,
+    schema: QNA_SCHEMA,
+    maxTokens: 1024,
+  });
+  qnaHistory.push({ role: "user", content }, { role: "assistant", content: result.answer });
+  qnaLog.push({ question, answer: result.answer });
+  return result.answer;
+}
+
 function recentQuestions() {
   return getRecords("writing")
     .slice(-RECENT_PROMPTS)
@@ -116,6 +166,7 @@ function newQuestion() {
   const question = pickFresh(writingPrompts, recentQuestions());
   if (!question) return toast("글쓰기 질문을 불러오지 못했습니다.");
   takeTranslatorUses("writing"); // 이전 질문에서 남은 번역기 사용 기록은 새 질문으로 넘기지 않는다.
+  resetQna();
   $("#writing-question").textContent = question;
   showTip();
   $("#writing-input").value = "";
@@ -186,6 +237,9 @@ export function init() {
     btn.textContent = "첨삭 중...";
     try {
       const r = await review($("#writing-question").textContent, answer);
+      qnaContext = { question: $("#writing-question").textContent, answer, feedback: r };
+      qnaHistory = [];
+      qnaLog = [];
       const result = $("#writing-result");
       result.innerHTML = `
         <div class="result-section">
@@ -201,10 +255,37 @@ export function init() {
           <div class="card">${sentenceLinesHTML(r.native_answer)}</div>
           <h4>💡 익혀두면 좋은 표현 <span class="reason">(담을 것만 골라 복습에 추가하세요)</span></h4>
           <div class="card" id="writing-exprs">${expressionAddHTML(r.native_expressions)}</div>
+          <h4>💬 첨삭에 대해 질문하기</h4>
+          <div class="card">
+            <div id="writing-qna-log"></div>
+            <form id="writing-qna-form">
+              <textarea id="writing-qna-input" rows="2" placeholder="왜 이렇게 고쳐졌는지, 다른 표현은 없는지 물어보세요..."></textarea>
+              <div class="row-end"><button class="btn-secondary" type="submit">질문하기</button></div>
+            </form>
+          </div>
           <div class="row-end"><button class="btn-secondary" id="writing-next">다음 질문 →</button></div>
         </div>`;
       wireExpressionAdds($("#writing-exprs"), r.native_expressions, "writing");
       $("#writing-next").addEventListener("click", newQuestion);
+      $("#writing-qna-form").addEventListener("submit", async (qev) => {
+        qev.preventDefault();
+        const input = $("#writing-qna-input");
+        const question = input.value.trim();
+        if (!question) return;
+        const qbtn = qev.target.querySelector("button");
+        qbtn.disabled = true;
+        qbtn.textContent = "답변 중...";
+        try {
+          await askQna(question);
+          input.value = "";
+          $("#writing-qna-log").innerHTML = qnaLogHTML();
+        } catch (e) {
+          toast(e.message);
+        } finally {
+          qbtn.disabled = false;
+          qbtn.textContent = "질문하기";
+        }
+      });
       autoSaveToGithub();
     } catch (e) {
       toast(e.message);
