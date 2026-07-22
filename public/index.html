@@ -61,8 +61,8 @@
     <section id="view-conversation" class="view active">
       <div class="card intro-card" id="conv-intro">
         <h2>💬 회화 공부</h2>
-        <p>AI가 먼저 말을 걸어요. 자연스럽게 대답해 보세요.<br/>어색하거나 틀린 표현은 바로 알려드려요.</p>
-        <button class="btn-primary" id="conv-start">대화 시작하기</button>
+        <p>주제 카테고리를 골라 대화를 시작하세요.<br/>어색하거나 틀린 표현은 바로 알려드려요.</p>
+        <div id="conv-categories" class="category-grid"></div>
         <div id="conv-rubric"></div>
       </div>
       <div id="conv-room" class="hidden">
@@ -166,6 +166,23 @@
           <option value="2">2개</option>
           <option value="3">3개</option>
         </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">내 성별
+          <span class="setting-desc">💕 연애 카테고리에서 이성 상대를 정하는 기준이에요.</span>
+        </div>
+        <select id="set-gender" class="setting-select">
+          <option value="male">남성</option>
+          <option value="female">여성</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">💕 연애 상대
+          <span class="setting-desc">안정형~멘헤라 중 성격을 골라 계속 대화해요.</span>
+        </div>
+        <select id="set-romance-partner" class="setting-select"></select>
       </div>
 
       <div class="setting-row">

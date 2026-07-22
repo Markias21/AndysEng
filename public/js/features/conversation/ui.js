@@ -1,5 +1,5 @@
-// 회화 공부: 로컬 주제로 시작(영어 배경설명 + 파트너 첫 대사)하고, 유저 답변마다 AI가 첨삭/채점 후 대화를 이어간다.
-// 주제·오프닝은 로컬 데이터에서 뽑아 토큰을 아끼고, AI 호출은 턴별 첨삭/이어가기에만 쓴다.
+// 회화 공부: 카테고리(대학/연애/가치관/공부/직업/상담/취미/기타)를 골라 대화를 시작한다.
+// 주제·페르소나는 로컬 데이터에서 뽑아 토큰을 아끼고, AI 호출은 턴별 첨삭/이어가기에만 쓴다.
 import { chatJSON } from "../../shared/claude.js";
 import { appendRecord, getRecords, getProfile } from "../../shared/store.js";
 import { pickFresh } from "../../shared/pick.js";
@@ -7,7 +7,8 @@ import { scoreDetail } from "../../shared/scoring.js";
 import { CONV_GUIDANCE } from "../../shared/levels.js";
 import { autoSaveToGithub } from "../../shared/autosave.js";
 import { takeTranslatorUses, TRANSLATOR_PENALTY } from "../../shared/translate.js";
-import { conversationTopics } from "./topics.js";
+import { CATEGORIES, HOBBY_SUBS, topicPool } from "./categories.js";
+import { findPersona, oppositeGender, counselPersona } from "./personas.js";
 import {
   $, esc, toast, scoreBreakdownHTML, rubricGuideHTML, correctionsHTML,
   expressionAddHTML, wireExpressionAdds, translatorPenaltyHTML,
@@ -18,6 +19,10 @@ const RECENT_TOPICS = 20;
 
 // 표현 수집 주기: 이만큼의 유저 턴마다 한 번 유용한 표현을 뽑아 복습 덱에 쌓는다(토큰 절약).
 const EXTRACT_EVERY = 3;
+
+// 취미 "자율": 파트너 오프닝 없이 플레이어가 먼저 화제를 꺼낸다.
+const FREE_SCENE = "You and the learner are hanging out casually with nothing planned. They will bring up whatever's on their mind — a hobby, an interest, anything they enjoy.";
+const FREE_PERSONA = "You are a friendly, curious peer chatting with the learner. The learner starts the conversation about a hobby or interest of their choice — follow their lead, react with genuine interest, and ask natural follow-up questions to keep it going.";
 
 const EXPRESSION_ITEM = {
   type: "object",
@@ -73,14 +78,20 @@ function buildReplySchema(extract) {
 }
 
 const convHistory = []; // {role: "ai"|"user", text}
-let currentTopic = null;
+let currentSession = null; // {topicId, scene, opening, persona}
+let currentCategory = null;
+let currentSub = null;
 let userTurns = 0;
 
 // 시스템 프롬프트는 턴마다 절대 바뀌지 않아야 프롬프트 캐시가 유지된다.
 // 표현 추출 지시처럼 턴마다 달라지는 내용은 여기 넣지 말고 유저 메시지 쪽(항상 캐시되지 않는 부분)에 넣는다.
-function tutorSystem(topic, level) {
+// session.persona가 있으면(연애·상담·자율) 그 캐릭터를 연기하도록 지시를 함께 넣는다.
+function tutorSystem(session, level) {
+  const personaBlock = session.persona
+    ? `\n${session.persona}\nStay fully in character as this person throughout the conversation.`
+    : "";
   return `You are a friendly native English conversation partner for a Korean learner.
-The current scene is: ${topic.scene}
+The current scene is: ${session.scene}${personaBlock}
 Stay in that setting and keep the conversation consistent with it.
 The learner's level is CEFR ${level}. Pitch your English to that level: ${CONV_GUIDANCE[level] || CONV_GUIDANCE.B1}.
 Speak natural, everyday English. Keep each message to 1-3 sentences and always end with something the learner can respond to (a question or an invitation to share).
@@ -92,10 +103,18 @@ You also review the learner's latest message:
 - When the learner's message ends with an extraction request in parentheses, also fill "expressions" with that many useful native-like expression(s) from your reply or this conversation, worth reviewing at around the learner's level. Each needs a Korean meaning, an example sentence, and its CEFR level.`;
 }
 
-function addScene(topic) {
+function addScene(scene) {
   const el = document.createElement("div");
   el.className = "scene-card";
-  el.innerHTML = `<span class="scene-label">🎬 Scene</span><p>${esc(topic.scene)}</p>`;
+  el.innerHTML = `<span class="scene-label">🎬 Scene</span><p>${esc(scene)}</p>`;
+  $("#conv-messages").appendChild(el);
+}
+
+// 자율 모드: 파트너가 먼저 말하지 않으니 유저에게 먼저 시작하라고 안내한다.
+function addStartHint() {
+  const el = document.createElement("div");
+  el.className = "start-hint";
+  el.textContent = "🎤 당신이 먼저 이야기를 시작해 보세요.";
   $("#conv-messages").appendChild(el);
 }
 
@@ -149,23 +168,87 @@ function recentTopicIds() {
     .map((r) => r.topicId);
 }
 
-function start() {
-  const topic = pickFresh(conversationTopics, recentTopicIds(), (t) => t.id);
-  if (!topic) return toast("회화 주제를 불러오지 못했습니다.");
+// 카테고리(+취미 하위)에서 대화 세션 설정을 만든다. 시작할 수 없으면 null.
+function buildSession(category, sub) {
+  if (category === "romance") {
+    const { gender, romancePartnerId } = getProfile();
+    const partner = findPersona(romancePartnerId);
+    if (!partner || partner.gender !== oppositeGender(gender)) return null;
+    return { topicId: `romance-${partner.id}`, scene: partner.scene, opening: partner.opening, persona: partner.persona };
+  }
+  if (category === "counsel") {
+    const scene = pickFresh(counselPersona.scenes, recentTopicIds(), (s) => s.id);
+    if (!scene) return null;
+    return { topicId: scene.id, scene: scene.scene, opening: scene.opening, persona: counselPersona.persona };
+  }
+  if (category === "hobby" && sub === "free") {
+    return { topicId: "hobby-free", scene: FREE_SCENE, opening: "", persona: FREE_PERSONA };
+  }
+  const topic = pickFresh(topicPool(category, sub), recentTopicIds(), (t) => t.id);
+  if (!topic) return null;
+  return { topicId: topic.id, scene: topic.scene, opening: topic.opening, persona: "" };
+}
+
+// 실제로 대화 방을 열고 세션을 시작한다. reroll("다른 주제")도 이 함수를 다시 부른다.
+function beginSession(category, sub) {
+  const session = buildSession(category, sub);
+  if (!session) return toast("대화를 시작할 주제를 불러오지 못했습니다.");
   // 다른 주제로 전환하기 전, 방금까지의 대화 기록을 GitHub에 저장해 둔다.
-  if (currentTopic && userTurns > 0) autoSaveToGithub();
+  if (currentSession && userTurns > 0) autoSaveToGithub();
   takeTranslatorUses("conversation"); // 이전 대화에서 남은 번역기 사용 기록은 새 대화로 넘기지 않는다.
-  currentTopic = topic;
+  currentSession = session;
+  currentCategory = category;
+  currentSub = sub;
   convHistory.length = 0;
   userTurns = 0;
-  appendRecord("sessions", { feature: "conversation", topicId: topic.id });
+  appendRecord("sessions", { feature: "conversation", topicId: session.topicId, category });
   $("#conv-messages").innerHTML = "";
   $("#conv-intro").classList.add("hidden");
   $("#conv-room").classList.remove("hidden");
-  addScene(topic);
-  convHistory.push({ role: "ai", text: topic.opening });
-  addBubble("ai", topic.opening);
+  addScene(session.scene);
+  if (session.opening) {
+    convHistory.push({ role: "ai", text: session.opening });
+    addBubble("ai", session.opening);
+  } else {
+    addStartHint();
+  }
   $("#conv-input").focus();
+}
+
+// 카테고리 버튼을 누르면: 취미는 하위 선택으로, 연애는 설정 확인 후, 나머지는 바로 시작.
+function startFromCategory(category) {
+  if (category === "hobby") return renderHobbySubs();
+  if (category === "romance") {
+    const { gender, romancePartnerId } = getProfile();
+    const partner = findPersona(romancePartnerId);
+    if (!partner || partner.gender !== oppositeGender(gender)) {
+      return toast("설정 ⚙️ 에서 내 성별과 연애 상대를 먼저 정해 주세요.");
+    }
+  }
+  beginSession(category, null);
+}
+
+function renderCategories() {
+  const grid = $("#conv-categories");
+  grid.innerHTML = CATEGORIES.map(
+    (c) => `<button class="btn-secondary category-btn" type="button" data-cat="${c.id}">${esc(c.label)}</button>`
+  ).join("");
+  grid.querySelectorAll("[data-cat]").forEach((b) =>
+    b.addEventListener("click", () => startFromCategory(b.dataset.cat))
+  );
+}
+
+function renderHobbySubs() {
+  const grid = $("#conv-categories");
+  grid.innerHTML =
+    `<button class="btn-text sub-back" type="button">← 카테고리</button>` +
+    HOBBY_SUBS.map(
+      (s) => `<button class="btn-secondary category-btn" type="button" data-sub="${s.id}">${esc(s.label)}</button>`
+    ).join("");
+  grid.querySelector(".sub-back").addEventListener("click", renderCategories);
+  grid.querySelectorAll("[data-sub]").forEach((b) =>
+    b.addEventListener("click", () => beginSession("hobby", b.dataset.sub))
+  );
 }
 
 // 이전 턴까지의 히스토리를 멀티턴 messages로 바꾸고, 마지막 기존 메시지에 캐시 breakpoint를 찍는다.
@@ -188,7 +271,7 @@ async function reply(text) {
   // EXTRACT_EVERY 턴마다 한 번 표현을 뽑는다. 뽑을 개수는 유저 설정(1~3).
   const extractCount = userTurns % EXTRACT_EVERY === 0 ? Math.max(1, Math.min(3, exprPerConv || 1)) : 0;
   const result = await chatJSON({
-    system: [{ type: "text", text: tutorSystem(currentTopic, level), cache_control: { type: "ephemeral" } }],
+    system: [{ type: "text", text: tutorSystem(currentSession, level), cache_control: { type: "ephemeral" } }],
     messages: buildMessages(text, extractCount),
     schema: buildReplySchema(extractCount > 0),
   });
@@ -202,9 +285,9 @@ async function reply(text) {
 
 export function init() {
   $("#conv-rubric").innerHTML = rubricGuideHTML("conversation");
-  $("#conv-start").addEventListener("click", start);
+  renderCategories();
   const reroll = $("#conv-reroll");
-  if (reroll) reroll.addEventListener("click", start);
+  if (reroll) reroll.addEventListener("click", () => beginSession(currentCategory, currentSub));
 
   $("#conv-form").addEventListener("submit", async (ev) => {
     ev.preventDefault();

@@ -56,6 +56,25 @@ main { max-width: 760px; margin: 0 auto; padding: 28px 16px 80px; }
 .intro-card p { color: var(--muted); line-height: 1.7; margin-bottom: 24px; }
 .page-title { margin-bottom: 16px; }
 
+/* 회화 카테고리 선택 그리드 */
+.category-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+  max-width: 460px; margin: 0 auto 24px;
+}
+.category-grid .category-btn {
+  width: 100%; padding: 18px 12px; font-size: 16px; text-align: center;
+}
+.category-grid .sub-back {
+  grid-column: 1 / -1; justify-self: start; padding: 6px 4px;
+}
+.start-hint {
+  align-self: center; color: var(--muted); font-size: 14px;
+  padding: 8px 0; font-style: italic;
+}
+@media (max-width: 480px) {
+  .category-grid { grid-template-columns: 1fr; }
+}
+
 .btn-primary, .btn-secondary {
   border: none; cursor: pointer;
   font-size: 15px; font-weight: 700;

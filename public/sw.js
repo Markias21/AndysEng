@@ -1,5 +1,5 @@
 // 오프라인 앱 셸. 정적 자산만 캐시하고 API 호출(api.anthropic.com)은 절대 캐시하지 않는다.
-const VERSION = "v8";
+const VERSION = "v9";
 const CACHE = `andyseng-${VERSION}`;
 const ASSETS = [
   "./",
@@ -17,6 +17,9 @@ const ASSETS = [
   "js/shared/levels.js",
   "js/shared/scoring.js",
   "js/features/conversation/ui.js",
+  "js/features/conversation/topics.js",
+  "js/features/conversation/personas.js",
+  "js/features/conversation/categories.js",
   "js/features/writing/ui.js",
   "js/features/report/report.js",
   "js/features/report/ui.js",

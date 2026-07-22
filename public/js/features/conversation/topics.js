@@ -1,7 +1,8 @@
 // 회화 주제 데이터. AI가 주제를 지어내던 호출을 없애고 여기서 무작위로 고른다 (토큰 절약).
 // scene: 영어로 상황/배경을 설명 (유저에게 보여줌). opening: 파트너의 첫 대사 (영어).
 // 최근에 쓴 주제는 피해서 고른다 (id 기준).
-export const conversationTopics = [
+// 카테고리별 주제는 categories.js가 이 배열들을 풀(pool)로 묶어 쓴다. etcTopics는 "✨ 기타" 카테고리.
+export const etcTopics = [
   { id: "coffee-order", title: "Ordering coffee", scene: "You step into a cozy neighborhood café on a rainy morning. The smell of fresh espresso fills the air, and a friendly barista looks up as you reach the counter.", opening: "Morning! Welcome in. What can I get started for you today?" },
   { id: "new-neighbor", title: "Meeting a new neighbor", scene: "You just moved into a new apartment. While carrying a box up the stairs, you run into the person who lives next door.", opening: "Oh, hi! Are you the one moving into 3B? Welcome to the building! How's the move going?" },
   { id: "weekend-plans", title: "Weekend plans", scene: "It's Friday afternoon at the office. A coworker leans over from the next desk, clearly ready for the weekend.", opening: "TGIF, right? So, got any fun plans for the weekend?" },
@@ -102,4 +103,72 @@ export const conversationTopics = [
   { id: "new-project", title: "Kicking off a team project", scene: "You're in a bright meeting room at the start of a new project. A teammate opens a fresh notebook and turns to you.", opening: "Exciting stuff, right? Blank slate. Before we get into the weeds — what part of this are you most looking forward to?" },
   { id: "farmers-recipe", title: "Buying unfamiliar produce", scene: "You're holding a strange vegetable at a market stall, unsure what it is. The vendor grins knowingly.", opening: "Never tried one of those before? You're in for a treat. Want me to tell you the best way to cook it? It's easier than it looks." },
   { id: "airport-goodbye", title: "A goodbye at the airport", scene: "You're seeing a close friend off at the airport before a long trip. You both linger by the security line.", opening: "Well, this is it. Text me the second you land, okay? Promise me you'll actually relax and enjoy yourself out there." }
+];
+
+// 🎓 대학 생활: 과제·수강신청·첫 수업·동아리 등 캠퍼스 상황.
+export const universityTopics = [
+  { id: "uni-course-reg", title: "Course registration", scene: "It's registration week on campus. You're staring at a full course catalog on a laptop when a classmate drops into the seat beside you.", opening: "Ugh, registration is a nightmare this semester — everything good is already full. Have you figured out your schedule yet? What are you taking?" },
+  { id: "uni-first-class", title: "The first day of class", scene: "You walk into a large lecture hall for the first class of the semester and take an open seat. The student next to you turns with a friendly smile.", opening: "Is this seat taken? Cool. First time with this professor? I heard the workload is no joke. What's your major, by the way?" },
+  { id: "uni-group-project", title: "A group assignment", scene: "Your professor just split the class into teams for a big project. You and your new teammate move your chairs together.", opening: "Okay, so we're partners for this one. Honestly I have no idea where to start — do you? How do you usually like to split up the work?" },
+  { id: "uni-club-welcome", title: "A club welcome party", scene: "You show up to a welcome night for a campus club you just joined. A cheerful senior member hands you a name tag.", opening: "Welcome, welcome! So glad you came out! Grab a drink, make yourself at home. So what made you want to join our club?" },
+  { id: "uni-exam-stress", title: "Before finals", scene: "It's the week before finals and the library is packed. A friend collapses into the chair across from you with a huge stack of notes.", opening: "I have three exams in two days and I've barely slept. How are you even this calm right now? What's your study plan?" },
+  { id: "uni-professor-office", title: "Visiting office hours", scene: "You knock on your professor's door during office hours. They look up from grading and wave you in warmly.", opening: "Come on in, have a seat! Good to see students actually stop by. So, what can I help you with today?" },
+  { id: "uni-campus-tour", title: "Showing a freshman around", scene: "A nervous-looking freshman asks you for directions, and you offer to walk them across campus.", opening: "Oh, you're looking for the science building? I'm headed that way — I'll show you. First year, right? How are you settling in?" },
+];
+
+// 💭 가치관: 돈·사랑·성공·행복 등 구체적 주제로 가치관을 나눈다.
+export const valuesTopics = [
+  { id: "val-money", title: "What money means to you", scene: "You and a friend are talking late into the night, and the conversation turns to money and what it really means.", opening: "Here's a question I keep thinking about — is money just a tool, or is chasing it kind of the whole point? Where do you land on that?" },
+  { id: "val-love", title: "What real love looks like", scene: "Over coffee, a close friend gets thoughtful and asks you something a little deeper than usual.", opening: "Can I ask you something real? Do you think love is more about passion, or more about choosing the same person every day? What do you actually believe?" },
+  { id: "val-success", title: "How you define success", scene: "A friend just turned down a high-paying job and wants to talk it through with you.", opening: "Everyone says I'm crazy for saying no to that offer. But is success really about the money and title? How do you define a successful life?" },
+  { id: "val-happiness", title: "What makes a good life", scene: "You're on a slow evening walk with a friend, and the talk drifts to what actually makes people happy.", opening: "Do you think happiness is something you chase, or something that just happens while you're busy with other things? I go back and forth on it." },
+  { id: "val-honesty", title: "Honesty vs. kindness", scene: "A friend is torn about whether to tell someone a hard truth, and turns to you for your take.", opening: "If being honest would hurt someone, would you still say it? Or is a kind little lie sometimes the better choice? I really can't decide." },
+  { id: "val-time", title: "How you spend your time", scene: "A friend mentions they've been rethinking how they spend their days, and asks how you see it.", opening: "Someone told me your calendar shows what you really value, not your words. That kind of scared me. What do you think you spend the most time on?" },
+];
+
+// 📚 공부: 공부 방법·동기·언어학습 등 학습 자체에 대한 대화.
+export const studyTopics = [
+  { id: "study-method", title: "How you study best", scene: "A study buddy pauses over their notes and asks how you actually get things to stick.", opening: "I feel like I read the same page five times and remember nothing. What actually works for you when you study? I need new tricks." },
+  { id: "study-motivation", title: "Staying motivated", scene: "A friend admits they've completely lost their drive to study lately and wants your honest take.", opening: "Honestly, I've had zero motivation this month. How do you push through when you just don't feel like it? Or do you just... not?" },
+  { id: "study-english", title: "Learning English", scene: "A friend who's also learning English asks how you keep improving.", opening: "Your English has gotten so good! What are you actually doing to practice? I feel stuck at the same level forever." },
+  { id: "study-procrastination", title: "Beating procrastination", scene: "You catch a friend scrolling their phone instead of studying, and they laugh guiltily.", opening: "Okay, you caught me — I've been 'about to start' for three hours. Do you ever procrastinate? How do you finally get yourself to begin?" },
+  { id: "study-exam-vs-real", title: "Grades vs. real learning", scene: "After getting a test back, a friend wonders aloud whether any of it really matters.", opening: "I aced the test but I already forgot half of it. Do grades actually mean you learned something? What do you think really counts?" },
+  { id: "study-online", title: "Studying on your own", scene: "A friend is thinking about teaching themselves a new skill online and asks if you've done it.", opening: "There are so many free courses out there now. Have you ever taught yourself something online? Did you actually stick with it?" },
+];
+
+// 💼 직업·미래: 진로·꿈·미래 계획을 서로 나눈다.
+export const careerTopics = [
+  { id: "career-dream-job", title: "Your dream job", scene: "A friend gets reflective and asks what you'd really love to do with your life.", opening: "If money weren't an issue at all, what would you actually want to do for work? Like, what's the dream? I'm still figuring mine out." },
+  { id: "career-five-years", title: "Where you'll be in five years", scene: "Over dinner, a friend brings up the classic question about the future.", opening: "So, the big scary question — where do you see yourself in five years? Do you even like thinking about that, or does it stress you out?" },
+  { id: "career-passion-vs-stable", title: "Passion vs. stability", scene: "A friend is choosing between a safe job and a risky dream, and wants your honest opinion.", opening: "I've got a stable offer and a risky passion project, and I have to pick. Would you follow the money or the dream? What would you do in my shoes?" },
+  { id: "career-change", title: "Thinking about a big change", scene: "A friend confides that they're thinking about completely changing careers.", opening: "I've been thinking about starting over in a totally different field. Everyone thinks I'm nuts. Have you ever wanted to just... change everything?" },
+  { id: "career-work-life", title: "Work-life balance", scene: "A friend who's been working long hours vents a little over coffee.", opening: "I've basically been living at the office lately. Is that just what it takes, or am I doing life wrong? How do you draw the line?" },
+  { id: "career-role-model", title: "Someone you look up to", scene: "A friend asks who inspires the path you want to take.", opening: "Is there someone whose career you'd love to have? Like a role model? I've been trying to figure out who I actually want to become." },
+];
+
+// 🎵 취미 — 음악
+export const hobbyMusicTopics = [
+  { id: "hob-music-genre", title: "Your music taste", scene: "You and a friend are passing an aux cord back and forth, sharing songs.", opening: "Okay, your turn to pick a song. What are you into these days? I feel like your music taste says a lot about you." },
+  { id: "hob-music-concert", title: "A live show", scene: "A friend just got back from a concert and is still buzzing about it.", opening: "That show last night was unreal — I lost my voice. When's the last time you saw live music? Who would you kill to see in concert?" },
+  { id: "hob-music-instrument", title: "Playing an instrument", scene: "You notice a guitar in the corner of a friend's room and they catch you looking.", opening: "Oh, you play? Or want to? I've been teaching myself for a few months. Do you play anything, or wish you did?" },
+  { id: "hob-music-nostalgia", title: "Songs that take you back", scene: "An old song comes on the café speakers and your friend gasps.", opening: "No way, this song! This is straight out of my childhood. Is there a song that instantly takes you back somewhere? What is it?" },
+  { id: "hob-music-discover", title: "Finding new music", scene: "A friend asks how you always seem to know the good new songs first.", opening: "How do you always find music before everyone else? I'm so bored of my playlist. Where do you even discover new stuff?" },
+];
+
+// ⚽ 취미 — 스포츠
+export const hobbySportsTopics = [
+  { id: "hob-sport-fav", title: "The sport you love", scene: "A friend in a team jersey asks what you're into when it comes to sports.", opening: "Big game tonight! Are you into sports at all? What's your thing — playing, watching, or both? I could talk about this for hours." },
+  { id: "hob-sport-team", title: "Your favorite team", scene: "You spot a friend wearing your rival team's colors and grin.", opening: "Oh, we are NOT going to get along if you cheer for them. Who's your team? Please tell me you have one — I need someone to argue with." },
+  { id: "hob-sport-start", title: "Picking up a new sport", scene: "A friend just came back sweaty and thrilled from trying a new sport.", opening: "I just tried rock climbing for the first time and I'm hooked! Is there a sport you've always wanted to try but never have? Let's do it." },
+  { id: "hob-sport-workout", title: "Staying active", scene: "You run into a friend at the park mid-jog and they slow down to chat.", opening: "Trying to get my steps in! Do you work out much, or is that not your thing? I keep trying to find something I actually enjoy." },
+  { id: "hob-sport-watch", title: "Watching the big match", scene: "You're settling in with a friend to watch a huge match on TV.", opening: "Okay, kickoff in five! Grab a seat. Are you a nervous watcher or a calm one? I literally cannot sit still during a close game." },
+];
+
+// 🎮 취미 — 게임
+export const hobbyGameTopics = [
+  { id: "hob-game-fav", title: "Your favorite game", scene: "A friend hands you a controller and asks what you've been playing lately.", opening: "Player two! What have you been playing lately? I need a new game to sink into — what's worth my time right now?" },
+  { id: "hob-game-genre", title: "The kind of games you like", scene: "You and a friend are browsing a game store, disagreeing playfully.", opening: "See, I'm all about story games, but you look like a competitive-shooter type. What genre are you really into? Let's settle this." },
+  { id: "hob-game-nostalgia", title: "Games from your childhood", scene: "A retro console at a friend's place sparks a wave of nostalgia.", opening: "No way, you still have this?! I grew up on these. What was the first game that really hooked you as a kid?" },
+  { id: "hob-game-multiplayer", title: "Playing together", scene: "A friend invites you to team up online tonight.", opening: "We should squad up tonight! Are you more of a play-with-friends person or a solo grinder? I'm terrible alone, honestly." },
+  { id: "hob-game-esports", title: "Watching esports", scene: "A big tournament is streaming and your friend is glued to the screen.", opening: "This final is insane — did you see that play?! Do you watch competitive gaming, or is that too much for you? I'm obsessed." },
 ];
