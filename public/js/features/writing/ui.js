@@ -8,6 +8,7 @@ import { WRITING_TIPS, CEFR_WRITING_DESCRIPTORS, descriptorBlock } from "../../s
 import { autoSaveToGithub } from "../../shared/autosave.js";
 import { takeTranslatorUses, TRANSLATOR_PENALTY } from "../../shared/translate.js";
 import { writingPrompts } from "./prompts.js";
+import { toeflPromptBlock, toeflBand } from "./toefl.js";
 import { structureTemplateHTML, structureExpressions } from "./structure.js";
 import {
   $, esc, toast, scoreBreakdownHTML, rubricGuideHTML, correctionsHTML,
@@ -83,6 +84,11 @@ const REVIEW_SCHEMA = {
       enum: ["A1", "A2", "B1", "B2", "C1", "C2"],
       description: "이 글의 전체 품질(구체성·분량·문법·표현)로 매긴 CEFR 레벨",
     },
+    toefl_score: {
+      type: "integer",
+      enum: [0, 1, 2, 3, 4],
+      description: "토플 라이팅 밴드(0~4)로 매긴 홀리스틱 점수",
+    },
     grades: {
       type: "object",
       description: "각 배점 요소를 S/A/B/C/F로 채점",
@@ -96,7 +102,7 @@ const REVIEW_SCHEMA = {
       additionalProperties: false,
     },
   },
-  required: ["spelling", "corrections", "corrected_answer", "native_answer", "native_expressions", "cefr_level", "grades"],
+  required: ["spelling", "corrections", "corrected_answer", "native_answer", "native_expressions", "cefr_level", "toefl_score", "grades"],
   additionalProperties: false,
 };
 
@@ -209,7 +215,9 @@ ${NATURALNESS_NOTE} This is written essay prose, so a formal/written register is
 6. native_expressions: 3-5 useful native-like expressions related to this topic or taken from the native answer, each with Korean meaning, an example sentence, and its CEFR level (A1-C2).
 7. cefr_level: the CEFR level (A1-C2) this essay actually demonstrates. Pick the highest level whose writing-skill descriptor the essay fully meets:
 ${descriptorBlock(CEFR_WRITING_DESCRIPTORS)}
-8. grades: grade each rubric component S/A/B/C/F (S excellent, F poor): essay_structure (organization and flow), grammar (ignoring typos and capitalization), comprehension (clarity of sentence structure), modifier_naturalness (natural use of adjectives, adverbs, and expressions).`,
+8. toefl_score: score this essay 0-4 with the official TOEFL "Writing for an Academic Discussion" rubric below. Never lower the score for typos, capitalization, or spelling slips (those belong only in "spelling"). Pick the band the essay best matches as a whole:
+${toeflPromptBlock()}
+9. grades: grade each rubric component S/A/B/C/F (S excellent, F poor): essay_structure (organization and flow), grammar (ignoring typos and capitalization), comprehension (clarity of sentence structure), modifier_naturalness (natural use of adjectives, adverbs, and expressions).`,
     messages: [{ role: "user", content: `Prompt: ${question}\n\nLearner's answer:\n${answer}` }],
     schema: REVIEW_SCHEMA,
     maxTokens: 8192,
@@ -219,7 +227,7 @@ ${descriptorBlock(CEFR_WRITING_DESCRIPTORS)}
   const penalty = translatorUses * TRANSLATOR_PENALTY.writing;
   const total = Math.max(0, rawTotal - penalty);
   // 글쓰기는 피드백 전체를 따로 저장한다 (스펙 요구사항).
-  appendRecord("writing", { score: total, grades: result.grades, cefr: result.cefr_level, question, answer, feedback: result, translatorUses });
+  appendRecord("writing", { score: total, grades: result.grades, cefr: result.cefr_level, toefl: result.toefl_score, question, answer, feedback: result, translatorUses });
   return { ...result, translatorUses, penalty, total };
 }
 
@@ -246,6 +254,8 @@ export function init() {
       const result = $("#writing-result");
       result.innerHTML = `
         <div class="result-section">
+          <h4>🎯 TOEFL 라이팅 <span class="cefr">${r.toefl_score} / 4</span></h4>
+          <div class="card">${esc(toeflBand(r.toefl_score).ko)}</div>
           <h4>🏅 점수 <span class="cefr">이 글의 레벨: ${esc(r.cefr_level)}</span></h4>
           <div class="card">${scoreBreakdownHTML("writing", r.grades)}${translatorPenaltyHTML(r.translatorUses, r.penalty, r.total)}</div>
           <h4>📝 문법 첨삭</h4>
