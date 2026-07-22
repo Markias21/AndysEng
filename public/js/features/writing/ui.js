@@ -4,7 +4,7 @@ import { chatJSON } from "../../shared/claude.js";
 import { appendRecord, getRecords, getProfile } from "../../shared/store.js";
 import { pickFresh, sampleN } from "../../shared/pick.js";
 import { scoreDetail, GRAMMAR_RUBRIC, NATURALNESS_NOTE } from "../../shared/scoring.js";
-import { WRITING_TIPS } from "../../shared/levels.js";
+import { WRITING_TIPS, CEFR_WRITING_DESCRIPTORS, descriptorBlock } from "../../shared/levels.js";
 import { autoSaveToGithub } from "../../shared/autosave.js";
 import { takeTranslatorUses, TRANSLATOR_PENALTY } from "../../shared/translate.js";
 import { writingPrompts } from "./prompts.js";
@@ -207,7 +207,8 @@ ${NATURALNESS_NOTE} This is written essay prose, so a formal/written register is
 4. native_answer: the same argument rewritten as a fluent native speaker would write it (3-4 sentences), split the same way with a Korean translation per sentence. Write it at CEFR ${level} — use vocabulary and sentence patterns the learner at that level can actually reuse, not higher.
 5. In both corrected_answer and native_answer, wrap in [[ ]] the parts that fix something the learner got wrong or that introduce an important expression worth noticing. Wrap the phrase itself, not whole sentences, and leave unchanged parts unwrapped.
 6. native_expressions: 3-5 useful native-like expressions related to this topic or taken from the native answer, each with Korean meaning, an example sentence, and its CEFR level (A1-C2).
-7. cefr_level: the CEFR level (A1-C2) this essay actually demonstrates, judged on specificity, length, grammar, and appropriate expression.
+7. cefr_level: the CEFR level (A1-C2) this essay actually demonstrates. Pick the highest level whose writing-skill descriptor the essay fully meets:
+${descriptorBlock(CEFR_WRITING_DESCRIPTORS)}
 8. grades: grade each rubric component S/A/B/C/F (S excellent, F poor): essay_structure (organization and flow), grammar (ignoring typos and capitalization), comprehension (clarity of sentence structure), modifier_naturalness (natural use of adjectives, adverbs, and expressions).`,
     messages: [{ role: "user", content: `Prompt: ${question}\n\nLearner's answer:\n${answer}` }],
     schema: REVIEW_SCHEMA,

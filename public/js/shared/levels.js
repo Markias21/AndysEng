@@ -41,6 +41,31 @@ export const WRITING_TIPS = {
   C2: "8문장 이상으로, 정교한 어휘와 다양한 문장 구조로 근거와 반론을 균형 있게 다루며 완결하세요.",
 };
 
+// CEFR 레벨 판정용 축약 기준. 공식 descriptor(CEFR 자가평가표)를 한 줄로 압축했다(컨텍스트 절약).
+// 기능별로 해당 스킬만 프롬프트에 넣는다: 글쓰기=쓰기, 회화=말하기.
+export const CEFR_WRITING_DESCRIPTORS = {
+  A1: "Fills in forms and writes a postcard (name, nationality, address); only simple isolated phrases.",
+  A2: "Writes short simple notes and messages, and a short basic personal letter.",
+  B1: "Writes simple connected text on familiar topics; personal letters describing experiences, feelings, and events.",
+  B2: "Writes clear, detailed text on many topics; an essay or report that passes on information or argues for or against a view.",
+  C1: "Writes clear, well-structured text expressing points of view at length; complex letters, essays, or reports in a style suited to the reader.",
+  C2: "Writes clear, fluent text in an appropriate style with effective logical structure; can summarize and critique professional or literary works.",
+};
+
+export const CEFR_SPEAKING_DESCRIPTORS = {
+  A1: "Interacts simply only if the partner speaks slowly and helps; asks and answers simple questions about immediate needs.",
+  A2: "Handles short, simple, routine exchanges on familiar topics but cannot usually sustain the conversation alone.",
+  B1: "Copes with most travel situations and joins unprepared talk on familiar topics; describes experiences, opinions, and plans with brief reasons.",
+  B2: "Interacts with fluency and spontaneity, sustaining normal conversation with natives; explains and defends viewpoints actively.",
+  C1: "Expresses ideas fluently and spontaneously without obvious searching; uses language flexibly and precisely for social and professional purposes.",
+  C2: "Takes part effortlessly with idiomatic, colloquial ease; conveys finer shades of meaning precisely and reformulates seamlessly.",
+};
+
+/** descriptor 맵을 "A1: ...\nA2: ..." 블록 문자열로. 레벨 판정 프롬프트에 넣는다. */
+export function descriptorBlock(descriptors) {
+  return CEFR_LEVELS.map((l) => `${l}: ${descriptors[l]}`).join("\n");
+}
+
 // 회화 지도용 레벨 설명. AI 파트너가 이 레벨에 맞춰 어휘·질문 난이도를 조절하도록 시스템 프롬프트에 넣는다.
 export const CONV_GUIDANCE = {
   A1: "very simple, short questions with basic everyday vocabulary (e.g. 'Do you like coffee?')",

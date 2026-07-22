@@ -4,7 +4,7 @@ import { chatJSON } from "../../shared/claude.js";
 import { appendRecord, getRecords, getProfile, getRomanceMemory, setRomanceMemory } from "../../shared/store.js";
 import { pickFresh } from "../../shared/pick.js";
 import { scoreDetail, GRAMMAR_RUBRIC, NATURALNESS_NOTE } from "../../shared/scoring.js";
-import { CONV_GUIDANCE } from "../../shared/levels.js";
+import { CONV_GUIDANCE, CEFR_SPEAKING_DESCRIPTORS, descriptorBlock } from "../../shared/levels.js";
 import { autoSaveToGithub } from "../../shared/autosave.js";
 import { takeTranslatorUses, TRANSLATOR_PENALTY } from "../../shared/translate.js";
 import { CATEGORIES, HOBBY_SUBS, topicPool } from "./categories.js";
@@ -91,9 +91,14 @@ function buildReplySchema(extract) {
       required: ["naturalness", "grammar", "structure"],
       additionalProperties: false,
     },
+    cefr_level: {
+      type: "string",
+      enum: ["A1", "A2", "B1", "B2", "C1", "C2"],
+      description: "이 발화가 실제로 보여 주는 CEFR 레벨",
+    },
     reply: { type: "string", description: "대화를 자연스럽게 이어가는 영어 답변, 1-3문장, 질문으로 끝내기" },
   };
-  const required = ["spelling", "corrections", "natural_alternative", "grades", "reply"];
+  const required = ["spelling", "corrections", "natural_alternative", "grades", "cefr_level", "reply"];
   if (extract) {
     properties.expressions = { type: "array", items: EXPRESSION_ITEM };
     required.push("expressions");
@@ -128,6 +133,8 @@ ${NATURALNESS_NOTE} This is a spoken conversation, so casual/spoken register is 
 - List real grammar mistakes and unnatural (non-native) phrasings as corrections (never typos, capitalization, or apostrophes). Explain each reason briefly in Korean.
 - If the message is already natural, return an empty corrections array and an empty natural_alternative.
 - Grade each rubric component S/A/B/C/F (S excellent, F poor): naturalness, grammar, structure (clarity of sentence structure). A short but perfectly natural reply can still earn S.
+- cefr_level: the CEFR level this single message demonstrates. Pick the highest level whose speaking-skill descriptor the message fully meets (judge only this message, not the whole conversation):
+${descriptorBlock(CEFR_SPEAKING_DESCRIPTORS)}
 - Then continue the conversation naturally in "reply", reacting to what the learner said and staying in the scene.
 - When the learner's message ends with an extraction request in parentheses, also fill "expressions" with that many useful native-like expression(s) from your reply or this conversation, worth reviewing at around the learner's level. Each needs a Korean meaning, an example sentence, and its CEFR level.`;
 }
@@ -169,9 +176,9 @@ function addUserTurn(text) {
   return turn;
 }
 
-function feedbackHTML({ spelling, corrections, natural_alternative, grades, expressions, translatorUses, penalty, total }) {
+function feedbackHTML({ spelling, corrections, natural_alternative, grades, cefr_level, expressions, translatorUses, penalty, total }) {
   const good = (!corrections || corrections.length === 0) && !natural_alternative;
-  return `<div class="fb-title">${good ? "✅ 자연스러워요!" : "📝 피드백"}</div>
+  return `<div class="fb-title">${good ? "✅ 자연스러워요!" : "📝 피드백"}${cefr_level ? ` <span class="cefr">이 발화 레벨: ${esc(cefr_level)}</span>` : ""}</div>
        ${scoreBreakdownHTML("conversation", grades)}
        ${translatorPenaltyHTML(translatorUses, penalty, total)}
        ${spelling?.length ? `<div class="fb-title">✏️ 오타·대소문자 <span class="reason">(점수에는 반영하지 않아요)</span></div>${spellingHTML(spelling)}` : ""}
@@ -375,7 +382,7 @@ async function reply(text) {
   const translatorUses = takeTranslatorUses("conversation");
   const penalty = translatorUses * TRANSLATOR_PENALTY.conversation;
   const total = Math.max(0, rawTotal - penalty);
-  appendRecord("conversation", { score: total, grades: result.grades, sentence: text, translatorUses });
+  appendRecord("conversation", { score: total, grades: result.grades, cefr: result.cefr_level, sentence: text, translatorUses });
   return { ...result, translatorUses, penalty, total };
 }
 
