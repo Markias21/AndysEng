@@ -2,7 +2,7 @@
 // 설정 값은 store.profile에 저장되고, 앱 시작 시 적용된다.
 import { getProfile, setProfile, getUsage } from "../../shared/store.js";
 import { setModel, MODELS } from "../../shared/claude.js";
-import { romancePartnersFor } from "../conversation/personas.js";
+import { romancePartnersFor } from "../../shared/personas.js";
 import { $ } from "../../shared/dom.js";
 
 // 다른 기능이 레벨 변경에 반응해야 할 때 쓰는 콜백(예: 복습 다시 그리기).

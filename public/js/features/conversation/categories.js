@@ -1,9 +1,11 @@
 // 회화 카테고리 정의 + 카테고리에서 대화 세션을 만드는 순수 로직.
 // UI/저장소를 import하지 않는다(테스트 가능). 실제 화면 흐름은 ui.js가 이 데이터를 소비한다.
+import { etcTopics, universityTopics, valuesTopics, studyTopics, careerTopics } from "./topics.js";
 import {
-  etcTopics, universityTopics, valuesTopics, studyTopics, careerTopics,
-  hobbyMusicTopics, hobbySportsTopics, hobbyGameTopics,
-} from "./topics.js";
+  hobbyMusicTopics, hobbySportsTopics, hobbyGameTopics, hobbyMovieTopics, hobbyReadingTopics,
+  hobbyCookingTopics, hobbyArtTopics, hobbyPhotoTopics, hobbyTravelTopics, hobbyPetsTopics,
+  hobbyOutdoorTopics,
+} from "./hobby-topics.js";
 
 // type: 세션을 만드는 방식.
 //  - "topics": 주제 풀에서 신선한 주제 하나를 골라 시작.
@@ -21,11 +23,20 @@ export const CATEGORIES = [
   { id: "etc", label: "✨ 기타", type: "topics" },
 ];
 
-// 취미 하위 선택. free(자율)는 파트너 오프닝 없이 플레이어가 먼저 말한다.
+// 취미 하위 선택. 취미는 넓은 범위를 다루도록 다른 카테고리보다 하위 선택지를 많이 둔다.
+// free(자율)는 주제 풀이 없고, 파트너 오프닝 없이 플레이어가 먼저 말한다.
 export const HOBBY_SUBS = [
   { id: "music", label: "🎵 음악" },
   { id: "sports", label: "⚽ 스포츠" },
   { id: "game", label: "🎮 게임" },
+  { id: "movies", label: "🎬 영화·드라마" },
+  { id: "reading", label: "📚 독서" },
+  { id: "cooking", label: "🍳 요리" },
+  { id: "art", label: "🎨 미술" },
+  { id: "photo", label: "📷 사진" },
+  { id: "travel", label: "✈️ 여행" },
+  { id: "pets", label: "🐾 반려동물" },
+  { id: "outdoor", label: "🏕 아웃도어" },
   { id: "free", label: "🎤 자율" },
 ];
 
@@ -38,6 +49,14 @@ const TOPIC_POOLS = {
   hobby_music: hobbyMusicTopics,
   hobby_sports: hobbySportsTopics,
   hobby_game: hobbyGameTopics,
+  hobby_movies: hobbyMovieTopics,
+  hobby_reading: hobbyReadingTopics,
+  hobby_cooking: hobbyCookingTopics,
+  hobby_art: hobbyArtTopics,
+  hobby_photo: hobbyPhotoTopics,
+  hobby_travel: hobbyTravelTopics,
+  hobby_pets: hobbyPetsTopics,
+  hobby_outdoor: hobbyOutdoorTopics,
 };
 
 /** 카테고리(+취미 하위)에 해당하는 주제 풀을 돌려준다. 없으면 빈 배열. */

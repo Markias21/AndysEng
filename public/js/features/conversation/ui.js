@@ -1,14 +1,14 @@
 // 회화 공부: 카테고리(대학/연애/가치관/공부/직업/상담/취미/기타)를 골라 대화를 시작한다.
 // 주제·페르소나는 로컬 데이터에서 뽑아 토큰을 아끼고, AI 호출은 턴별 첨삭/이어가기에만 쓴다.
 import { chatJSON } from "../../shared/claude.js";
-import { appendRecord, getRecords, getProfile } from "../../shared/store.js";
+import { appendRecord, getRecords, getProfile, getRomanceMemory, setRomanceMemory } from "../../shared/store.js";
 import { pickFresh } from "../../shared/pick.js";
 import { scoreDetail } from "../../shared/scoring.js";
 import { CONV_GUIDANCE } from "../../shared/levels.js";
 import { autoSaveToGithub } from "../../shared/autosave.js";
 import { takeTranslatorUses, TRANSLATOR_PENALTY } from "../../shared/translate.js";
 import { CATEGORIES, HOBBY_SUBS, topicPool } from "./categories.js";
-import { findPersona, oppositeGender, counselPersona } from "./personas.js";
+import { findPersona, oppositeGender, counselPersona } from "../../shared/personas.js";
 import {
   $, esc, toast, scoreBreakdownHTML, rubricGuideHTML, correctionsHTML,
   expressionAddHTML, wireExpressionAdds, translatorPenaltyHTML,
@@ -23,6 +23,17 @@ const EXTRACT_EVERY = 3;
 // 취미 "자율": 파트너 오프닝 없이 플레이어가 먼저 화제를 꺼낸다.
 const FREE_SCENE = "You and the learner are hanging out casually with nothing planned. They will bring up whatever's on their mind — a hobby, an interest, anything they enjoy.";
 const FREE_PERSONA = "You are a friendly, curious peer chatting with the learner. The learner starts the conversation about a hobby or interest of their choice — follow their lead, react with genuine interest, and ask natural follow-up questions to keep it going.";
+
+// 연애 대화가 끝날 때 저렴한 Haiku로 요약해 관계 기억을 갱신한다(사전·번역기와 같은 Haiku 고정 패턴).
+const MEMORY_MODEL = "claude-haiku-4-5-20251001";
+const MEMORY_SCHEMA = {
+  type: "object",
+  properties: {
+    memory: { type: "string", description: "Updated relationship memory notes, under 400 characters" },
+  },
+  required: ["memory"],
+  additionalProperties: false,
+};
 
 const EXPRESSION_ITEM = {
   type: "object",
@@ -78,7 +89,7 @@ function buildReplySchema(extract) {
 }
 
 const convHistory = []; // {role: "ai"|"user", text}
-let currentSession = null; // {topicId, scene, opening, persona}
+let currentSession = null; // {topicId, partnerId?, scene, opening, persona, memory?}
 let currentCategory = null;
 let currentSub = null;
 let userTurns = 0;
@@ -86,9 +97,11 @@ let userTurns = 0;
 // 시스템 프롬프트는 턴마다 절대 바뀌지 않아야 프롬프트 캐시가 유지된다.
 // 표현 추출 지시처럼 턴마다 달라지는 내용은 여기 넣지 말고 유저 메시지 쪽(항상 캐시되지 않는 부분)에 넣는다.
 // session.persona가 있으면(연애·상담·자율) 그 캐릭터를 연기하도록 지시를 함께 넣는다.
+// session.memory(연애만)가 있으면 이전 대화에서 요약해 둔 관계 기억을 함께 준다.
 function tutorSystem(session, level) {
   const personaBlock = session.persona
-    ? `\n${session.persona}\nStay fully in character as this person throughout the conversation.`
+    ? `\n${session.persona}\nStay fully in character as this person throughout the conversation.` +
+      (session.memory ? `\nWhat you remember about your relationship together so far: ${session.memory}` : "")
     : "";
   return `You are a friendly native English conversation partner for a Korean learner.
 The current scene is: ${session.scene}${personaBlock}
@@ -168,13 +181,64 @@ function recentTopicIds() {
     .map((r) => r.topicId);
 }
 
+// 연애 대화가 끝날 때(다른 세션으로 넘어가거나 카테고리 화면으로 나갈 때) 호출한다.
+// 대화가 없었으면(userTurns=0) 아무것도 하지 않는다. 실패해도 학습 흐름을 막지 않도록 토스트만 띄운다.
+async function updateRomanceMemory(partnerId) {
+  const transcript = convHistory.map((m) => `${m.role === "user" ? "Learner" : "Partner"}: ${m.text}`).join("\n");
+  if (!transcript) return;
+  try {
+    const { memory } = await chatJSON({
+      system:
+        "You maintain a short memory of an ongoing romantic relationship for a role-play conversation partner. " +
+        "Given the previous memory and a new conversation excerpt, write an updated memory: merge in any new lasting " +
+        "facts (preferences, feelings expressed, promises, plans, notable events) and drop anything no longer relevant. " +
+        "Write compact notes, not a transcript. Keep it under 400 characters.",
+      messages: [{
+        role: "user",
+        content: `Previous memory: ${getRomanceMemory(partnerId) || "(none yet)"}\n\nNew conversation:\n${transcript}`,
+      }],
+      schema: MEMORY_SCHEMA,
+      modelOverride: MEMORY_MODEL,
+      maxTokens: 300,
+    });
+    setRomanceMemory(partnerId, memory);
+  } catch (e) {
+    toast(`기억 저장 실패: ${e.message}`);
+  }
+}
+
+// 세션을 떠나기 전 뒷정리: GitHub 자동 저장 + (연애라면) 관계 기억 갱신. beginSession과
+// "다른 카테고리" 버튼 양쪽에서 공통으로 쓴다.
+// 기억 요약은 논블로킹으로 실행해 화면 전환을 기다리게 하지 않는다. 갱신이 끝났을 때 마침
+// 같은 상대와 새로고침해 다시 대화 중이라면(가장 흔한 경우) 그 자리에서 memory를 최신값으로
+// 바꿔치기해, 이번 새로고침의 다음 턴부터 방금 요약된 기억이 반영되게 한다.
+function persistLeavingSession() {
+  if (!currentSession || userTurns === 0) return;
+  const leaving = currentSession;
+  const leavingCategory = currentCategory;
+  autoSaveToGithub();
+  if (leavingCategory !== "romance" || !leaving.partnerId) return;
+  updateRomanceMemory(leaving.partnerId).then(() => {
+    if (currentSession && currentSession.partnerId === leaving.partnerId) {
+      currentSession.memory = getRomanceMemory(leaving.partnerId);
+    }
+  });
+}
+
 // 카테고리(+취미 하위)에서 대화 세션 설정을 만든다. 시작할 수 없으면 null.
 function buildSession(category, sub) {
   if (category === "romance") {
     const { gender, romancePartnerId } = getProfile();
     const partner = findPersona(romancePartnerId);
     if (!partner || partner.gender !== oppositeGender(gender)) return null;
-    return { topicId: `romance-${partner.id}`, scene: partner.scene, opening: partner.opening, persona: partner.persona };
+    return {
+      topicId: `romance-${partner.id}`,
+      partnerId: partner.id,
+      scene: partner.scene,
+      opening: partner.opening,
+      persona: partner.persona,
+      memory: getRomanceMemory(partner.id),
+    };
   }
   if (category === "counsel") {
     const scene = pickFresh(counselPersona.scenes, recentTopicIds(), (s) => s.id);
@@ -189,12 +253,11 @@ function buildSession(category, sub) {
   return { topicId: topic.id, scene: topic.scene, opening: topic.opening, persona: "" };
 }
 
-// 실제로 대화 방을 열고 세션을 시작한다. reroll("다른 주제")도 이 함수를 다시 부른다.
+// 실제로 대화 방을 열고 세션을 시작한다. reroll("다른 주제"/"새로고침")도 이 함수를 다시 부른다.
 function beginSession(category, sub) {
   const session = buildSession(category, sub);
   if (!session) return toast("대화를 시작할 주제를 불러오지 못했습니다.");
-  // 다른 주제로 전환하기 전, 방금까지의 대화 기록을 GitHub에 저장해 둔다.
-  if (currentSession && userTurns > 0) autoSaveToGithub();
+  persistLeavingSession(); // 다른 세션으로 전환하기 전, 방금까지의 대화 기록을 저장해 둔다.
   takeTranslatorUses("conversation"); // 이전 대화에서 남은 번역기 사용 기록은 새 대화로 넘기지 않는다.
   currentSession = session;
   currentCategory = category;
@@ -205,6 +268,9 @@ function beginSession(category, sub) {
   $("#conv-messages").innerHTML = "";
   $("#conv-intro").classList.add("hidden");
   $("#conv-room").classList.remove("hidden");
+  const reroll = $("#conv-reroll");
+  // 연애는 상대가 고정이라 "다른 주제"가 아니라 같은 상대와의 대화를 "새로고침"하는 동작이다.
+  if (reroll) reroll.textContent = category === "romance" ? "🔄 새로고침" : "🔄 다른 주제";
   addScene(session.scene);
   if (session.opening) {
     convHistory.push({ role: "ai", text: session.opening });
@@ -213,6 +279,19 @@ function beginSession(category, sub) {
     addStartHint();
   }
   $("#conv-input").focus();
+}
+
+// "🗂 다른 카테고리" 버튼: 현재 세션을 정리하고 카테고리 선택 화면(맨 처음)으로 돌아간다.
+function backToCategories() {
+  persistLeavingSession();
+  currentSession = null;
+  currentCategory = null;
+  currentSub = null;
+  convHistory.length = 0;
+  userTurns = 0;
+  $("#conv-room").classList.add("hidden");
+  $("#conv-intro").classList.remove("hidden");
+  renderCategories();
 }
 
 // 카테고리 버튼을 누르면: 취미는 하위 선택으로, 연애는 설정 확인 후, 나머지는 바로 시작.
@@ -288,6 +367,8 @@ export function init() {
   renderCategories();
   const reroll = $("#conv-reroll");
   if (reroll) reroll.addEventListener("click", () => beginSession(currentCategory, currentSub));
+  const categoriesBtn = $("#conv-categories-btn");
+  if (categoriesBtn) categoriesBtn.addEventListener("click", backToCategories);
 
   $("#conv-form").addEventListener("submit", async (ev) => {
     ev.preventDefault();

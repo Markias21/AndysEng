@@ -13,7 +13,7 @@ function emptyData() {
   const records = {};
   for (const kind of RECORD_KINDS) records[kind] = [];
   // deck: 표현 복습 카드. words: 단어장 카드. dict: 사전 조회 영구 캐시(질의 → entries).
-  // usage: 모델별 누적 AI 비용(달러, 추정치).
+  // usage: 모델별 누적 AI 비용(달러, 추정치). romanceMemory: 연애 상대(id)별 관계 기억 요약 한 줄.
   return {
     version: 4,
     records,
@@ -21,6 +21,7 @@ function emptyData() {
     words: [],
     dict: {},
     usage: {},
+    romanceMemory: {},
     profile: { ...DEFAULT_PROFILE },
     lastReportAt: null,
     lastSyncedAt: null,
@@ -45,6 +46,7 @@ function normalize(data) {
     words: Array.isArray(data.words) ? data.words : [],
     dict: data.dict && typeof data.dict === "object" ? data.dict : {},
     usage: data.usage && typeof data.usage === "object" ? data.usage : {},
+    romanceMemory: data.romanceMemory && typeof data.romanceMemory === "object" ? data.romanceMemory : {},
     profile: { ...base.profile, ...(data.profile || {}) },
   };
 }
@@ -211,6 +213,18 @@ export function getCachedLookup(key) {
 
 export function setCachedLookup(key, entries) {
   load().dict[key] = entries;
+  save();
+}
+
+// ===== 연애 상대 기억 =====
+// 상대(id)별로 관계에서 있었던 일을 압축한 요약 하나만 보관한다. 대화가 끝날 때마다
+// 이전 요약과 새 대화를 합친 요약으로 통째로 교체한다(누적 append가 아니라 교체라 토큰이 무한히 늘지 않는다).
+export function getRomanceMemory(partnerId) {
+  return load().romanceMemory[partnerId] || "";
+}
+
+export function setRomanceMemory(partnerId, memory) {
+  load().romanceMemory[partnerId] = memory;
   save();
 }
 

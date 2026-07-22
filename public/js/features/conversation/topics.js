@@ -145,30 +145,3 @@ export const careerTopics = [
   { id: "career-work-life", title: "Work-life balance", scene: "A friend who's been working long hours vents a little over coffee.", opening: "I've basically been living at the office lately. Is that just what it takes, or am I doing life wrong? How do you draw the line?" },
   { id: "career-role-model", title: "Someone you look up to", scene: "A friend asks who inspires the path you want to take.", opening: "Is there someone whose career you'd love to have? Like a role model? I've been trying to figure out who I actually want to become." },
 ];
-
-// 🎵 취미 — 음악
-export const hobbyMusicTopics = [
-  { id: "hob-music-genre", title: "Your music taste", scene: "You and a friend are passing an aux cord back and forth, sharing songs.", opening: "Okay, your turn to pick a song. What are you into these days? I feel like your music taste says a lot about you." },
-  { id: "hob-music-concert", title: "A live show", scene: "A friend just got back from a concert and is still buzzing about it.", opening: "That show last night was unreal — I lost my voice. When's the last time you saw live music? Who would you kill to see in concert?" },
-  { id: "hob-music-instrument", title: "Playing an instrument", scene: "You notice a guitar in the corner of a friend's room and they catch you looking.", opening: "Oh, you play? Or want to? I've been teaching myself for a few months. Do you play anything, or wish you did?" },
-  { id: "hob-music-nostalgia", title: "Songs that take you back", scene: "An old song comes on the café speakers and your friend gasps.", opening: "No way, this song! This is straight out of my childhood. Is there a song that instantly takes you back somewhere? What is it?" },
-  { id: "hob-music-discover", title: "Finding new music", scene: "A friend asks how you always seem to know the good new songs first.", opening: "How do you always find music before everyone else? I'm so bored of my playlist. Where do you even discover new stuff?" },
-];
-
-// ⚽ 취미 — 스포츠
-export const hobbySportsTopics = [
-  { id: "hob-sport-fav", title: "The sport you love", scene: "A friend in a team jersey asks what you're into when it comes to sports.", opening: "Big game tonight! Are you into sports at all? What's your thing — playing, watching, or both? I could talk about this for hours." },
-  { id: "hob-sport-team", title: "Your favorite team", scene: "You spot a friend wearing your rival team's colors and grin.", opening: "Oh, we are NOT going to get along if you cheer for them. Who's your team? Please tell me you have one — I need someone to argue with." },
-  { id: "hob-sport-start", title: "Picking up a new sport", scene: "A friend just came back sweaty and thrilled from trying a new sport.", opening: "I just tried rock climbing for the first time and I'm hooked! Is there a sport you've always wanted to try but never have? Let's do it." },
-  { id: "hob-sport-workout", title: "Staying active", scene: "You run into a friend at the park mid-jog and they slow down to chat.", opening: "Trying to get my steps in! Do you work out much, or is that not your thing? I keep trying to find something I actually enjoy." },
-  { id: "hob-sport-watch", title: "Watching the big match", scene: "You're settling in with a friend to watch a huge match on TV.", opening: "Okay, kickoff in five! Grab a seat. Are you a nervous watcher or a calm one? I literally cannot sit still during a close game." },
-];
-
-// 🎮 취미 — 게임
-export const hobbyGameTopics = [
-  { id: "hob-game-fav", title: "Your favorite game", scene: "A friend hands you a controller and asks what you've been playing lately.", opening: "Player two! What have you been playing lately? I need a new game to sink into — what's worth my time right now?" },
-  { id: "hob-game-genre", title: "The kind of games you like", scene: "You and a friend are browsing a game store, disagreeing playfully.", opening: "See, I'm all about story games, but you look like a competitive-shooter type. What genre are you really into? Let's settle this." },
-  { id: "hob-game-nostalgia", title: "Games from your childhood", scene: "A retro console at a friend's place sparks a wave of nostalgia.", opening: "No way, you still have this?! I grew up on these. What was the first game that really hooked you as a kid?" },
-  { id: "hob-game-multiplayer", title: "Playing together", scene: "A friend invites you to team up online tonight.", opening: "We should squad up tonight! Are you more of a play-with-friends person or a solo grinder? I'm terrible alone, honestly." },
-  { id: "hob-game-esports", title: "Watching esports", scene: "A big tournament is streaming and your friend is glued to the screen.", opening: "This final is insane — did you see that play?! Do you watch competitive gaming, or is that too much for you? I'm obsessed." },
-];
