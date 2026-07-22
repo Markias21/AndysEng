@@ -3,7 +3,7 @@
 import { chatJSON } from "../../shared/claude.js";
 import { appendRecord, getRecords, getProfile } from "../../shared/store.js";
 import { pickFresh, sampleN } from "../../shared/pick.js";
-import { scoreDetail } from "../../shared/scoring.js";
+import { scoreDetail, GRAMMAR_RUBRIC, NATURALNESS_NOTE } from "../../shared/scoring.js";
 import { WRITING_TIPS } from "../../shared/levels.js";
 import { autoSaveToGithub } from "../../shared/autosave.js";
 import { takeTranslatorUses, TRANSLATOR_PENALTY } from "../../shared/translate.js";
@@ -197,10 +197,12 @@ async function review(question, answer) {
   const result = await chatJSON({
     system: `You are an English writing tutor for a Korean learner whose target level is CEFR ${level}.
 
-Typos and capitalization are NOT part of the assessment. Never count them as grammar errors, never explain them, and never let them affect any grade.
+${GRAMMAR_RUBRIC}
 
-1. spelling: list only typos and capitalization slips, as original -> corrected. No explanation, no reason. Empty array if none.
-2. corrections: real grammar errors and awkward phrasing only (never typos or capitalization), with the reason explained in Korean.
+${NATURALNESS_NOTE} This is written essay prose, so a formal/written register is the natural fit here.
+
+1. spelling: list only typos, capitalization, and apostrophe slips, as original -> corrected. No explanation, no reason. Empty array if none.
+2. corrections: real grammar errors and awkward phrasing only (never typos, capitalization, or apostrophes), with the reason explained in Korean.
 3. corrected_answer: the learner's own answer with only grammatical fixes applied (keep their voice and argument), split into one object per sentence with a Korean translation of that sentence.
 4. native_answer: the same argument rewritten as a fluent native speaker would write it (3-4 sentences), split the same way with a Korean translation per sentence. Write it at CEFR ${level} — use vocabulary and sentence patterns the learner at that level can actually reuse, not higher.
 5. In both corrected_answer and native_answer, wrap in [[ ]] the parts that fix something the learner got wrong or that introduce an important expression worth noticing. Wrap the phrase itself, not whole sentences, and leave unchanged parts unwrapped.

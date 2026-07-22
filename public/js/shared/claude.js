@@ -63,12 +63,15 @@ const SUPPORTS_ADAPTIVE_THINKING = (id) => !id.startsWith("claude-haiku");
  */
 export async function chatJSON({ system, messages, schema, maxTokens = 2048, modelOverride }) {
   const targetModel = modelOverride || model;
+  const thinking = SUPPORTS_ADAPTIVE_THINKING(targetModel);
+  // 채점 일관성을 위해 temperature=0. 단 adaptive thinking과는 함께 쓸 수 없어(사고 시 temperature 고정),
+  // thinking을 쓰는 모델은 생략하고 사고 과정 자체로 변동을 줄인다.
   const response = await request({
     model: targetModel,
     max_tokens: maxTokens,
-    ...(SUPPORTS_ADAPTIVE_THINKING(targetModel) ? { thinking: { type: "adaptive" } } : {}),
+    ...(thinking ? { thinking: { type: "adaptive" } } : { temperature: 0 }),
     output_config: {
-      ...(SUPPORTS_ADAPTIVE_THINKING(targetModel) ? { effort: "medium" } : {}),
+      ...(thinking ? { effort: "medium" } : {}),
       format: { type: "json_schema", schema },
     },
     system,

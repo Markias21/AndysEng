@@ -10,9 +10,9 @@
 import { review, dueCards, INTERVALS } from "./scheduler.js";
 import { chatJSON } from "../../shared/claude.js";
 import { getDeck, updateCard, removeCard, getWords, updateWord, removeWord, appendRecord, getProfile } from "../../shared/store.js";
-import { scoreDetail } from "../../shared/scoring.js";
+import { scoreDetail, GRAMMAR_RUBRIC } from "../../shared/scoring.js";
 import { filterByLevel } from "../../shared/levels.js";
-import { $, esc, toast, scoreBreakdownHTML, correctionsHTML } from "../../shared/dom.js";
+import { $, esc, toast, scoreBreakdownHTML, correctionsHTML, spellingHTML } from "../../shared/dom.js";
 
 let queue = [];
 let current = null; // { kind: "expression"|"word", raw, term, meaning, example, pos, level }
@@ -23,6 +23,19 @@ let sessionRemembered = 0;
 const REVIEW_SCHEMA = {
   type: "object",
   properties: {
+    spelling: {
+      type: "array",
+      description: "오타·대소문자·아포스트로피 실수만. 설명 없이 원문과 교정형만.",
+      items: {
+        type: "object",
+        properties: {
+          original: { type: "string" },
+          corrected: { type: "string" },
+        },
+        required: ["original", "corrected"],
+        additionalProperties: false,
+      },
+    },
     corrections: {
       type: "array",
       items: {
@@ -50,7 +63,7 @@ const REVIEW_SCHEMA = {
       additionalProperties: false,
     },
   },
-  required: ["corrections", "natural_version", "comment", "grades"],
+  required: ["spelling", "corrections", "natural_version", "comment", "grades"],
   additionalProperties: false,
 };
 
@@ -212,7 +225,9 @@ function startProduce() {
 async function grade(sentence) {
   return chatJSON({
     system: `You review a Korean learner's example sentence using the target ${current.kind === "word" ? "word" : "expression"} "${current.term}".
-- corrections: grammar errors and unnatural phrasings, reasons in Korean.
+${GRAMMAR_RUBRIC}
+- spelling: list only typos, capitalization, and apostrophe slips as original -> corrected, with no explanation. Empty array if none.
+- corrections: real grammar errors and unnatural phrasings only (never typos, capitalization, or apostrophes), reasons in Korean.
 - natural_version: how a native speaker would write the same idea using the ${current.kind === "word" ? "word" : "expression"}.
 - comment: one or two sentences in Korean on whether it was used correctly.
 - grades: grade each rubric component S/A/B/C/F (S excellent, F poor): naturalness (natural use of the target ${current.kind === "word" ? "word" : "expression"}), grammar, comprehension (clarity of sentence structure).`,
@@ -246,6 +261,7 @@ async function onSubmit(ev) {
       <div class="feedback ${result.corrections.length ? "" : "good"}">
         <div class="fb-title">📝 첨삭</div>
         ${scoreBreakdownHTML("expression", result.grades)}
+        ${result.spelling?.length ? `<div class="fb-title">✏️ 오타·대소문자 <span class="reason">(점수에는 반영하지 않아요)</span></div>${spellingHTML(result.spelling)}` : ""}
         ${correctionsHTML(result.corrections)}
         <div>💬 원어민이라면: <span class="fixed">${esc(result.natural_version)}</span></div>
         <div class="reason mt-6">${esc(result.comment)}</div>

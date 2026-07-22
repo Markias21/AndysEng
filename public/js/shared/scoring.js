@@ -34,6 +34,17 @@ export const RUBRICS = {
   },
 };
 
+// AI 채점 시스템 프롬프트에 넣는 공통 지침(회화·글쓰기·표현 세 기능 공유, 드리프트 방지).
+// 오타·대소문자·아포스트로피는 spelling으로 분리해 점수에서 빼고, 구어체/문어체는 문법으로 보지 않으며,
+// 기초 구조 문법만 문법성 등급에 반영한다.
+export const GRAMMAR_RUBRIC = `Grammar grading rules (apply to the grammar grade and to corrections):
+- Never treat typos, capitalization, or apostrophe slips (e.g. its/it's, dont, i) as grammar errors. Put them only in the separate "spelling" list and never let them affect the grammar grade or the corrections.
+- Do not judge register (spoken/casual vs. written/formal English) as grammar.
+- Judge grammar only on core structural correctness: number of verbs in a clause, adjective vs. adverb confusion, subject-verb agreement, verb tense, articles (a/the), prepositions, plural forms, and word order.`;
+
+// 자연스러움(회화·글쓰기) 채점에서 구어체/문어체(register)가 상황에 맞는지를 문법이 아니라 여기서 본다.
+export const NATURALNESS_NOTE = `Register (spoken/casual vs. written/formal English) is judged as part of naturalness, not grammar: reward language whose register fits this situation, and treat a register that does not fit as less natural.`;
+
 export const GRADES = ["S", "A", "B", "C", "F"];
 
 // 등급 → 만점 대비 비율 (1/5 간격).

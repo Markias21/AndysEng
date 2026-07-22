@@ -3,7 +3,7 @@
 import { chatJSON } from "../../shared/claude.js";
 import { appendRecord, getRecords, getProfile, getRomanceMemory, setRomanceMemory } from "../../shared/store.js";
 import { pickFresh } from "../../shared/pick.js";
-import { scoreDetail } from "../../shared/scoring.js";
+import { scoreDetail, GRAMMAR_RUBRIC, NATURALNESS_NOTE } from "../../shared/scoring.js";
 import { CONV_GUIDANCE } from "../../shared/levels.js";
 import { autoSaveToGithub } from "../../shared/autosave.js";
 import { takeTranslatorUses, TRANSLATOR_PENALTY } from "../../shared/translate.js";
@@ -11,7 +11,7 @@ import { CATEGORIES, HOBBY_SUBS, topicPool } from "./categories.js";
 import { findPersona, oppositeGender, counselPersona } from "../../shared/personas.js";
 import {
   $, esc, toast, scoreBreakdownHTML, rubricGuideHTML, correctionsHTML,
-  expressionAddHTML, wireExpressionAdds, translatorPenaltyHTML,
+  spellingHTML, expressionAddHTML, wireExpressionAdds, translatorPenaltyHTML,
 } from "../../shared/dom.js";
 
 // 최근 이 개수만큼의 주제는 새로고침해도 다시 나오지 않게 피한다.
@@ -50,6 +50,19 @@ const EXPRESSION_ITEM = {
 // 표현 추출 여부에 따라 스키마를 만든다(추출하지 않는 턴엔 expressions 필드를 아예 빼 토큰을 아낀다).
 function buildReplySchema(extract) {
   const properties = {
+    spelling: {
+      type: "array",
+      description: "오타·대소문자·아포스트로피 실수만. 설명 없이 원문과 교정형만.",
+      items: {
+        type: "object",
+        properties: {
+          original: { type: "string" },
+          corrected: { type: "string" },
+        },
+        required: ["original", "corrected"],
+        additionalProperties: false,
+      },
+    },
     corrections: {
       type: "array",
       items: {
@@ -80,7 +93,7 @@ function buildReplySchema(extract) {
     },
     reply: { type: "string", description: "대화를 자연스럽게 이어가는 영어 답변, 1-3문장, 질문으로 끝내기" },
   };
-  const required = ["corrections", "natural_alternative", "grades", "reply"];
+  const required = ["spelling", "corrections", "natural_alternative", "grades", "reply"];
   if (extract) {
     properties.expressions = { type: "array", items: EXPRESSION_ITEM };
     required.push("expressions");
@@ -109,7 +122,10 @@ Stay in that setting and keep the conversation consistent with it.
 The learner's level is CEFR ${level}. Pitch your English to that level: ${CONV_GUIDANCE[level] || CONV_GUIDANCE.B1}.
 Speak natural, everyday English. Keep each message to 1-3 sentences and always end with something the learner can respond to (a question or an invitation to share).
 You also review the learner's latest message:
-- List grammar mistakes and unnatural (non-native) phrasings as corrections. Explain each reason briefly in Korean.
+${GRAMMAR_RUBRIC}
+${NATURALNESS_NOTE} This is a spoken conversation, so casual/spoken register is the natural fit here.
+- spelling: list only typos, capitalization, and apostrophe slips as original -> corrected, with no explanation. Empty array if none.
+- List real grammar mistakes and unnatural (non-native) phrasings as corrections (never typos, capitalization, or apostrophes). Explain each reason briefly in Korean.
 - If the message is already natural, return an empty corrections array and an empty natural_alternative.
 - Grade each rubric component S/A/B/C/F (S excellent, F poor): naturalness, grammar, structure (clarity of sentence structure). A short but perfectly natural reply can still earn S.
 - Then continue the conversation naturally in "reply", reacting to what the learner said and staying in the scene.
@@ -153,11 +169,12 @@ function addUserTurn(text) {
   return turn;
 }
 
-function feedbackHTML({ corrections, natural_alternative, grades, expressions, translatorUses, penalty, total }) {
+function feedbackHTML({ spelling, corrections, natural_alternative, grades, expressions, translatorUses, penalty, total }) {
   const good = (!corrections || corrections.length === 0) && !natural_alternative;
   return `<div class="fb-title">${good ? "✅ 자연스러워요!" : "📝 피드백"}</div>
        ${scoreBreakdownHTML("conversation", grades)}
        ${translatorPenaltyHTML(translatorUses, penalty, total)}
+       ${spelling?.length ? `<div class="fb-title">✏️ 오타·대소문자 <span class="reason">(점수에는 반영하지 않아요)</span></div>${spellingHTML(spelling)}` : ""}
        ${correctionsHTML(corrections)}
        ${natural_alternative ? `<div>💬 원어민이라면: <span class="fixed">${esc(natural_alternative)}</span></div>` : ""}
        ${expressions?.length ? `<div class="fb-title">💡 익혀두면 좋은 표현</div>${expressionAddHTML(expressions)}` : ""}`;
