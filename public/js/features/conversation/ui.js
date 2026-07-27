@@ -3,7 +3,7 @@
 import { chatJSON } from "../../shared/claude.js";
 import { appendRecord, getRecords, getProfile, getRomanceMemory, setRomanceMemory } from "../../shared/store.js";
 import { pickFresh } from "../../shared/pick.js";
-import { scoreDetail, GRAMMAR_RUBRIC, NATURALNESS_NOTE } from "../../shared/scoring.js";
+import { scoreDetail, GRADES, GRADE_SCALE_NOTE, GRAMMAR_RUBRIC, NATURALNESS_NOTE, TASK_RUBRIC, RANGE_RUBRIC } from "../../shared/scoring.js";
 import { CONV_GUIDANCE, CEFR_SPEAKING_DESCRIPTORS, descriptorBlock } from "../../shared/levels.js";
 import { autoSaveToGithub } from "../../shared/autosave.js";
 import { takeTranslatorUses, TRANSLATOR_PENALTY } from "../../shared/translate.js";
@@ -82,13 +82,14 @@ function buildReplySchema(extract) {
     },
     grades: {
       type: "object",
-      description: "각 배점 요소를 S/A/B/C/F로 채점",
+      description: "각 배점 요소를 9단계(S+~F) 절대 기준으로 채점",
       properties: {
-        naturalness: { type: "string", enum: ["S", "A", "B", "C", "F"] },
-        grammar: { type: "string", enum: ["S", "A", "B", "C", "F"] },
-        structure: { type: "string", enum: ["S", "A", "B", "C", "F"] },
+        task: { type: "string", enum: GRADES },
+        accuracy: { type: "string", enum: GRADES },
+        range: { type: "string", enum: GRADES },
+        fluency: { type: "string", enum: GRADES },
       },
-      required: ["naturalness", "grammar", "structure"],
+      required: ["task", "accuracy", "range", "fluency"],
       additionalProperties: false,
     },
     cefr_level: {
@@ -126,13 +127,17 @@ The current scene is: ${session.scene}${personaBlock}
 Stay in that setting and keep the conversation consistent with it.
 The learner's level is CEFR ${level}. Pitch your English to that level: ${CONV_GUIDANCE[level] || CONV_GUIDANCE.B1}.
 Speak natural, everyday English. Keep each message to 1-3 sentences and always end with something the learner can respond to (a question or an invitation to share).
-You also review the learner's latest message:
-${GRAMMAR_RUBRIC}
-${NATURALNESS_NOTE} This is a spoken conversation, so casual/spoken register is the natural fit here.
+You also review the learner's latest message. Grade it on four independent components, judged separately (a message can be strong on one and weak on another):
+${GRADE_SCALE_NOTE}
+- task: ${TASK_RUBRIC}
+Here, task means how relevantly and substantially the learner responds to and moves the conversation forward.
+- accuracy: ${GRAMMAR_RUBRIC}
+- range: ${RANGE_RUBRIC}
+- fluency: ${NATURALNESS_NOTE} This is a spoken conversation, so casual/spoken register is the natural fit here. A short but perfectly natural, well-connected reply can still earn a top fluency grade.
+Then:
 - spelling: list only typos, capitalization, and apostrophe slips as original -> corrected, with no explanation. Empty array if none.
 - List real grammar mistakes and unnatural (non-native) phrasings as corrections (never typos, capitalization, or apostrophes). Explain each reason briefly in Korean.
 - If the message is already natural, return an empty corrections array and an empty natural_alternative.
-- Grade each rubric component S/A/B/C/F (S excellent, F poor): naturalness, grammar, structure (clarity of sentence structure). A short but perfectly natural reply can still earn S.
 - cefr_level: the CEFR level this single message demonstrates. Pick the highest level whose speaking-skill descriptor the message fully meets (judge only this message, not the whole conversation):
 ${descriptorBlock(CEFR_SPEAKING_DESCRIPTORS)}
 - Then continue the conversation naturally in "reply", reacting to what the learner said and staying in the scene.

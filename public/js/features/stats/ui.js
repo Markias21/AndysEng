@@ -28,7 +28,8 @@ function shiftMonth(delta) {
 function calCell(cell, today) {
   if (!cell.date) return `<div class="cal-cell cal-empty"></div>`;
   const grade = cell.avgScore != null ? overallGrade(cell.avgScore / 100) : null;
-  const cls = grade ? `cal-${grade}` : "cal-none";
+  // 달력은 거친 히트맵이라 9단계 등급의 +를 떼어 5색 계열로만 칠한다(툴팁엔 정확한 등급 표기).
+  const cls = grade ? `cal-${grade.replace("+", "")}` : "cal-none";
   const isToday = cell.date === today ? " cal-today" : "";
   const chip = (emoji, v) => (v != null ? `<span class="cal-chip">${emoji}${Math.round(v)}</span>` : "");
   const chips = chip("💬", cell.convAvg) + chip("✍️", cell.writeAvg) + chip("💡", cell.exprAvg);

@@ -3,7 +3,7 @@
 import { chatJSON } from "../../shared/claude.js";
 import { appendRecord, getRecords, getProfile } from "../../shared/store.js";
 import { pickFresh, sampleN } from "../../shared/pick.js";
-import { scoreDetail, GRAMMAR_RUBRIC, NATURALNESS_NOTE } from "../../shared/scoring.js";
+import { scoreDetail, GRADES, GRADE_SCALE_NOTE, GRAMMAR_RUBRIC, NATURALNESS_NOTE, TASK_RUBRIC, RANGE_RUBRIC } from "../../shared/scoring.js";
 import { WRITING_TIPS, CEFR_WRITING_DESCRIPTORS, descriptorBlock } from "../../shared/levels.js";
 import { autoSaveToGithub } from "../../shared/autosave.js";
 import { takeTranslatorUses, TRANSLATOR_PENALTY } from "../../shared/translate.js";
@@ -91,14 +91,14 @@ const REVIEW_SCHEMA = {
     },
     grades: {
       type: "object",
-      description: "각 배점 요소를 S/A/B/C/F로 채점",
+      description: "각 배점 요소를 9단계(S+~F) 절대 기준으로 채점",
       properties: {
-        essay_structure: { type: "string", enum: ["S", "A", "B", "C", "F"] },
-        grammar: { type: "string", enum: ["S", "A", "B", "C", "F"] },
-        comprehension: { type: "string", enum: ["S", "A", "B", "C", "F"] },
-        modifier_naturalness: { type: "string", enum: ["S", "A", "B", "C", "F"] },
+        task: { type: "string", enum: GRADES },
+        accuracy: { type: "string", enum: GRADES },
+        range: { type: "string", enum: GRADES },
+        fluency: { type: "string", enum: GRADES },
       },
-      required: ["essay_structure", "grammar", "comprehension", "modifier_naturalness"],
+      required: ["task", "accuracy", "range", "fluency"],
       additionalProperties: false,
     },
   },
@@ -201,11 +201,7 @@ function toggleStructure() {
 async function review(question, answer) {
   const level = getProfile().level;
   const result = await chatJSON({
-    system: `You are an English writing tutor for a Korean learner whose target level is CEFR ${level}.
-
-${GRAMMAR_RUBRIC}
-
-${NATURALNESS_NOTE} This is written essay prose, so a formal/written register is the natural fit here.
+    system: `You are an English writing tutor for a Korean learner whose target level is CEFR ${level}. Pitch your model answer to that level, but grade the rubric on an absolute scale (see below).
 
 1. spelling: list only typos, capitalization, and apostrophe slips, as original -> corrected. No explanation, no reason. Empty array if none.
 2. corrections: real grammar errors and awkward phrasing only (never typos, capitalization, or apostrophes), with the reason explained in Korean.
@@ -217,7 +213,13 @@ ${NATURALNESS_NOTE} This is written essay prose, so a formal/written register is
 ${descriptorBlock(CEFR_WRITING_DESCRIPTORS)}
 8. toefl_score: score this essay 0-4 with the official TOEFL "Writing for an Academic Discussion" rubric below. Never lower the score for typos, capitalization, or spelling slips (those belong only in "spelling"). Pick the band the essay best matches as a whole:
 ${toeflPromptBlock()}
-9. grades: grade each rubric component S/A/B/C/F (S excellent, F poor): essay_structure (organization and flow), grammar (ignoring typos and capitalization), comprehension (clarity of sentence structure), modifier_naturalness (natural use of adjectives, adverbs, and expressions).`,
+9. grades: grade the essay on four independent components, judged separately.
+${GRADE_SCALE_NOTE}
+- task: ${TASK_RUBRIC}
+Here, task means how well the essay addresses the prompt and develops a clear, relevant argument.
+- accuracy: ${GRAMMAR_RUBRIC}
+- range: ${RANGE_RUBRIC}
+- fluency: ${NATURALNESS_NOTE} This is written essay prose, so a formal/written register is the natural fit here. Fluency here also covers how well the sentences are organized and connected (coherence and flow).`,
     messages: [{ role: "user", content: `Prompt: ${question}\n\nLearner's answer:\n${answer}` }],
     schema: REVIEW_SCHEMA,
     maxTokens: 8192,

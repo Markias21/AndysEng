@@ -1,5 +1,5 @@
 // DOM 공통 유틸.
-import { RUBRICS, scoreDetail } from "./scoring.js";
+import { RUBRICS, scoreDetail, gradeClass } from "./scoring.js";
 import { addToDeck } from "./store.js";
 
 export const $ = (sel) => document.querySelector(sel);
@@ -23,9 +23,9 @@ export function scoreBadge(score) {
   return `<span class="score-badge ${cls}">${score}점</span>`;
 }
 
-/** S/A/B/C/F 등급 배지. */
+/** 9단계(S+~F) 등급 배지. 클래스명에 '+'를 못 쓰므로 gradeClass로 안전화한다. */
 export function gradeBadge(grade) {
-  return `<span class="grade-badge grade-${grade}">${grade}</span>`;
+  return `<span class="grade-badge ${gradeClass(grade)}">${esc(grade)}</span>`;
 }
 
 /**
@@ -59,7 +59,7 @@ export function rubricGuideHTML(feature) {
   return `<details class="rubric-guide">
       <summary>📋 배점 안내</summary>
       <ul>${items}</ul>
-      <p class="small muted">각 요소를 S/A/B/C/F로 채점 → 그 요소 만점의 S 100% · A 80% · B 60% · C 40% · F 20%</p>
+      <p class="small muted">각 요소를 9단계(S+~F)로 채점 → 만점의 S+ 100% · S 90% · A+ 80% · A 70% · B+ 60% · B 50% · C+ 40% · C 30% · F 20%. 내 레벨과 무관한 <b>절대 기준</b>으로 채점해요.</p>
     </details>`;
 }
 

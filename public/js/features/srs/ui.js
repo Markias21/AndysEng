@@ -10,7 +10,7 @@
 import { review, dueCards, INTERVALS } from "./scheduler.js";
 import { chatJSON } from "../../shared/claude.js";
 import { getDeck, updateCard, removeCard, getWords, updateWord, removeWord, appendRecord, getProfile } from "../../shared/store.js";
-import { scoreDetail, GRAMMAR_RUBRIC } from "../../shared/scoring.js";
+import { scoreDetail, GRADES, GRADE_SCALE_NOTE, GRAMMAR_RUBRIC, NATURALNESS_NOTE, RANGE_RUBRIC } from "../../shared/scoring.js";
 import { filterByLevel } from "../../shared/levels.js";
 import { $, esc, toast, scoreBreakdownHTML, correctionsHTML, spellingHTML } from "../../shared/dom.js";
 
@@ -53,13 +53,14 @@ const REVIEW_SCHEMA = {
     comment: { type: "string", description: "표현을 제대로 활용했는지 한국어로 한두 문장" },
     grades: {
       type: "object",
-      description: "각 배점 요소를 S/A/B/C/F로 채점",
+      description: "각 배점 요소를 9단계(S+~F) 절대 기준으로 채점",
       properties: {
-        naturalness: { type: "string", enum: ["S", "A", "B", "C", "F"] },
-        grammar: { type: "string", enum: ["S", "A", "B", "C", "F"] },
-        comprehension: { type: "string", enum: ["S", "A", "B", "C", "F"] },
+        task: { type: "string", enum: GRADES },
+        accuracy: { type: "string", enum: GRADES },
+        range: { type: "string", enum: GRADES },
+        fluency: { type: "string", enum: GRADES },
       },
-      required: ["naturalness", "grammar", "comprehension"],
+      required: ["task", "accuracy", "range", "fluency"],
       additionalProperties: false,
     },
   },
@@ -225,12 +226,16 @@ function startProduce() {
 async function grade(sentence) {
   return chatJSON({
     system: `You review a Korean learner's example sentence using the target ${current.kind === "word" ? "word" : "expression"} "${current.term}".
-${GRAMMAR_RUBRIC}
 - spelling: list only typos, capitalization, and apostrophe slips as original -> corrected, with no explanation. Empty array if none.
 - corrections: real grammar errors and unnatural phrasings only (never typos, capitalization, or apostrophes), reasons in Korean.
 - natural_version: how a native speaker would write the same idea using the ${current.kind === "word" ? "word" : "expression"}.
 - comment: one or two sentences in Korean on whether it was used correctly.
-- grades: grade each rubric component S/A/B/C/F (S excellent, F poor): naturalness (natural use of the target ${current.kind === "word" ? "word" : "expression"}), grammar, comprehension (clarity of sentence structure).`,
+- grades: grade the sentence on four independent components, judged separately.
+${GRADE_SCALE_NOTE}
+- task: how accurately and meaningfully the sentence uses the target ${current.kind === "word" ? "word" : "expression"} to convey its real meaning (an off-target or nonsensical use scores low even if grammatical).
+- accuracy: ${GRAMMAR_RUBRIC}
+- range: ${RANGE_RUBRIC}
+- fluency: ${NATURALNESS_NOTE}`,
     messages: [{ role: "user", content: `Learner's sentence: "${sentence}"` }],
     schema: REVIEW_SCHEMA,
   });
