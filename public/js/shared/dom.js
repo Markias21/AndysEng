@@ -101,25 +101,40 @@ export function sentenceLinesHTML(items) {
     .join("");
 }
 
+/** 한국어 직역으로는 나오지 않는 표현임을 알리는 배지. 이런 표현이 배울 가치가 가장 크다. */
+export function nonLiteralBadge(nonLiteral) {
+  return nonLiteral ? ` <span class="non-literal" title="한국어를 그대로 옮겨서는 나오지 않는 표현">직역 불가</span>` : "";
+}
+
 /** 표현 목록을 개별 ➕ 버튼과 함께 렌더한다(유저가 담을 것만 복습에 추가). */
 export function expressionAddHTML(expressions) {
   if (!expressions || !expressions.length) return "";
   return `<ul class="expr-list">${expressions
     .map(
       (e, i) =>
-        `<li><div class="expr-head"><b>${esc(e.expression)}</b>${e.level ? ` <span class="cefr">${esc(e.level)}</span>` : ""} — ${esc(e.meaning)}</div>
+        `<li><div class="expr-head"><b>${esc(e.expression)}</b>${e.level ? ` <span class="cefr">${esc(e.level)}</span>` : ""}${nonLiteralBadge(e.non_literal)} — ${esc(e.meaning)}</div>
           <div class="reason">${esc(e.example)}</div>
           <button class="btn-secondary expr-add" type="button" data-i="${i}">➕ 복습에 추가</button></li>`
     )
     .join("")}</ul>`;
 }
 
-/** expressionAddHTML로 그린 ➕ 버튼들을 복습 덱 추가와 연결한다. */
-export function wireExpressionAdds(root, expressions, source) {
+/**
+ * expressionAddHTML로 그린 ➕ 버튼들을 복습 덱 추가와 연결한다.
+ * alreadyAdded: 다른 경로로 이미 덱에 담긴 표현 문자열 Set (있으면 버튼을 담김 상태로 표시).
+ */
+export function wireExpressionAdds(root, expressions, source, alreadyAdded) {
   root.querySelectorAll(".expr-add").forEach((btn) => {
+    const e = expressions[Number(btn.dataset.i)];
+    if (alreadyAdded?.has(e.expression)) {
+      btn.disabled = true;
+      btn.textContent = "✓ 담김";
+      return;
+    }
     btn.addEventListener("click", () => {
-      const e = expressions[Number(btn.dataset.i)];
-      const added = addToDeck([{ expression: e.expression, meaning: e.meaning, example: e.example, level: e.level, source }]);
+      const added = addToDeck([
+        { expression: e.expression, meaning: e.meaning, example: e.example, level: e.level, nonLiteral: e.non_literal, source },
+      ]);
       toast(added ? `복습에 담았어요: ${e.expression}` : "이미 복습 목록에 있어요.");
       btn.disabled = true;
       btn.textContent = added ? "✓ 담김" : "이미 있음";

@@ -3,13 +3,16 @@
 import { chatJSON } from "../../shared/claude.js";
 import { appendRecord, getRecords, getProfile } from "../../shared/store.js";
 import { pickFresh, sampleN } from "../../shared/pick.js";
-import { scoreDetail, GRADES, GRADE_SCALE_NOTE, GRAMMAR_RUBRIC, NATURALNESS_NOTE, TASK_RUBRIC, RANGE_RUBRIC } from "../../shared/scoring.js";
+import { scoreDetail, GRADE_SCALE_NOTE, GRAMMAR_RUBRIC, NATURALNESS_NOTE, TASK_RUBRIC, RANGE_RUBRIC } from "../../shared/scoring.js";
 import { WRITING_TIPS, CEFR_WRITING_DESCRIPTORS, descriptorBlock } from "../../shared/levels.js";
 import { autoSaveToGithub } from "../../shared/autosave.js";
 import { takeTranslatorUses, TRANSLATOR_PENALTY } from "../../shared/translate.js";
 import { writingPrompts } from "./prompts.js";
 import { toeflPromptBlock, toeflBand } from "./toefl.js";
 import { structureTemplateHTML, structureExpressions } from "./structure.js";
+import { REVIEW_SCHEMA } from "./schema.js";
+import { startQna, resetQna, askQna, qnaLogHTML } from "./qna.js";
+import { mountCloze } from "./cloze-ui.js";
 import {
   $, esc, toast, scoreBreakdownHTML, rubricGuideHTML, correctionsHTML,
   spellingHTML, sentenceLinesHTML, expressionAddHTML, wireExpressionAdds,
@@ -21,140 +24,6 @@ const STRUCTURE_EXPR_COUNT = 5;
 
 // 최근 이 개수만큼의 질문은 다시 나오지 않게 피한다.
 const RECENT_PROMPTS = 20;
-
-// 답안은 문장 단위로 받아 한 줄씩 보여 주고, 각 문장의 한국어 해석을 함께 붙인다.
-// 고친 부분·새로 쓴 중요한 표현은 [[...]]로 감싸 밑줄로 렌더한다.
-const SENTENCE_ITEM = {
-  type: "object",
-  properties: {
-    sentence: { type: "string", description: "영어 문장 한 개. 고친 부분이나 새로 쓴 중요한 표현은 [[...]]로 감쌀 것" },
-    translation: { type: "string", description: "이 문장의 한국어 해석" },
-  },
-  required: ["sentence", "translation"],
-  additionalProperties: false,
-};
-
-const REVIEW_SCHEMA = {
-  type: "object",
-  properties: {
-    spelling: {
-      type: "array",
-      description: "오타·대소문자 실수만. 설명 없이 원문과 교정형만.",
-      items: {
-        type: "object",
-        properties: {
-          original: { type: "string" },
-          corrected: { type: "string" },
-        },
-        required: ["original", "corrected"],
-        additionalProperties: false,
-      },
-    },
-    corrections: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          original: { type: "string" },
-          corrected: { type: "string" },
-          reason: { type: "string", description: "이유를 한국어로 설명" },
-        },
-        required: ["original", "corrected", "reason"],
-        additionalProperties: false,
-      },
-    },
-    corrected_answer: { type: "array", items: SENTENCE_ITEM, description: "문법적으로 맞게 고친 답안, 문장 단위" },
-    native_answer: { type: "array", items: SENTENCE_ITEM, description: "원어민이 쓴 것처럼 다듬은 모범 답안, 문장 단위" },
-    native_expressions: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          expression: { type: "string" },
-          meaning: { type: "string", description: "뜻을 한국어로" },
-          example: { type: "string" },
-          level: { type: "string", enum: ["A1", "A2", "B1", "B2", "C1", "C2"], description: "이 표현의 CEFR 난이도" },
-        },
-        required: ["expression", "meaning", "example", "level"],
-        additionalProperties: false,
-      },
-    },
-    cefr_level: {
-      type: "string",
-      enum: ["A1", "A2", "B1", "B2", "C1", "C2"],
-      description: "이 글의 전체 품질(구체성·분량·문법·표현)로 매긴 CEFR 레벨",
-    },
-    toefl_score: {
-      type: "integer",
-      enum: [0, 1, 2, 3, 4],
-      description: "토플 라이팅 밴드(0~4)로 매긴 홀리스틱 점수",
-    },
-    grades: {
-      type: "object",
-      description: "각 배점 요소를 9단계(S+~F) 절대 기준으로 채점",
-      properties: {
-        task: { type: "string", enum: GRADES },
-        accuracy: { type: "string", enum: GRADES },
-        range: { type: "string", enum: GRADES },
-        fluency: { type: "string", enum: GRADES },
-      },
-      required: ["task", "accuracy", "range", "fluency"],
-      additionalProperties: false,
-    },
-  },
-  required: ["spelling", "corrections", "corrected_answer", "native_answer", "native_expressions", "cefr_level", "toefl_score", "grades"],
-  additionalProperties: false,
-};
-
-const QNA_SCHEMA = {
-  type: "object",
-  properties: {
-    answer: { type: "string", description: "학생의 질문에 대한 한국어 답변" },
-  },
-  required: ["answer"],
-  additionalProperties: false,
-};
-
-// 방금 받은 첨삭에 대해 후속 질문을 주고받기 위한 상태. 질문을 새로 받거나 다시 첨삭받으면 초기화된다.
-let qnaContext = null; // { question, answer, feedback }
-let qnaHistory = []; // 모델에 그대로 replay할 messages (질문에는 최초 1회 context를 포함)
-let qnaLog = []; // 화면 표시용 { question, answer }
-
-function resetQna() {
-  qnaContext = null;
-  qnaHistory = [];
-  qnaLog = [];
-}
-
-function qnaContextText(ctx) {
-  return `다음은 학생이 쓴 글쓰기 질문과 답안, 그리고 이미 받은 첨삭 결과입니다.
-
-질문: ${ctx.question}
-학생 답안: ${ctx.answer}
-첨삭 결과(JSON): ${JSON.stringify(ctx.feedback)}
-
-학생이 이 첨삭에 대해 궁금한 점을 물어볼 것입니다.`;
-}
-
-function qnaLogHTML() {
-  return qnaLog
-    .map((t) => `<div class="qna-turn"><div class="qna-q">Q. ${esc(t.question)}</div><div class="qna-a">A. ${esc(t.answer)}</div></div>`)
-    .join("");
-}
-
-async function askQna(question) {
-  const content = qnaHistory.length === 0 ? `${qnaContextText(qnaContext)}\n\n학생의 질문: ${question}` : question;
-  const messages = [...qnaHistory, { role: "user", content }];
-  const result = await chatJSON({
-    system: "You are an English writing tutor answering a Korean learner's follow-up question about feedback they already received on their essay. Answer entirely in Korean, clearly and concisely, referencing the specific corrections or grades when relevant.",
-    messages,
-    schema: QNA_SCHEMA,
-    maxTokens: 1024,
-  });
-  qnaHistory.push({ role: "user", content }, { role: "assistant", content: result.answer });
-  qnaLog.push({ question, answer: result.answer });
-  return result.answer;
-}
 
 function recentQuestions() {
   return getRecords("writing")
@@ -208,7 +77,7 @@ async function review(question, answer) {
 3. corrected_answer: the learner's own answer with only grammatical fixes applied (keep their voice and argument), split into one object per sentence with a Korean translation of that sentence.
 4. native_answer: the same argument rewritten as a fluent native speaker would write it (3-4 sentences), split the same way with a Korean translation per sentence. Write it at CEFR ${level} — use vocabulary and sentence patterns the learner at that level can actually reuse, not higher.
 5. In both corrected_answer and native_answer, wrap in [[ ]] the parts that fix something the learner got wrong or that introduce an important expression worth noticing. Wrap the phrase itself, not whole sentences, and leave unchanged parts unwrapped.
-6. native_expressions: 3-5 useful native-like expressions related to this topic or taken from the native answer, each with Korean meaning, an example sentence, and its CEFR level (A1-C2).
+6. native_expressions: 3-5 useful native-like expressions, each of which MUST appear verbatim somewhere in native_answer (the learner will be asked to recall them from it). Give each a Korean meaning, an example sentence, its CEFR level (A1-C2), and non_literal.
 7. cefr_level: the CEFR level (A1-C2) this essay actually demonstrates. Pick the highest level whose writing-skill descriptor the essay fully meets:
 ${descriptorBlock(CEFR_WRITING_DESCRIPTORS)}
 8. toefl_score: score this essay 0-4 with the official TOEFL "Writing for an Academic Discussion" rubric below. Never lower the score for typos, capitalization, or spelling slips (those belong only in "spelling"). Pick the band the essay best matches as a whole:
@@ -250,12 +119,13 @@ export function init() {
     btn.textContent = "첨삭 중...";
     try {
       const r = await review($("#writing-question").textContent, answer);
-      qnaContext = { question: $("#writing-question").textContent, answer, feedback: r };
-      qnaHistory = [];
-      qnaLog = [];
+      startQna({ question: $("#writing-question").textContent, answer, feedback: r });
       const result = $("#writing-result");
+      // 원어민 문장을 먼저 인출해 보게 하고, 그 뒤에야 첨삭 전체를 연다.
+      // (정답이 corrections/corrected_answer로 새는 것을 막고, 모범 답안을 그냥 넘기지 않게 한다)
       result.innerHTML = `
-        <div class="result-section">
+        <div class="result-section" id="writing-cloze"></div>
+        <div class="result-section hidden" id="writing-feedback-rest">
           <h4>🎯 TOEFL 라이팅 <span class="cefr">${r.toefl_score} / 4</span></h4>
           <div class="card">${esc(toeflBand(r.toefl_score).ko)}</div>
           <h4>🏅 점수 <span class="cefr">이 글의 레벨: ${esc(r.cefr_level)}</span></h4>
@@ -280,7 +150,10 @@ export function init() {
           </div>
           <div class="row-end"><button class="btn-secondary" id="writing-next">다음 질문 →</button></div>
         </div>`;
-      wireExpressionAdds($("#writing-exprs"), r.native_expressions, "writing");
+      mountCloze($("#writing-cloze"), r, (autoAdded) => {
+        $("#writing-feedback-rest").classList.remove("hidden");
+        wireExpressionAdds($("#writing-exprs"), r.native_expressions, "writing", autoAdded);
+      });
       $("#writing-next").addEventListener("click", newQuestion);
       $("#writing-qna-form").addEventListener("submit", async (qev) => {
         qev.preventDefault();

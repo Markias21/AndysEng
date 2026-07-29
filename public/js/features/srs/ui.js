@@ -12,7 +12,7 @@ import { chatJSON } from "../../shared/claude.js";
 import { getDeck, updateCard, removeCard, getWords, updateWord, removeWord, appendRecord, getProfile } from "../../shared/store.js";
 import { scoreDetail, GRADES, GRADE_SCALE_NOTE, GRAMMAR_RUBRIC, NATURALNESS_NOTE, RANGE_RUBRIC } from "../../shared/scoring.js";
 import { filterByLevel } from "../../shared/levels.js";
-import { $, esc, toast, scoreBreakdownHTML, correctionsHTML, spellingHTML } from "../../shared/dom.js";
+import { $, esc, toast, scoreBreakdownHTML, correctionsHTML, spellingHTML, nonLiteralBadge } from "../../shared/dom.js";
 
 let queue = [];
 let current = null; // { kind: "expression"|"word", raw, term, meaning, example, pos, level }
@@ -78,6 +78,7 @@ function wrap(raw, kind) {
     example: raw.example,
     pos: raw.pos,
     level: raw.level,
+    nonLiteral: raw.nonLiteral,
   };
 }
 
@@ -89,6 +90,13 @@ function dueLabel(card, now) {
 
 function nounFor(kind) {
   return kind === "word" ? "단어" : "표현";
+}
+
+/** 받침 유무에 맞는 조사를 붙인다 (표현→표현으로/표현을, 단어→단어로/단어를). */
+function withParticle(noun, afterJong, afterVowel) {
+  const code = noun.charCodeAt(noun.length - 1) - 0xac00;
+  const hasJong = code >= 0 && code <= 11171 && code % 28 !== 0;
+  return noun + (hasJong ? afterJong : afterVowel);
 }
 
 function allItems() {
@@ -114,7 +122,7 @@ function renderHome() {
   const rows = items
     .map(
       (it) =>
-        `<div class="stat-row"><span>${it.kind === "word" ? "📖" : "🔁"} <b>${esc(it.term)}</b>${it.level ? ` <span class="cefr">${esc(it.level)}</span>` : ""}</span><span class="row-actions">${dueLabel(it.raw, now)}<button class="btn-text card-remove" data-id="${it.raw.id}" data-kind="${it.kind}" title="복습에서 빼기">🗑</button></span></div>`
+        `<div class="stat-row"><span>${it.kind === "word" ? "📖" : "🔁"} <b>${esc(it.term)}</b>${it.level ? ` <span class="cefr">${esc(it.level)}</span>` : ""}${nonLiteralBadge(it.nonLiteral)}</span><span class="row-actions">${dueLabel(it.raw, now)}<button class="btn-text card-remove" data-id="${it.raw.id}" data-kind="${it.kind}" title="복습에서 빼기">🗑</button></span></div>`
     )
     .join("");
 
@@ -183,7 +191,7 @@ function removeCurrent() {
 }
 
 function meaningHTML(item) {
-  return `<div class="word-meaning">${esc(item.meaning)}</div>${
+  return `<div class="word-meaning">${esc(item.meaning)}${nonLiteralBadge(item.nonLiteral)}</div>${
     item.example ? `<p class="example">예시: ${esc(item.example)}</p>` : ""
   }`;
 }
@@ -198,7 +206,7 @@ function showChoice(remembered) {
       ${meaningHTML(current)}
       <div class="row-rate">
         <button class="btn-secondary" id="srs-plain-next" type="button">⏭ 예문 없이 넘어가기</button>
-        <button class="btn-primary" id="srs-produce" type="button">✍️ 예문 만들기</button>
+        <button class="btn-primary" id="srs-produce" type="button">✍️ 내 이야기로 예문 만들기</button>
       </div>
     </div>`;
   $("#srs-produce").addEventListener("click", startProduce);
@@ -209,11 +217,12 @@ function showChoice(remembered) {
 function startProduce() {
   $("#srs-content").innerHTML = `
     <div class="card">
-      <span class="chip chip-yellow">이 ${nounFor(current.kind)}로 예문 만들기</span>
+      <span class="chip chip-yellow">이 ${withParticle(nounFor(current.kind), "으로", "로")} 내 이야기 만들기</span>
       <h3 class="expr-word">${esc(current.term)}</h3>
+      <p class="reason">아무 예문보다 <b>실제 내 경험·습관·계획</b>을 담은 문장이 훨씬 오래 남아요.</p>
     </div>
     <form id="srs-form">
-      <textarea id="srs-input" rows="3" placeholder="이 ${nounFor(current.kind)}로 예문을 만들어 보세요..."></textarea>
+      <textarea id="srs-input" rows="3" placeholder="이 ${withParticle(nounFor(current.kind), "을", "를")} 써서 나에 대한 문장을 만들어 보세요..."></textarea>
       <div class="row-end">
         <button class="btn-primary" type="submit">채점 받기</button>
       </div>
@@ -229,7 +238,7 @@ async function grade(sentence) {
 - spelling: list only typos, capitalization, and apostrophe slips as original -> corrected, with no explanation. Empty array if none.
 - corrections: real grammar errors and unnatural phrasings only (never typos, capitalization, or apostrophes), reasons in Korean.
 - natural_version: how a native speaker would write the same idea using the ${current.kind === "word" ? "word" : "expression"}.
-- comment: one or two sentences in Korean on whether it was used correctly.
+- comment: one or two sentences in Korean on whether it was used correctly. The learner was asked to write about their own real life, so if the sentence is impersonal or generic, say so briefly.
 - grades: grade the sentence on four independent components, judged separately.
 ${GRADE_SCALE_NOTE}
 - task: how accurately and meaningfully the sentence uses the target ${current.kind === "word" ? "word" : "expression"} to convey its real meaning (an off-target or nonsensical use scores low even if grammatical).

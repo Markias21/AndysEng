@@ -42,8 +42,9 @@ const EXPRESSION_ITEM = {
     meaning: { type: "string", description: "뜻을 한국어로" },
     example: { type: "string" },
     level: { type: "string", enum: ["A1", "A2", "B1", "B2", "C1", "C2"], description: "이 표현의 CEFR 난이도" },
+    non_literal: { type: "boolean", description: "한국어를 그대로 직역해서는 나오지 않는 표현이면 true" },
   },
-  required: ["expression", "meaning", "example", "level"],
+  required: ["expression", "meaning", "example", "level", "non_literal"],
   additionalProperties: false,
 };
 
@@ -141,7 +142,7 @@ Then:
 - cefr_level: the CEFR level this single message demonstrates. Pick the highest level whose speaking-skill descriptor the message fully meets (judge only this message, not the whole conversation):
 ${descriptorBlock(CEFR_SPEAKING_DESCRIPTORS)}
 - Then continue the conversation naturally in "reply", reacting to what the learner said and staying in the scene.
-- When the learner's message ends with an extraction request in parentheses, also fill "expressions" with that many useful native-like expression(s) from your reply or this conversation, worth reviewing at around the learner's level. Each needs a Korean meaning, an example sentence, and its CEFR level.`;
+- When the learner's message ends with an extraction request in parentheses, also fill "expressions" with that many useful native-like expression(s) from your reply or this conversation, worth reviewing at around the learner's level. Each needs a Korean meaning, an example sentence, its CEFR level, and non_literal — set it to true when a Korean speaker translating word-for-word would never produce that phrasing.`;
 }
 
 function addScene(scene) {

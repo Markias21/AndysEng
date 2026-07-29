@@ -306,6 +306,13 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
   padding: 2px 8px; border-radius: 999px; vertical-align: middle;
 }
 
+/* 한국어 직역으로는 안 나오는 표현 배지 */
+.non-literal {
+  display: inline-block; font-size: 11px; font-weight: 800;
+  background: #fff1e6; color: #c2500f;
+  padding: 2px 8px; border-radius: 999px; vertical-align: middle;
+}
+
 /* 복습: 표현 단어 */
 .expr-word { font-size: 24px; color: var(--primary); margin-bottom: 6px; }
 
@@ -415,6 +422,21 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 .answer-line .mark { text-decoration: underline; text-underline-offset: 3px; font-weight: 700; color: var(--green); }
 .answer-ko { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
 
+/* 원어민 문장 되찾기: 모범 답안의 표현을 빈칸으로 뚫고 직접 인출하게 한다 */
+.cloze-line { margin-bottom: 14px; line-height: 2.2; }
+.cloze-line:last-of-type { margin-bottom: 4px; }
+.cloze-input {
+  width: 9em; padding: 2px 8px; margin: 0 2px; font-size: 15px; font-family: inherit;
+  border: none; border-bottom: 2px solid var(--primary); border-radius: 0;
+  background: transparent; color: var(--text); text-align: center;
+}
+.cloze-input:focus { outline: none; background: #f0f1ff; }
+.cloze-input::placeholder { color: var(--muted); letter-spacing: 1px; }
+.cloze-ok { font-weight: 700; color: var(--green); }
+.cloze-miss { font-weight: 700; color: var(--red); }
+.cloze-miss s { font-weight: 400; opacity: 0.7; }
+.cloze-summary { margin-top: 12px; font-size: 14px; color: var(--muted); }
+
 /* 첨삭 질문하기: 주고받은 질문/답변 로그 */
 .qna-turn { margin-bottom: 12px; }
 .qna-turn:last-child { margin-bottom: 0; }
@@ -461,6 +483,8 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 :root[data-theme="dark"] .cal-arrow { background: #2a2c44; }
 :root[data-theme="dark"] .dict-add:disabled { background: #16281f; color: var(--green); }
 :root[data-theme="dark"] .expr-add:disabled { background: #16281f; color: var(--green); }
+:root[data-theme="dark"] .non-literal { background: #3d2412; color: #f0a86a; }
+:root[data-theme="dark"] .cloze-input:focus { background: #2a2c44; }
 :root[data-theme="dark"] .cal-arrow:hover { background: #343652; }
 :root[data-theme="dark"] .cal-cell,
 :root[data-theme="dark"] .cal-none { background: #24263a; }
