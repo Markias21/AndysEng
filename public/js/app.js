@@ -119,7 +119,7 @@ async function init() {
   // 옛 "표현 공부"에서 쌓인 복습 카드를 한 번 정리한다(복습은 이제 회화·글쓰기 표현만 다룬다).
   purgeExpressionCards();
   settings.init({
-    onLevelChange: () => {
+    onStudyChange: () => {
       if ($("#view-srs").classList.contains("active")) srs.render();
     },
   });

@@ -7,7 +7,17 @@ const RECORD_KINDS = ["conversation", "writing", "expression", "quiz", "sessions
 // 유저 프로필(설정): CEFR 학습 레벨, 회화 표현 수집 개수, 화면 테마, AI 모델.
 // 레벨/표현수는 회화·글쓰기·복습에 공통 적용. theme는 화면 색, model은 Claude 호출 모델.
 // gender: 회화 💕연애에서 이성 상대를 정하는 기준. romancePartnerId: 고정된 연애 상대 페르소나 id.
-const DEFAULT_PROFILE = { level: "B1", exprPerConv: 2, theme: "light", model: "claude-sonnet-5", gender: "male", romancePartnerId: "" };
+// dailyNewLimit/dailyReviewLimit: 하루에 새로 시작할 카드 수 / 하루 복습 총량. 표현이 쌓여도 부담을 고정한다.
+const DEFAULT_PROFILE = {
+  level: "B1",
+  exprPerConv: 2,
+  theme: "light",
+  model: "claude-sonnet-5",
+  gender: "male",
+  romancePartnerId: "",
+  dailyNewLimit: 5,
+  dailyReviewLimit: 20,
+};
 
 function emptyData() {
   const records = {};
@@ -163,7 +173,8 @@ export function addToDeck(items) {
     if (known.has(key)) continue;
     known.add(key);
     // 새 카드는 바로 복습 대상(due=now). 이후 스케줄링은 srs 도메인(scheduler.js)이 맡는다.
-    deck.push({ id: crypto.randomUUID(), ...item, addedAt: now, streak: 0, interval: 0, due: now });
+    // reps=0은 "아직 한 번도 복습하지 않음" — 하루 신규 상한을 세는 기준이다.
+    deck.push({ id: crypto.randomUUID(), ...item, addedAt: now, reps: 0, lapses: 0, streak: 0, interval: 0, due: now });
     added += 1;
   }
   if (added) save();
@@ -185,7 +196,7 @@ export function addWord(item) {
   if (words.some((w) => `${w.word.toLowerCase().trim()}|${w.meaning.trim()}` === key)) return false;
   const now = Date.now();
   // 새 카드는 바로 복습 대상(due=now). 간격 스케줄링은 srs 도메인(scheduler.js)이 맡는다.
-  words.push({ id: crypto.randomUUID(), ...item, addedAt: now, streak: 0, interval: 0, due: now });
+  words.push({ id: crypto.randomUUID(), ...item, addedAt: now, reps: 0, lapses: 0, streak: 0, interval: 0, due: now });
   save();
   return true;
 }

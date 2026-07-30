@@ -1,128 +1,53 @@
 // 복습 화면: 회화·글쓰기에서 배운 표현(deck) + 사전에서 담은 단어(words)를 한 큐에서 함께 복습한다.
 //
+// 하루 부담을 상한(신규/총량)으로 고정한다 — 표현이 쌓여도 오늘 할 양은 변하지 않고, 넘친 건 다음 날로 넘어간다.
+//
 // 흐름: 표현/단어만 보여 주고 [🙂 기억나요 / 😵 까먹었어요]로 먼저 자가평가한다.
 //  그 다음 뜻+예시를 보여주고 두 갈래로 나뉜다:
-//   - ✍️ 예문 만들기: AI가 첨삭한다. 기억나요였다면 [😵 잘못 생각했어요 / 다음 →]로 진짜 기억했는지
-//     최종 확인한다('다음'=간격 상승, '잘못 생각했어요'/까먹었어요=처음으로).
+//   - ✍️ 예문 만들기: AI가 첨삭한다(produce-ui.js). 기억나요였다면 [😵 잘못 생각했어요 / 다음 →]로
+//     진짜 기억했는지 최종 확인한다('다음'=간격 상승, '잘못 생각했어요'/까먹었어요=간격 하락).
 //   - ⏭ 예문 없이 넘어가기: 첨삭 없이 방금 한 자가평가를 그대로 다음 간격 결정에 쓴다.
-// AI 채점은 피드백(첨삭·원어민 문장·등급)만 담당하고, 다음 복습 시점은 자가평가(+선택적 최종 확인)가 정한다.
-// 유저 레벨(±1) 밖의 표현 카드는 이번 복습에서 제외한다(단어 카드는 레벨 태그가 없어 항상 포함).
-import { review, dueCards, INTERVALS } from "./scheduler.js";
-import { chatJSON } from "../../shared/claude.js";
-import { getDeck, updateCard, removeCard, getWords, updateWord, removeWord, appendRecord, getProfile } from "../../shared/store.js";
-import { scoreDetail, GRADES, GRADE_SCALE_NOTE, GRAMMAR_RUBRIC, NATURALNESS_NOTE, RANGE_RUBRIC } from "../../shared/scoring.js";
-import { filterByLevel } from "../../shared/levels.js";
-import { $, esc, toast, scoreBreakdownHTML, correctionsHTML, spellingHTML, nonLiteralBadge } from "../../shared/dom.js";
+// 놓친 항목은 세션 끝의 🔁 재도전 단계에서 다시 인출한다. 재도전은 그 자리에서 굳히기만 하고
+// 다음 복습 시점을 바꾸지 않는다 — 같은 세션 안에서의 성공은 단기기억에서 나온 것이라 장기 파지의 증거가 아니다.
+// AI 채점은 피드백 전용이고, 다음 복습 시점은 자가평가(+선택적 최종 확인)가 정한다.
+// 유저 레벨(±1) 밖의 표현 카드는 제외한다(단어 카드는 레벨 태그가 없어 항상 포함).
+import { review, clearLeech, masteryLabel, INTERVALS } from "./scheduler.js";
+import { wrap, allItems, todayPlan } from "./items.js";
+import { renderProduce } from "./produce-ui.js";
+import { nounFor, withParticle, dueLabel, leechBadge, meaningHTML } from "./labels.js";
+import { updateCard, removeCard, updateWord, removeWord, appendRecord, getProfile } from "../../shared/store.js";
+import { $, esc, toast, nonLiteralBadge } from "../../shared/dom.js";
+
+const RETRY_ALLOWANCE = 2; // 놓친 카드를 재도전에서 다시 보여줄 최대 횟수(본 문제 1회 + 재도전 2회)
 
 let queue = [];
-let current = null; // { kind: "expression"|"word", raw, term, meaning, example, pos, level }
+let retryQueue = []; // 이번 세션에서 놓친 항목 (세션 말 재도전용)
+let current = null; // items.js의 wrap 결과 + 재도전 단계에서는 retryLeft
 let recalled = false; // 이번 항목에서 '기억나요'를 눌렀는지
+let inRetry = false;
 let sessionTotal = 0;
 let sessionRemembered = 0;
-
-const REVIEW_SCHEMA = {
-  type: "object",
-  properties: {
-    spelling: {
-      type: "array",
-      description: "오타·대소문자·아포스트로피 실수만. 설명 없이 원문과 교정형만.",
-      items: {
-        type: "object",
-        properties: {
-          original: { type: "string" },
-          corrected: { type: "string" },
-        },
-        required: ["original", "corrected"],
-        additionalProperties: false,
-      },
-    },
-    corrections: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          original: { type: "string" },
-          corrected: { type: "string" },
-          reason: { type: "string", description: "이유를 한국어로" },
-        },
-        required: ["original", "corrected", "reason"],
-        additionalProperties: false,
-      },
-    },
-    natural_version: { type: "string", description: "원어민이라면 이렇게 쓸 문장" },
-    comment: { type: "string", description: "표현을 제대로 활용했는지 한국어로 한두 문장" },
-    grades: {
-      type: "object",
-      description: "각 배점 요소를 9단계(S+~F) 절대 기준으로 채점",
-      properties: {
-        task: { type: "string", enum: GRADES },
-        accuracy: { type: "string", enum: GRADES },
-        range: { type: "string", enum: GRADES },
-        fluency: { type: "string", enum: GRADES },
-      },
-      required: ["task", "accuracy", "range", "fluency"],
-      additionalProperties: false,
-    },
-  },
-  required: ["spelling", "corrections", "natural_version", "comment", "grades"],
-  additionalProperties: false,
-};
-
-/** 표현 카드/단어 카드를 복습 화면에서 공통으로 다루기 위한 어댑터. */
-function wrap(raw, kind) {
-  return {
-    kind,
-    raw,
-    term: kind === "word" ? raw.word : raw.expression,
-    meaning: raw.meaning,
-    example: raw.example,
-    pos: raw.pos,
-    level: raw.level,
-    nonLiteral: raw.nonLiteral,
-  };
-}
-
-function dueLabel(card, now) {
-  if (card.due <= now) return `<span class="due-now">지금</span>`;
-  const days = Math.ceil((card.due - now) / (24 * 60 * 60 * 1000));
-  return `${days}일 후`;
-}
-
-function nounFor(kind) {
-  return kind === "word" ? "단어" : "표현";
-}
-
-/** 받침 유무에 맞는 조사를 붙인다 (표현→표현으로/표현을, 단어→단어로/단어를). */
-function withParticle(noun, afterJong, afterVowel) {
-  const code = noun.charCodeAt(noun.length - 1) - 0xac00;
-  const hasJong = code >= 0 && code <= 11171 && code % 28 !== 0;
-  return noun + (hasJong ? afterJong : afterVowel);
-}
-
-function allItems() {
-  return [...getDeck().map((c) => wrap(c, "expression")), ...getWords().map((w) => wrap(w, "word"))];
-}
-
-function dueItems(level) {
-  const expr = filterByLevel(dueCards(getDeck(), Date.now()), level, 1).map((c) => wrap(c, "expression"));
-  const words = dueCards(getWords(), Date.now()).map((w) => wrap(w, "word"));
-  return [...expr, ...words];
-}
 
 function removeItem(item) {
   if (item.kind === "word") removeWord(item.raw.id);
   else removeCard(item.raw.id);
+  retryQueue = retryQueue.filter((it) => it.raw.id !== item.raw.id);
+}
+
+function saveItem(item, updated) {
+  if (item.kind === "word") updateWord(updated);
+  else updateCard(updated);
 }
 
 function renderHome() {
   const now = Date.now();
   const level = getProfile().level;
   const items = allItems().sort((a, b) => a.raw.due - b.raw.due);
-  const due = dueItems(level);
+  const { plan, totalDone, newDone, newLimit, reviewLimit, waiting } = todayPlan();
   const rows = items
     .map(
       (it) =>
-        `<div class="stat-row"><span>${it.kind === "word" ? "📖" : "🔁"} <b>${esc(it.term)}</b>${it.level ? ` <span class="cefr">${esc(it.level)}</span>` : ""}${nonLiteralBadge(it.nonLiteral)}</span><span class="row-actions">${dueLabel(it.raw, now)}<button class="btn-text card-remove" data-id="${it.raw.id}" data-kind="${it.kind}" title="복습에서 빼기">🗑</button></span></div>`
+        `<div class="stat-row"><span>${it.kind === "word" ? "📖" : "🔁"} <b>${esc(it.term)}</b>${it.level ? ` <span class="cefr">${esc(it.level)}</span>` : ""}${nonLiteralBadge(it.nonLiteral)}${leechBadge(it.raw)} <span class="mastery">${masteryLabel(it.raw)}</span></span><span class="row-actions">${dueLabel(it.raw, now)}<button class="btn-text card-remove" data-id="${it.raw.id}" data-kind="${it.kind}" title="복습에서 빼기">🗑</button></span></div>`
     )
     .join("");
 
@@ -131,13 +56,16 @@ function renderHome() {
       <h2>🔁 복습</h2>
       <p>회화·글쓰기에서 배운 표현과 📖 사전으로 담은 단어가 여기 함께 쌓여요.<br/>
       먼저 기억나는지 스스로 확인하고, 원하면 예문을 만들어 AI 첨삭도 받아요(선택). 망각곡선(${INTERVALS.slice(0, 4).join("→")}일…)에 맞춰 복습합니다.</p>
-      <p class="muted small">표현 카드는 내 레벨 <b>${esc(level)}</b> 근처(±1)만 나와요. 레벨은 상단에서 바꿀 수 있어요.</p>
+      <div class="srs-progress">오늘 복습 <b>${totalDone}/${reviewLimit}</b> · 신규 <b>${newDone}/${newLimit}</b>${waiting > 0 ? ` · 대기 중 ${waiting}개` : ""}</div>
+      <p class="muted small">표현이 아무리 쌓여도 하루에 하는 양은 <b>${reviewLimit}개</b>로 고정돼요. 넘친 건 다음 날로 넘어가니 밀렸다고 걱정하지 않아도 됩니다. 표현 카드는 내 레벨 <b>${esc(level)}</b> 근처(±1)만 나와요. 상한과 레벨은 ⚙️ 설정에서 바꿀 수 있어요.</p>
       ${
         items.length === 0
           ? `<p class="muted">아직 쌓인 게 없어요. 회화·글쓰기를 하거나 📖 사전에서 단어를 담아 보세요.</p>`
-          : due.length === 0
-            ? `<p class="muted">지금 복습할 게 없어요. 전체 ${items.length}개가 예정대로 기다리고 있어요.</p>`
-            : `<button class="btn-primary" id="srs-start">복습 시작 (${due.length}개)</button>`
+          : plan.length === 0
+            ? waiting > 0
+              ? `<p class="muted">오늘 몫을 다 했어요. 남은 ${waiting}개는 내일 이어서 해요.</p>`
+              : `<p class="muted">지금 복습할 게 없어요. 전체 ${items.length}개가 예정대로 기다리고 있어요.</p>`
+            : `<button class="btn-primary" id="srs-start">복습 시작 (${plan.length}개)</button>`
       }
     </div>
     ${items.length ? `<details class="history"><summary>📚 내 복습 목록 (${items.length})</summary><div class="card">${rows}</div></details>` : ""}`;
@@ -157,7 +85,9 @@ function renderHome() {
 }
 
 function startSession() {
-  queue = dueItems(getProfile().level);
+  queue = todayPlan().plan;
+  retryQueue = [];
+  inRetry = false;
   sessionTotal = 0;
   sessionRemembered = 0;
   nextQuestion();
@@ -166,22 +96,23 @@ function startSession() {
 // 1단계: 표현/단어만 보여 주고 기억 여부를 먼저 묻는다.
 function nextQuestion() {
   current = queue.shift() || null;
-  if (!current) return renderSummary();
+  if (!current) return retryQueue.length ? renderRetryIntro() : renderSummary();
   const remaining = queue.length + 1;
   $("#srs-content").innerHTML = `
     <div class="card">
-      <span class="chip chip-yellow">이 ${nounFor(current.kind)}, 기억나요? · 남은 항목 ${remaining}</span>
+      <span class="chip chip-yellow">${inRetry ? "🔁 재도전" : `이 ${nounFor(current.kind)}, 기억나요?`} · 남은 항목 ${remaining}</span>
       <h3 class="expr-word">${esc(current.term)}</h3>
       ${current.kind === "word" && current.pos ? `<p class="dict-pos">${esc(current.pos)}</p>` : ""}
       <div class="row-rate">
-        <button class="btn-secondary" id="srs-forgot" type="button">😵 까먹었어요</button>
-        <button class="btn-primary" id="srs-recall" type="button">🙂 기억나요</button>
+        <button class="btn-secondary" id="srs-forgot" type="button">😵 ${inRetry ? "아직이요" : "까먹었어요"}</button>
+        <button class="btn-primary" id="srs-recall" type="button">🙂 ${inRetry ? "기억났어요" : "기억나요"}</button>
       </div>
-      <div class="row-end"><button class="btn-secondary btn-chip" id="srs-remove" type="button">🗑 이 ${nounFor(current.kind)} 빼기</button></div>
+      ${inRetry ? "" : `<div class="row-end"><button class="btn-secondary btn-chip" id="srs-remove" type="button">🗑 이 ${nounFor(current.kind)} 빼기</button></div>`}
     </div>`;
   $("#srs-recall").addEventListener("click", () => showChoice(true));
   $("#srs-forgot").addEventListener("click", () => showChoice(false));
-  $("#srs-remove").addEventListener("click", removeCurrent);
+  const removeBtn = $("#srs-remove");
+  if (removeBtn) removeBtn.addEventListener("click", removeCurrent);
 }
 
 function removeCurrent() {
@@ -190,120 +121,116 @@ function removeCurrent() {
   nextQuestion();
 }
 
-function meaningHTML(item) {
-  return `<div class="word-meaning">${esc(item.meaning)}${nonLiteralBadge(item.nonLiteral)}</div>${
-    item.example ? `<p class="example">예시: ${esc(item.example)}</p>` : ""
-  }`;
-}
-
 // 2단계: 뜻을 보여주고, 예문 만들기(선택)와 그냥 넘어가기 중 고른다.
 function showChoice(remembered) {
   recalled = remembered;
+  if (inRetry) return showRetryReveal(remembered);
+  // 놓친 항목은 예문까지 만들어 산출(produce)하는 편이 훨씬 잘 남으므로 그쪽을 주 버튼으로 둔다.
+  const produceFirst = !remembered;
   $("#srs-content").innerHTML = `
     <div class="card">
       <span class="chip chip-yellow">${nounFor(current.kind)} 확인</span>
       <h3 class="expr-word">${esc(current.term)}</h3>
       ${meaningHTML(current)}
+      ${produceFirst ? `<p class="reason">방금 놓친 ${withParticle(nounFor(current.kind), "은", "는")} 예문까지 만들어 보면 훨씬 오래 남아요.</p>` : ""}
       <div class="row-rate">
-        <button class="btn-secondary" id="srs-plain-next" type="button">⏭ 예문 없이 넘어가기</button>
-        <button class="btn-primary" id="srs-produce" type="button">✍️ 내 이야기로 예문 만들기</button>
+        <button class="${produceFirst ? "btn-secondary" : "btn-primary"}" id="srs-plain-next" type="button">⏭ 예문 없이 넘어가기</button>
+        <button class="${produceFirst ? "btn-primary" : "btn-secondary"}" id="srs-produce" type="button">✍️ 내 이야기로 예문 만들기</button>
       </div>
     </div>`;
-  $("#srs-produce").addEventListener("click", startProduce);
+  $("#srs-produce").addEventListener("click", () => renderProduce(current, recalled, finish));
   $("#srs-plain-next").addEventListener("click", () => finish(recalled));
-}
-
-// 예문 만들기(선택): 표현/단어로 문장을 만들면 AI가 첨삭한다.
-function startProduce() {
-  $("#srs-content").innerHTML = `
-    <div class="card">
-      <span class="chip chip-yellow">이 ${withParticle(nounFor(current.kind), "으로", "로")} 내 이야기 만들기</span>
-      <h3 class="expr-word">${esc(current.term)}</h3>
-      <p class="reason">아무 예문보다 <b>실제 내 경험·습관·계획</b>을 담은 문장이 훨씬 오래 남아요.</p>
-    </div>
-    <form id="srs-form">
-      <textarea id="srs-input" rows="3" placeholder="이 ${withParticle(nounFor(current.kind), "을", "를")} 써서 나에 대한 문장을 만들어 보세요..."></textarea>
-      <div class="row-end">
-        <button class="btn-primary" type="submit">채점 받기</button>
-      </div>
-    </form>
-    <div id="srs-result"></div>`;
-  $("#srs-input").focus();
-  $("#srs-form").addEventListener("submit", onSubmit);
-}
-
-async function grade(sentence) {
-  return chatJSON({
-    system: `You review a Korean learner's example sentence using the target ${current.kind === "word" ? "word" : "expression"} "${current.term}".
-- spelling: list only typos, capitalization, and apostrophe slips as original -> corrected, with no explanation. Empty array if none.
-- corrections: real grammar errors and unnatural phrasings only (never typos, capitalization, or apostrophes), reasons in Korean.
-- natural_version: how a native speaker would write the same idea using the ${current.kind === "word" ? "word" : "expression"}.
-- comment: one or two sentences in Korean on whether it was used correctly. The learner was asked to write about their own real life, so if the sentence is impersonal or generic, say so briefly.
-- grades: grade the sentence on four independent components, judged separately.
-${GRADE_SCALE_NOTE}
-- task: how accurately and meaningfully the sentence uses the target ${current.kind === "word" ? "word" : "expression"} to convey its real meaning (an off-target or nonsensical use scores low even if grammatical).
-- accuracy: ${GRAMMAR_RUBRIC}
-- range: ${RANGE_RUBRIC}
-- fluency: ${NATURALNESS_NOTE}`,
-    messages: [{ role: "user", content: `Learner's sentence: "${sentence}"` }],
-    schema: REVIEW_SCHEMA,
-  });
-}
-
-async function onSubmit(ev) {
-  ev.preventDefault();
-  const sentence = $("#srs-input").value.trim();
-  if (!sentence) return toast("예문을 먼저 작성해 주세요.");
-  const btn = ev.target.querySelector("button[type=submit]");
-  btn.disabled = true;
-  btn.textContent = "채점 중...";
-  try {
-    const result = await grade(sentence);
-    const score = scoreDetail("expression", result.grades).total;
-    $("#srs-input").disabled = true;
-    btn.classList.add("hidden");
-
-    // 채점(피드백)만 보여 주고, 다음 복습 시점은 아래 버튼(최종 자가판정)이 정한다.
-    const decision = recalled
-      ? `<div class="row-end">
-           <button class="btn-secondary" id="srs-wrong" type="button">😵 잘못 생각했어요</button>
-           <button class="btn-primary" id="srs-next" type="button">다음 →</button>
-         </div>`
-      : `<div class="row-end"><button class="btn-primary" id="srs-next" type="button">다음 →</button></div>`;
-
-    $("#srs-result").innerHTML = `
-      <div class="feedback ${result.corrections.length ? "" : "good"}">
-        <div class="fb-title">📝 첨삭</div>
-        ${scoreBreakdownHTML("expression", result.grades)}
-        ${result.spelling?.length ? `<div class="fb-title">✏️ 오타·대소문자 <span class="reason">(점수에는 반영하지 않아요)</span></div>${spellingHTML(result.spelling)}` : ""}
-        ${correctionsHTML(result.corrections)}
-        <div>💬 원어민이라면: <span class="fixed">${esc(result.natural_version)}</span></div>
-        <div class="reason mt-6">${esc(result.comment)}</div>
-      </div>
-      ${decision}`;
-
-    // recalled + '다음' → 정말 기억함(정답). recalled + '잘못 생각했어요' 또는 까먹음 → 처음으로.
-    $("#srs-next").addEventListener("click", () => finish(recalled, score));
-    const wrongBtn = $("#srs-wrong");
-    if (wrongBtn) wrongBtn.addEventListener("click", () => finish(false, score));
-  } catch (e) {
-    toast(e.message);
-    btn.disabled = false;
-    btn.textContent = "채점 받기";
-  }
 }
 
 // 최종 자가판정으로 SRS를 반영하고 기록을 남긴 뒤 다음 문제로. score는 예문을 만들었을 때만 있다.
 function finish(remembered, score) {
-  const now = Date.now();
-  const updated = review(current.raw, remembered, now);
-  if (current.kind === "word") updateWord(updated);
-  else updateCard(updated);
-  appendRecord("quiz", { expression: current.term, correct: remembered, kind: current.kind, ...(score != null ? { score } : {}) });
+  const wasNew = !current.raw.reps; // 하루 신규 상한을 세는 기준
+  const wasLeech = !!current.raw.leech;
+  const updated = review(current.raw, remembered, Date.now());
+  saveItem(current, updated);
+  appendRecord("quiz", {
+    expression: current.term,
+    correct: remembered,
+    kind: current.kind,
+    isNew: wasNew,
+    ...(score != null ? { score } : {}),
+  });
   sessionTotal += 1;
   if (remembered) sessionRemembered += 1;
-  else queue.push(wrap(updated, current.kind)); // 기억 못한 항목은 이번 세션에서 다시
+  else retryQueue.push({ ...wrap(updated, current.kind), retryLeft: RETRY_ALLOWANCE });
+
+  // 방금 leech가 켜졌을 때만 한 번 물어본다(계속 보기로 했다면 다시 8회 뒤에).
+  if (updated.leech && !wasLeech) return renderLeechPrompt(current, updated);
   nextQuestion();
+}
+
+// 아무리 해도 안 외워지는 항목: 몰래 없애지 않고 유저에게 판단을 맡긴다.
+function renderLeechPrompt(item, updated) {
+  const noun = nounFor(item.kind);
+  $("#srs-content").innerHTML = `
+    <div class="card">
+      <span class="chip chip-yellow">⚠️ 잘 안 외워지는 ${noun}</span>
+      <h3 class="expr-word">${esc(item.term)}</h3>
+      <p class="reason">이 ${withParticle(noun, "을", "를")} ${updated.lapses}번이나 놓쳤어요. 이런 항목은 대개 지금 레벨에 안 맞거나, 예문이 와닿지 않는 경우예요. 계속 붙잡고 있기보다 빼는 편이 나을 수도 있어요.</p>
+      <div class="row-rate">
+        <button class="btn-secondary" id="srs-leech-keep" type="button">계속 볼래요</button>
+        <button class="btn-primary" id="srs-leech-drop" type="button">🗑 복습에서 빼기</button>
+      </div>
+    </div>`;
+  $("#srs-leech-drop").addEventListener("click", () => {
+    removeItem(item);
+    toast("복습에서 뺐어요.");
+    nextQuestion();
+  });
+  $("#srs-leech-keep").addEventListener("click", () => {
+    saveItem(item, clearLeech(updated));
+    nextQuestion();
+  });
+}
+
+// 세션 말 재도전: 방금 놓친 것만 다시 인출해 굳힌다. SRS 간격은 이미 정해졌으므로 바꾸지 않는다.
+function renderRetryIntro() {
+  $("#srs-content").innerHTML = `
+    <div class="card intro-card">
+      <h2>🔁 재도전 ${retryQueue.length}개</h2>
+      <p>방금 놓친 것만 다시 볼게요. 여기서 맞혀도 다음 복습 날짜는 바뀌지 않아요 — 지금 한 번 더 떠올려 머리에 굳히는 단계예요.</p>
+      <div class="row-rate">
+        <button class="btn-secondary" id="srs-retry-skip" type="button">오늘은 여기까지</button>
+        <button class="btn-primary" id="srs-retry-start" type="button">재도전 시작</button>
+      </div>
+    </div>`;
+  $("#srs-retry-start").addEventListener("click", () => {
+    inRetry = true;
+    queue = retryQueue;
+    retryQueue = [];
+    nextQuestion();
+  });
+  $("#srs-retry-skip").addEventListener("click", renderSummary);
+}
+
+// 재도전에서 뜻을 확인하고 넘어간다. 못 떠올렸으면 남은 횟수만큼 큐 뒤로 보낸다.
+function showRetryReveal(remembered) {
+  const again = !remembered && current.retryLeft > 1;
+  const item = current;
+  $("#srs-content").innerHTML = `
+    <div class="card">
+      <span class="chip chip-yellow">🔁 재도전</span>
+      <h3 class="expr-word">${esc(item.term)}</h3>
+      ${meaningHTML(item)}
+      ${again ? `<p class="reason">조금 뒤에 한 번 더 보여드릴게요.</p>` : ""}
+      <div class="row-end"><button class="btn-primary" id="srs-retry-next" type="button">다음 →</button></div>
+    </div>`;
+  $("#srs-retry-next").addEventListener("click", () => {
+    if (again) queue.push({ ...item, retryLeft: item.retryLeft - 1 });
+    nextQuestion();
+  });
+}
+
+/** 기억률에 따른 상한 조정 힌트. 너무 어려우면 학습이 안 되고, 너무 쉬우면 시간이 아깝다. */
+function rateHint(rate) {
+  if (rate < 70) return `<p class="reason">기억률이 낮아요. ⚙️ 설정에서 하루 학습량을 줄이면 이미 배운 걸 굳히는 데 집중할 수 있어요.</p>`;
+  if (rate > 95) return `<p class="reason">여유가 있어요. ⚙️ 설정에서 하루 학습량을 늘려도 좋겠어요.</p>`;
+  return "";
 }
 
 function renderSummary() {
@@ -312,6 +239,7 @@ function renderSummary() {
     <div class="card intro-card">
       <h2>🎉 복습 완료</h2>
       <p>${sessionTotal}개 중 ${sessionRemembered}개 기억했어요 (기억률 ${rate}%)</p>
+      ${sessionTotal ? rateHint(rate) : ""}
       <button class="btn-secondary" id="srs-home">돌아가기</button>
     </div>`;
   $("#srs-home").addEventListener("click", renderHome);

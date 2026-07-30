@@ -1,4 +1,8 @@
 // 학습 통계 도메인 로직. 순수 함수만 — 프레임워크/저장소/UI를 import하지 않는다.
+import { toSeoulDate } from "../../shared/date.js";
+
+// 복습(features/srs)도 같은 날짜 경계를 쓰므로 shared/date.js로 옮겼다. 기존 import 경로 호환을 위해 재수출한다.
+export { toSeoulDate };
 
 /** 최근 n개 점수의 평균. 점수가 없으면 null. */
 export function avgLastN(scores, n) {
@@ -21,11 +25,6 @@ export function summarize(records) {
     avg100: avgLastN(scores, 100),
     recentScores: scores.slice(-10),
   };
-}
-
-/** ISO 타임스탬프를 서울 기준 날짜 문자열(YYYY-MM-DD)로. */
-export function toSeoulDate(ts) {
-  return new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Seoul" }).format(new Date(ts));
 }
 
 function round1(n) {
