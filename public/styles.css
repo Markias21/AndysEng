@@ -450,13 +450,23 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 .cloze-line { margin-bottom: 14px; line-height: 2.2; }
 .cloze-line:last-of-type { margin-bottom: 4px; }
 .cloze-blank { white-space: nowrap; }
+/* 밑줄을 글자 수만큼 잘라 단어 길이를 보여 준다.
+   등폭 글꼴이라 글자 하나의 진행폭이 정확히 1ch고, letter-spacing 0.4ch를 더해 한 칸 주기가 1.4ch.
+   밑줄은 같은 1.4ch 주기로 1ch만 칠하는 그라디언트라 글자와 칸이 어긋나지 않는다.
+   (칸 폭 계산은 cloze-ui.js의 SLOT/GAP과 짝이므로 함께 바꿔야 한다) */
 .cloze-input {
-  min-width: 3.5ch; padding: 2px 4px; margin: 0 1px; font-size: 15px; font-family: inherit;
-  border: none; border-bottom: 2px solid var(--primary); border-radius: 0;
-  background: transparent; color: var(--text); text-align: center;
+  padding: 2px 0 4px; margin: 0 3px; font-size: 15px; text-align: left;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.4ch;
+  border: none; border-radius: 0; color: var(--text);
+  background-color: transparent;
+  background-image: linear-gradient(to right, var(--primary) 1ch, transparent 1ch);
+  background-size: 1.4ch 2px;
+  background-repeat: repeat-x;
+  background-position: left bottom;
 }
-.cloze-input:focus { outline: none; background: #f0f1ff; }
-.cloze-input::placeholder { color: var(--muted); letter-spacing: 0; opacity: 0.7; }
+.cloze-input:focus { outline: none; background-color: #f0f1ff; }
+.cloze-input::placeholder { color: var(--muted); opacity: 0.65; }
 .cloze-ok { font-weight: 700; color: var(--green); }
 .cloze-miss { font-weight: 700; color: var(--red); }
 .cloze-miss s { font-weight: 400; opacity: 0.7; }
@@ -509,7 +519,7 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 :root[data-theme="dark"] .dict-add:disabled { background: #16281f; color: var(--green); }
 :root[data-theme="dark"] .expr-add:disabled { background: #16281f; color: var(--green); }
 :root[data-theme="dark"] .non-literal { background: #3d2412; color: #f0a86a; }
-:root[data-theme="dark"] .cloze-input:focus { background: #2a2c44; }
+:root[data-theme="dark"] .cloze-input:focus { background-color: #2a2c44; }
 :root[data-theme="dark"] .cal-arrow:hover { background: #343652; }
 :root[data-theme="dark"] .cal-cell,
 :root[data-theme="dark"] .cal-none { background: #24263a; }

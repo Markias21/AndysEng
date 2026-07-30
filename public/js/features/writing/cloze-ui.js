@@ -2,21 +2,19 @@
 import { buildCloze, checkWords, wordsOf } from "./cloze.js";
 import { $, esc } from "../../shared/dom.js";
 
-// 자리점 하나가 글자 하나. 표현이 몇 단어이고 각 단어가 몇 글자인지 보여 주지 않으면 인출 난이도가 과하게 올라간다.
-const DOT = "·";
+// 잘린 밑줄 한 칸 = 글자 하나. 표현이 몇 단어이고 각 단어가 몇 글자인지 보여 주지 않으면 인출 난이도가 과하게 올라간다.
+// SLOT(글자폭)·GAP(글자 사이 간격)은 styles.css의 .cloze-input 배경 주기(1.4ch = 1ch 밑줄 + 0.4ch 공백)와 짝이다.
+const SLOT = 1;
+const GAP = 0.4;
 
-function dots(word) {
-  return DOT.repeat(word.length);
-}
-
-/** 힌트: 첫 글자만 드러내고 나머지는 자리점으로 남긴다. */
-function hintFor(word) {
-  return word[0] + DOT.repeat(word.length - 1);
+/** 글자 수만큼의 칸 폭. 마지막 글자 뒤 간격은 빼서 밑줄이 마지막 칸에서 딱 끝나게 한다. */
+function slotsWidth(length) {
+  return (length * (SLOT + GAP) - GAP).toFixed(2);
 }
 
 function inputHTML(blankIndex, wordIndex, word) {
   return `<input class="cloze-input" type="text" autocomplete="off" spellcheck="false"
-    data-b="${blankIndex}" data-w="${wordIndex}" style="width:${word.length + 1.5}ch" placeholder="${dots(word)}" />`;
+    data-b="${blankIndex}" data-w="${wordIndex}" style="width:${slotsWidth(word.length)}ch" />`;
 }
 
 /** parts/blanks를 번갈아 이어 붙인다. blank(i)는 parts[i+1] 앞에 온다. */
@@ -79,7 +77,7 @@ export function mountCloze(root, result, onReveal) {
   root.innerHTML = `
     <h4>🔤 원어민 문장 되찾기 <span class="reason">(채우고 나면 아래에 전체 첨삭이 열려요)</span></h4>
     <div class="card">
-      <p class="reason">원어민이라면 이렇게 썼어요. 한국어 해석을 힌트 삼아 빈칸을 채워 보세요. 빈칸은 단어 하나씩 나뉘어 있고, 자리점(${DOT}) 하나가 글자 하나예요.</p>
+      <p class="reason">원어민이라면 이렇게 썼어요. 한국어 해석을 힌트 삼아 빈칸을 채워 보세요. 빈칸은 단어 하나씩 나뉘어 있고, 잘린 밑줄 한 칸이 글자 하나예요.</p>
       <form id="cloze-form">
         ${weave(lines, blankInputsHTML)}
         <div class="row-end">
@@ -93,10 +91,11 @@ export function mountCloze(root, result, onReveal) {
   const groups = flat.map((blank, i) => [...root.querySelectorAll(`.cloze-input[data-b="${i}"]`)]);
   groups[0][0]?.focus();
 
+  // 길이는 밑줄 칸이 이미 알려 주므로, 힌트는 첫 글자만 첫 칸에 흘려 준다.
   $("#cloze-hint").addEventListener("click", () => {
     groups.forEach((inputs, i) => {
       const words = wordsOf(flat[i].answer);
-      inputs.forEach((el, wi) => (el.placeholder = hintFor(words[wi])));
+      inputs.forEach((el, wi) => (el.placeholder = words[wi][0]));
     });
   });
 
