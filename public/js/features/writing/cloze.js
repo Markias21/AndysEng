@@ -87,13 +87,21 @@ export function buildCloze(sentences, expressions) {
   });
 }
 
-/** 전체 빈칸 개수. 0이면 인출 단계를 띄울 게 없다. */
-export function countBlanks(lines) {
-  return (lines || []).reduce((n, line) => n + line.blanks.length, 0);
-}
-
 /** 유저 입력이 정답인지. 빈 입력은 항상 오답. */
 export function checkBlank(input, answer) {
   const got = normalize(input);
   return got !== "" && got === normalize(answer);
+}
+
+/** 표현을 띄어쓰기 단위로 나눈다. 빈칸을 단어별로 쪼개 개수와 길이를 보여 주기 위한 것. */
+export function wordsOf(answer) {
+  return String(answer ?? "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+/** 단어별 입력이 각각 맞는지. 입력이 모자란 자리는 오답. */
+export function checkWords(inputs, answer) {
+  return wordsOf(answer).map((word, i) => checkBlank(inputs?.[i] ?? "", word));
 }

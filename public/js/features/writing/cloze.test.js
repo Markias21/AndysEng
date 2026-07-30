@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildCloze, countBlanks, checkBlank, normalize } from "./cloze.js";
+import { buildCloze, checkBlank, checkWords, wordsOf, normalize } from "./cloze.js";
 
 function expr(expression, overrides = {}) {
   return { expression, meaning: "뜻", example: "example", level: "B1", ...overrides };
@@ -93,14 +93,20 @@ test("buildCloze: 구버전 문자열 답안도 받아들인다", () => {
   assert.deepEqual(lines[0].blanks, [{ answer: "pays off", exprIndex: 0 }]);
 });
 
-test("countBlanks: 전체 빈칸 개수를 센다", () => {
-  const lines = buildCloze(
-    [line("In the long run, it pays off."), line("Nothing to fill here.")],
-    [expr("in the long run"), expr("pays off")]
-  );
+test("wordsOf: 표현을 띄어쓰기 단위로 나눈다", () => {
+  assert.deepEqual(wordsOf("in the long run"), ["in", "the", "long", "run"]);
+  assert.deepEqual(wordsOf("  pays   off  "), ["pays", "off"]);
+  assert.deepEqual(wordsOf(""), []);
+});
 
-  assert.equal(countBlanks(lines), 2);
-  assert.equal(countBlanks([]), 0);
+test("checkWords: 단어마다 따로 판정한다", () => {
+  assert.deepEqual(checkWords(["In", "the", "long", "run"], "in the long run"), [true, true, true, true]);
+  assert.deepEqual(checkWords(["in", "a", "long", "run"], "in the long run"), [true, false, true, true]);
+});
+
+test("checkWords: 입력이 모자란 자리는 오답", () => {
+  assert.deepEqual(checkWords(["pays"], "pays off"), [true, false]);
+  assert.deepEqual(checkWords([], "pays off"), [false, false]);
 });
 
 test("checkBlank: 대소문자·양끝 구두점·연속 공백을 무시하고 판정한다", () => {

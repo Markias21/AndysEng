@@ -139,7 +139,7 @@ export function init() {
           <h4>🌟 원어민 모범 답안 <span class="cefr">${esc(getProfile().level)}</span></h4>
           <div class="card">${sentenceLinesHTML(r.native_answer)}</div>
           <h4>💡 익혀두면 좋은 표현 <span class="reason">(담을 것만 골라 복습에 추가하세요)</span></h4>
-          <div class="card" id="writing-exprs">${expressionAddHTML(r.native_expressions)}</div>
+          <div class="card" id="writing-exprs"></div>
           <h4>💬 첨삭에 대해 질문하기</h4>
           <div class="card">
             <div id="writing-qna-log"></div>
@@ -150,9 +150,11 @@ export function init() {
           </div>
           <div class="row-end"><button class="btn-secondary" id="writing-next">다음 질문 →</button></div>
         </div>`;
-      mountCloze($("#writing-cloze"), r, (autoAdded) => {
+      mountCloze($("#writing-cloze"), r, (missed) => {
         $("#writing-feedback-rest").classList.remove("hidden");
-        wireExpressionAdds($("#writing-exprs"), r.native_expressions, "writing", autoAdded);
+        const exprs = $("#writing-exprs");
+        exprs.innerHTML = expressionAddHTML(r.native_expressions, missed);
+        wireExpressionAdds(exprs, r.native_expressions, "writing");
       });
       $("#writing-next").addEventListener("click", newQuestion);
       $("#writing-qna-form").addEventListener("submit", async (qev) => {
