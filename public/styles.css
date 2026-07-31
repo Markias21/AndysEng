@@ -449,27 +449,22 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 .answer-line .mark { text-decoration: underline; text-underline-offset: 3px; font-weight: 700; color: var(--green); }
 .answer-ko { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
 
-/* 원어민 문장 되찾기: 모범 답안의 표현을 빈칸으로 뚫고 직접 인출하게 한다 */
-.cloze-line { margin-bottom: 14px; line-height: 2.2; }
+/* 빈칸 인출: 한 글자 = 칸 하나. 칸이 떨어져 있어야 몇 글자인지 세지 않고도 보인다.
+   단어 안(3px)보다 단어 사이(10px) 간격을 넓게 둬 단어 구분이 읽히게 하고,
+   좁은 화면에서는 단어 단위로 줄바꿈해 가로 스크롤이 생기지 않게 한다. */
+.cloze-line { margin-bottom: 14px; line-height: 2.1; }
 .cloze-line:last-of-type { margin-bottom: 4px; }
-.cloze-blank { white-space: nowrap; }
-/* 밑줄을 글자 수만큼 잘라 단어 길이를 보여 준다.
-   등폭 글꼴이라 글자 하나의 진행폭이 정확히 1ch고, letter-spacing 0.4ch를 더해 한 칸 주기가 1.4ch.
-   밑줄은 같은 1.4ch 주기로 1ch만 칠하는 그라디언트라 글자와 칸이 어긋나지 않는다.
-   (칸 폭 계산은 cloze-ui.js의 SLOT/GAP과 짝이므로 함께 바꿔야 한다) */
-.cloze-input {
-  padding: 2px 0 4px; margin: 0 3px; font-size: 15px; text-align: left;
+.cloze-blank { display: inline-flex; flex-wrap: wrap; gap: 4px 13px; vertical-align: bottom; margin: 0 4px; }
+.quiz-line .cloze-blank { justify-content: center; }
+.cloze-word { display: inline-flex; flex-wrap: wrap; gap: 3px; }
+.cloze-cell {
+  width: 1.15em; padding: 1px 0 3px; font-size: 16px; text-align: center;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  letter-spacing: 0.4ch;
-  border: none; border-radius: 0; color: var(--text);
-  background-color: transparent;
-  background-image: linear-gradient(to right, var(--primary) 1ch, transparent 1ch);
-  background-size: 1.4ch 2px;
-  background-repeat: repeat-x;
-  background-position: left bottom;
+  border: none; border-bottom: 2px solid var(--primary); border-radius: 0;
+  background-color: transparent; color: var(--text);
 }
-.cloze-input:focus { outline: none; background-color: #f0f1ff; }
-.cloze-input::placeholder { color: var(--muted); opacity: 0.65; }
+.cloze-cell:focus { outline: none; background-color: #f0f1ff; border-bottom-color: var(--primary-dark); }
+.cloze-cell::placeholder { color: var(--muted); opacity: 0.6; }
 .cloze-ok { font-weight: 700; color: var(--green); }
 .cloze-miss { font-weight: 700; color: var(--red); }
 .cloze-miss s { font-weight: 400; opacity: 0.7; }
@@ -477,6 +472,7 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 /* 복습 문제: 예문 한 줄과 그 해석을 가운데로 모아 카드처럼 보이게 한다 */
 .quiz-line { text-align: center; font-size: 17px; margin-top: 14px; }
 .quiz-ko { text-align: center; font-size: 14px; color: var(--muted); margin-top: 2px; }
+.cloze-guide { text-align: center; margin-top: 10px; }
 .word-meaning + .dict-pos { text-align: center; margin-top: 2px; }
 
 /* 첨삭 질문하기: 주고받은 질문/답변 로그 */
@@ -526,7 +522,7 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 :root[data-theme="dark"] .dict-add:disabled { background: #16281f; color: var(--green); }
 :root[data-theme="dark"] .expr-add:disabled { background: #16281f; color: var(--green); }
 :root[data-theme="dark"] .non-literal { background: #3d2412; color: #f0a86a; }
-:root[data-theme="dark"] .cloze-input:focus { background-color: #2a2c44; }
+:root[data-theme="dark"] .cloze-cell:focus { background-color: #2a2c44; }
 :root[data-theme="dark"] .cal-arrow:hover { background: #343652; }
 :root[data-theme="dark"] .cal-cell,
 :root[data-theme="dark"] .cal-none { background: #24263a; }
@@ -561,4 +557,9 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
   .cal-cell { min-height: 52px; padding: 3px 4px; border-radius: 8px; }
   .cal-chip { font-size: 9px; }
   .card { padding: 18px 14px; }
+  /* 좁은 화면에서 빈칸 한 줄이 화면을 넘지 않도록 문장·칸을 함께 줄인다 */
+  .cloze-line { font-size: 15px; line-height: 2; }
+  .quiz-line { font-size: 15px; }
+  .cloze-cell { font-size: 15px; width: 1.1em; }
+  .cloze-blank { gap: 4px 8px; margin: 0 2px; }
 }

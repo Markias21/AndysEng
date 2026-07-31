@@ -1,7 +1,7 @@
 // 원어민 모범 답안 인출(빈칸 복원) 화면. 판정은 shared/cloze.js(순수 도메인),
 // 입력칸·채점 표시는 shared/cloze-view.js가 맡고 여기서는 화면 구성만 한다.
 import { buildCloze, checkWords } from "../../shared/cloze.js";
-import { blankInputsHTML, blankResultHTML, inputsOf, showFirstLetters } from "../../shared/cloze-view.js";
+import { blankInputsHTML, blankResultHTML, readWords, showFirstLetters, wireCells } from "../../shared/cloze-view.js";
 import { $, esc } from "../../shared/dom.js";
 
 /** parts/blanks를 번갈아 이어 붙인다. blank(i)는 parts[i+1] 앞에 온다. */
@@ -49,7 +49,7 @@ export function mountCloze(root, result, onReveal) {
   root.innerHTML = `
     <h4>🔤 원어민 문장 되찾기 <span class="reason">(채우고 나면 아래에 전체 첨삭이 열려요)</span></h4>
     <div class="card">
-      <p class="reason">원어민이라면 이렇게 썼어요. 한국어 해석을 힌트 삼아 빈칸을 채워 보세요. 빈칸은 단어 하나씩 나뉘어 있고, 잘린 밑줄 한 칸이 글자 하나예요.</p>
+      <p class="reason">원어민이라면 이렇게 썼어요. 한국어 해석을 힌트 삼아 빈칸을 채워 보세요. 칸 하나가 글자 하나고, 스페이스바를 누르면 다음 단어로 넘어가요.</p>
       <form id="cloze-form">
         ${weave(lines, (i, blank) => blankInputsHTML(blank.answer, i))}
         <div class="row-end">
@@ -60,18 +60,18 @@ export function mountCloze(root, result, onReveal) {
       </form>
     </div>`;
 
-  const groups = flat.map((_, i) => inputsOf(root, i));
-  groups[0][0]?.focus();
+  const cells = wireCells(root);
+  cells[0]?.focus();
 
   $("#cloze-hint").addEventListener("click", () => {
-    groups.forEach((inputs, i) => showFirstLetters(inputs, flat[i].answer));
+    flat.forEach((blank, i) => showFirstLetters(root, blank.answer, i));
   });
 
   $("#cloze-skip").addEventListener("click", () => onReveal(new Set()));
 
   $("#cloze-form").addEventListener("submit", (ev) => {
     ev.preventDefault();
-    const typedByBlank = groups.map((inputs) => inputs.map((el) => el.value));
+    const typedByBlank = flat.map((_, i) => readWords(root, i));
     const wordFlags = flat.map((blank, i) => checkWords(typedByBlank[i], blank.answer));
     const okFlags = wordFlags.map((flags) => flags.every(Boolean));
     onReveal(showResult(root, lines, typedByBlank, wordFlags, okFlags, result.native_expressions));

@@ -3,7 +3,7 @@
 // 다음 복습 간격은 이 빈칸의 정답 여부가 정한다(자가평가 없음).
 import { buildQuiz } from "./quiz.js";
 import { checkWords } from "../../shared/cloze.js";
-import { blankInputsHTML, blankResultHTML, inputsOf, showFirstLetters } from "../../shared/cloze-view.js";
+import { blankInputsHTML, blankResultHTML, readWords, showFirstLetters, wireCells } from "../../shared/cloze-view.js";
 import { nounFor, withParticle } from "./labels.js";
 import { $, esc, nonLiteralBadge } from "../../shared/dom.js";
 
@@ -55,6 +55,7 @@ export function renderQuiz(item, meta, handlers) {
       <span class="chip chip-yellow">${meta.inRetry ? "🔁 재도전" : `빈칸 채우기`} · 남은 항목 ${meta.remaining}</span>
       <form id="srs-quiz-form">
         ${questionBody(quiz, item, noun)}
+        <p class="reason cloze-guide">칸 하나가 글자 하나예요. 스페이스바를 누르면 다음 단어로 넘어가요.</p>
         <div class="row-end">
           <button class="btn-text" id="srs-hint" type="button">🔤 첫 글자 힌트</button>
           <button class="btn-primary" type="submit">확인하기</button>
@@ -63,9 +64,10 @@ export function renderQuiz(item, meta, handlers) {
       ${meta.inRetry ? "" : `<div class="row-end"><button class="btn-secondary btn-chip" id="srs-remove" type="button">🗑 이 ${noun} 빼기</button></div>`}
     </div>`;
 
-  const inputs = inputsOf($(CONTENT));
-  inputs[0]?.focus();
-  $("#srs-hint").addEventListener("click", () => showFirstLetters(inputs, quiz.answer));
+  const root = $(CONTENT);
+  const cells = wireCells(root);
+  cells[0]?.focus();
+  $("#srs-hint").addEventListener("click", () => showFirstLetters(root, quiz.answer));
   const meaningBtn = $("#srs-show-meaning");
   if (meaningBtn)
     meaningBtn.addEventListener("click", () => {
@@ -77,7 +79,7 @@ export function renderQuiz(item, meta, handlers) {
 
   $("#srs-quiz-form").addEventListener("submit", (ev) => {
     ev.preventDefault();
-    const typed = inputs.map((el) => el.value);
+    const typed = readWords(root);
     const flags = checkWords(typed, quiz.answer);
     renderReveal(quiz, item, typed, flags, meta, handlers);
   });
