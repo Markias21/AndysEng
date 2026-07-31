@@ -161,7 +161,7 @@ export function removeCard(id) {
 
 /**
  * 배운 표현들을 새 복습 카드로 덱에 추가한다. 같은 표현(대소문자 무시)은 중복 저장하지 않는다.
- * items: [{expression, meaning, example, source}]
+ * items: [{expression, meaning, example, exampleKo, level, nonLiteral, source}]
  */
 export function addToDeck(items) {
   const deck = load().deck;
@@ -188,7 +188,7 @@ export function getWords() {
 
 /**
  * 사전에서 고른 단어(뜻 하나)를 단어장 카드로 추가한다. 같은 단어+뜻(대소문자 무시)은 중복 저장하지 않는다.
- * item: {word, pos, meaning, example}. 반환: 추가했으면 true.
+ * item: {word, pos, meaning, example, exampleKo}. 반환: 추가했으면 true.
  */
 export function addWord(item) {
   const words = load().words;

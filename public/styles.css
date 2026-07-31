@@ -94,6 +94,8 @@ main { max-width: 760px; margin: 0 auto; padding: 28px 16px 80px; }
   padding: 4px 12px; border-radius: 999px; margin-bottom: 10px;
 }
 .chip-yellow { background: #fff4cc; color: #a07800; }
+.chip-green { background: #d7f5e6; color: var(--green); }
+.chip-red { background: #ffe3e3; color: var(--red); }
 
 /* 회화 */
 .chat { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
@@ -433,8 +435,9 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 .dict-phonetic { font-size: 13px; color: var(--muted); }
 .dict-pos { font-size: 12px; font-weight: 700; color: var(--muted); }
 .dict-meaning { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-.dict-example { font-size: 14px; font-style: italic; color: var(--muted); margin-bottom: 10px; }
-.dict-add { padding: 7px 14px; font-size: 13px; }
+.dict-example { font-size: 14px; font-style: italic; color: var(--muted); }
+.dict-example-ko { font-size: 13px; color: var(--muted); }
+.dict-add { padding: 7px 14px; font-size: 13px; margin-top: 10px; }
 .dict-add:disabled { background: #d7f5e6; color: var(--green); cursor: default; }
 
 /* 번역기 모달 결과 */
@@ -471,6 +474,10 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 .cloze-miss { font-weight: 700; color: var(--red); }
 .cloze-miss s { font-weight: 400; opacity: 0.7; }
 .cloze-summary { margin-top: 12px; font-size: 14px; color: var(--muted); }
+/* 복습 문제: 예문 한 줄과 그 해석을 가운데로 모아 카드처럼 보이게 한다 */
+.quiz-line { text-align: center; font-size: 17px; margin-top: 14px; }
+.quiz-ko { text-align: center; font-size: 14px; color: var(--muted); margin-top: 2px; }
+.word-meaning + .dict-pos { text-align: center; margin-top: 2px; }
 
 /* 첨삭 질문하기: 주고받은 질문/답변 로그 */
 .qna-turn { margin-bottom: 12px; }

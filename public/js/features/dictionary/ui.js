@@ -17,9 +17,10 @@ const ENTRY_ITEM = {
     phonetic: { type: "string", description: "IPA 발음 기호, 예: /meɪk/. 모르면 빈 문자열" },
     pos: { type: "string", description: "품사를 한국어로, 예: 동사·명사·형용사" },
     meaning: { type: "string", description: "이 범주의 뜻을 한국어로 짧게" },
-    example: { type: "string", description: "이 뜻을 보여주는 자연스러운 영어 예문 1개" },
+    example: { type: "string", description: "이 뜻을 보여주는 자연스러운 영어 예문 1개. 표제어를 반드시 포함할 것" },
+    example_ko: { type: "string", description: "example의 한국어 해석" },
   },
-  required: ["word", "phonetic", "pos", "meaning", "example"],
+  required: ["word", "phonetic", "pos", "meaning", "example", "example_ko"],
   additionalProperties: false,
 };
 
@@ -69,6 +70,7 @@ function entryHTML(entry, i) {
       </div>
       <div class="dict-meaning">${esc(entry.meaning)}</div>
       <div class="dict-example">${esc(entry.example)}</div>
+      ${entry.example_ko ? `<div class="dict-example-ko">${esc(entry.example_ko)}</div>` : ""}
       <button class="btn-secondary dict-add" type="button" data-i="${i}">➕ 복습에 추가</button>
     </div>`;
 }
@@ -84,7 +86,13 @@ function renderResults(entries) {
   box.querySelectorAll(".dict-add").forEach((btn) => {
     btn.addEventListener("click", () => {
       const entry = lastEntries[Number(btn.dataset.i)];
-      const added = addWord({ word: entry.word, pos: entry.pos, meaning: entry.meaning, example: entry.example });
+      const added = addWord({
+        word: entry.word,
+        pos: entry.pos,
+        meaning: entry.meaning,
+        example: entry.example,
+        exampleKo: entry.example_ko,
+      });
       toast(added ? `복습에 담았어요: ${entry.word}` : "이미 복습 목록에 있는 단어예요.");
       btn.disabled = true;
       btn.textContent = added ? "✓ 담김" : "이미 있음";

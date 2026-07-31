@@ -1,5 +1,5 @@
 // 복습의 '예문 만들기' 화면(선택 단계): 표현/단어로 내 이야기를 쓰면 AI가 첨삭한다.
-// 첨삭은 피드백 전용이다 — 다음 복습 시점은 이 화면이 아니라 자가평가 버튼이 정한다.
+// 첨삭은 피드백 전용이다 — 다음 복습 시점은 이 화면이 아니라 앞선 빈칸 정답 여부가 정한다.
 import { REVIEW_SCHEMA, reviewSystem } from "./schema.js";
 import { nounFor, withParticle } from "./labels.js";
 import { chatJSON } from "../../shared/claude.js";
@@ -8,10 +8,9 @@ import { $, esc, toast, scoreBreakdownHTML, correctionsHTML, spellingHTML } from
 
 /**
  * item: {kind, term}
- * recalled: 앞서 '기억나요'를 눌렀는지 (눌렀다면 최종 확인 버튼을 하나 더 준다)
- * onDone(remembered, score): 자가판정이 끝났을 때
+ * onDone(score): 첨삭을 확인하고 다음으로 넘어갈 때
  */
-export function renderProduce(item, recalled, onDone) {
+export function renderProduce(item, onDone) {
   const noun = nounFor(item.kind);
   $("#srs-content").innerHTML = `
     <div class="card">
@@ -27,7 +26,7 @@ export function renderProduce(item, recalled, onDone) {
     </form>
     <div id="srs-result"></div>`;
   $("#srs-input").focus();
-  $("#srs-form").addEventListener("submit", (ev) => onSubmit(ev, item, recalled, onDone));
+  $("#srs-form").addEventListener("submit", (ev) => onSubmit(ev, item, onDone));
 }
 
 async function grade(item, sentence) {
@@ -38,7 +37,7 @@ async function grade(item, sentence) {
   });
 }
 
-async function onSubmit(ev, item, recalled, onDone) {
+async function onSubmit(ev, item, onDone) {
   ev.preventDefault();
   const sentence = $("#srs-input").value.trim();
   if (!sentence) return toast("예문을 먼저 작성해 주세요.");
@@ -51,14 +50,6 @@ async function onSubmit(ev, item, recalled, onDone) {
     $("#srs-input").disabled = true;
     btn.classList.add("hidden");
 
-    // recalled + '다음' → 정말 기억함. recalled + '잘못 생각했어요' 또는 까먹음 → 간격 하락.
-    const decision = recalled
-      ? `<div class="row-end">
-           <button class="btn-secondary" id="srs-wrong" type="button">😵 잘못 생각했어요</button>
-           <button class="btn-primary" id="srs-next" type="button">다음 →</button>
-         </div>`
-      : `<div class="row-end"><button class="btn-primary" id="srs-next" type="button">다음 →</button></div>`;
-
     $("#srs-result").innerHTML = `
       <div class="feedback ${result.corrections.length ? "" : "good"}">
         <div class="fb-title">📝 첨삭</div>
@@ -68,11 +59,9 @@ async function onSubmit(ev, item, recalled, onDone) {
         <div>💬 원어민이라면: <span class="fixed">${esc(result.natural_version)}</span></div>
         <div class="reason mt-6">${esc(result.comment)}</div>
       </div>
-      ${decision}`;
+      <div class="row-end"><button class="btn-primary" id="srs-next" type="button">다음 →</button></div>`;
 
-    $("#srs-next").addEventListener("click", () => onDone(recalled, score));
-    const wrongBtn = $("#srs-wrong");
-    if (wrongBtn) wrongBtn.addEventListener("click", () => onDone(false, score));
+    $("#srs-next").addEventListener("click", () => onDone(score));
   } catch (e) {
     toast(e.message);
     btn.disabled = false;

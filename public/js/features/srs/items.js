@@ -13,6 +13,7 @@ export function wrap(raw, kind) {
     term: kind === "word" ? raw.word : raw.expression,
     meaning: raw.meaning,
     example: raw.example,
+    exampleKo: raw.exampleKo,
     pos: raw.pos,
     level: raw.level,
     nonLiteral: raw.nonLiteral,

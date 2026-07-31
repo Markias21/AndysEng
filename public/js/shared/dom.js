@@ -117,6 +117,7 @@ export function expressionAddHTML(expressions, missed) {
       (e, i) =>
         `<li><div class="expr-head"><b>${esc(e.expression)}</b>${e.level ? ` <span class="cefr">${esc(e.level)}</span>` : ""}${nonLiteralBadge(e.non_literal)}${missed?.has(e.expression) ? ` <span class="expr-missed">못 맞힘</span>` : ""} — ${esc(e.meaning)}</div>
           <div class="reason">${esc(e.example)}</div>
+          ${e.example_ko ? `<div class="reason">${esc(e.example_ko)}</div>` : ""}
           <button class="btn-secondary expr-add" type="button" data-i="${i}">➕ 복습에 추가</button></li>`
     )
     .join("")}</ul>`;
@@ -128,7 +129,15 @@ export function wireExpressionAdds(root, expressions, source) {
     const e = expressions[Number(btn.dataset.i)];
     btn.addEventListener("click", () => {
       const added = addToDeck([
-        { expression: e.expression, meaning: e.meaning, example: e.example, level: e.level, nonLiteral: e.non_literal, source },
+        {
+          expression: e.expression,
+          meaning: e.meaning,
+          example: e.example,
+          exampleKo: e.example_ko,
+          level: e.level,
+          nonLiteral: e.non_literal,
+          source,
+        },
       ]);
       toast(added ? `복습에 담았어요: ${e.expression}` : "이미 복습 목록에 있어요.");
       btn.disabled = true;

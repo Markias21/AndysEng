@@ -1,5 +1,4 @@
 // 복습 화면에서 쓰는 표시용 헬퍼. 저장소를 모르고, 받은 값만 문자열로 바꾼다.
-import { esc, nonLiteralBadge } from "../../shared/dom.js";
 import { LEECH_THRESHOLD } from "./scheduler.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -23,10 +22,4 @@ export function dueLabel(card, now) {
 
 export function leechBadge(card) {
   return card.leech ? ` <span class="leech-badge" title="${LEECH_THRESHOLD}번 넘게 놓친 항목이에요">⚠️ 잘 안 외워져요</span>` : "";
-}
-
-export function meaningHTML(item) {
-  return `<div class="word-meaning">${esc(item.meaning)}${nonLiteralBadge(item.nonLiteral)}</div>${
-    item.example ? `<p class="example">예시: ${esc(item.example)}</p>` : ""
-  }`;
 }
