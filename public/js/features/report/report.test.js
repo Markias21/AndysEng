@@ -102,6 +102,17 @@ test("buildReport: 문장 단위 답안은 해석과 함께 줄을 나누고 밑
   assert.ok(!md.includes("[["), "밑줄 마커가 리포트에 남으면 안 된다");
 });
 
+test("buildReport: 글쓰기 기본 결과를 지문·난이도·정답 개수로 요약한다", () => {
+  const md = buildReport(
+    {
+      writingBasic: [{ essayId: "big-city-small-town", template: "preference", difficulty: "mid", total: 14, correct: 11 }],
+    },
+    { dateLabel: "2026-08-01 10:00" }
+  );
+  assert.match(md, /📝 글쓰기 기본 \(1회\)/);
+  assert.match(md, /\(mid\) big-city-small-town: 11\/14개 맞음/);
+});
+
 test("buildReport: 복습 퀴즈 결과를 정답률과 함께 담는다", () => {
   const md = buildReport(
     {

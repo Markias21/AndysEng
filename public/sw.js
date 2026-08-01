@@ -1,5 +1,5 @@
 // 오프라인 앱 셸. 정적 자산만 캐시하고 API 호출(api.anthropic.com)은 절대 캐시하지 않는다.
-const VERSION = "v11";
+const VERSION = "v12";
 const CACHE = `andyseng-${VERSION}`;
 const ASSETS = [
   "./",
@@ -19,6 +19,11 @@ const ASSETS = [
   "js/shared/date.js",
   "js/shared/cloze.js",
   "js/shared/cloze-view.js",
+  "js/shared/pick.js",
+  "js/shared/autosave.js",
+  "js/shared/translate.js",
+  "js/shared/github.js",
+  "js/shared/usage.js",
   "js/features/conversation/ui.js",
   "js/features/conversation/topics.js",
   "js/features/conversation/hobby-topics.js",
@@ -28,6 +33,17 @@ const ASSETS = [
   "js/features/writing/schema.js",
   "js/features/writing/qna.js",
   "js/features/writing/cloze-ui.js",
+  "js/features/writing/prompts.js",
+  "js/features/writing/structure.js",
+  "js/features/writing/toefl.js",
+  "js/features/writing-basic/ui.js",
+  "js/features/writing-basic/templates.js",
+  "js/features/writing-basic/difficulty.js",
+  "js/features/writing-basic/essays.js",
+  "js/features/writing-basic/essays-preference.js",
+  "js/features/writing-basic/essays-agree.js",
+  "js/features/writing-basic/essays-tradeoff.js",
+  "js/features/writing-basic/essays-policy.js",
   "js/features/report/report.js",
   "js/features/report/ui.js",
   "js/features/stats/stats.js",
@@ -44,6 +60,7 @@ const ASSETS = [
   "js/features/srs/ui.js",
   "js/features/dictionary/detect.js",
   "js/features/dictionary/ui.js",
+  "js/features/sync/ui.js",
   "js/features/translate/ui.js",
   "js/features/settings/ui.js",
 ];

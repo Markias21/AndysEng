@@ -25,7 +25,8 @@ async function finishStudy() {
   const since = getLastReportAt();
   const records = recordsSince(getAllRecords(), since);
   const total =
-    records.conversation.length + records.writing.length + records.expression.length + records.quiz.length;
+    records.conversation.length + records.writing.length + records.expression.length + records.quiz.length +
+    records.writingBasic.length;
   if (total === 0) return toast("저장할 새 학습 기록이 없어요.");
 
   const now = new Date();

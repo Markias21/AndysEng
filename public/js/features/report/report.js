@@ -55,6 +55,17 @@ function expressionSection(records) {
   return lines;
 }
 
+/** 글쓰기 기본은 점수 통계에는 반영하지 않고 기록만 남기므로 지문·난이도·정답 개수만 요약한다. */
+function writingBasicSection(records) {
+  if (records.length === 0) return [];
+  const lines = [`## 📝 글쓰기 기본 (${records.length}회)`, ""];
+  for (const r of records) {
+    lines.push(`- (${r.difficulty}) ${r.essayId}: ${r.correct}/${r.total}개 맞음`);
+  }
+  lines.push("");
+  return lines;
+}
+
 function quizSection(records) {
   if (records.length === 0) return [];
   const correct = records.filter((r) => r.correct).length;
@@ -73,13 +84,14 @@ function quizSection(records) {
  * meta: { dateLabel, userName? }
  */
 export function buildReport(records, meta) {
-  const { conversation = [], writing = [], expression = [], quiz = [] } = records;
+  const { conversation = [], writing = [], expression = [], quiz = [], writingBasic = [] } = records;
   const total = conversation.length + writing.length + expression.length;
   const lines = [`# AndysEng 학습 리포트 — ${meta.dateLabel}`, ""];
   if (meta.userName) lines.push(`- 학습자: ${meta.userName}`);
   lines.push(`- 학습한 문장 수: ${total}개`, "");
   lines.push(...conversationSection(conversation));
   lines.push(...writingSection(writing));
+  lines.push(...writingBasicSection(writingBasic));
   lines.push(...expressionSection(expression));
   lines.push(...quizSection(quiz));
   return lines.join("\n").replace(/\n+$/, "\n");

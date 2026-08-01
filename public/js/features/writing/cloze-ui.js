@@ -1,29 +1,15 @@
 // 원어민 모범 답안 인출(빈칸 복원) 화면. 판정은 shared/cloze.js(순수 도메인),
 // 입력칸·채점 표시는 shared/cloze-view.js가 맡고 여기서는 화면 구성만 한다.
 import { buildCloze, checkWords } from "../../shared/cloze.js";
-import { blankInputsHTML, blankResultHTML, readWords, showFirstLetters, wireCells } from "../../shared/cloze-view.js";
-import { $, esc } from "../../shared/dom.js";
-
-/** parts/blanks를 번갈아 이어 붙인다. blank(i)는 parts[i+1] 앞에 온다. */
-function weave(lines, blankHTML) {
-  let index = 0;
-  return lines
-    .map((line) => {
-      const body = line.parts
-        .map((part, p) => (p === 0 ? esc(part) : blankHTML(index++, line.blanks[p - 1]) + esc(part)))
-        .join("");
-      const ko = line.translation ? `<span class="answer-ko">${esc(line.translation)}</span>` : "";
-      return `<div class="cloze-line">${body}${ko}</div>`;
-    })
-    .join("");
-}
+import { blankInputsHTML, blankResultHTML, readWords, showFirstLetters, weaveHTML, wireCells } from "../../shared/cloze-view.js";
+import { $ } from "../../shared/dom.js";
 
 function showResult(root, lines, typedByBlank, wordFlags, okFlags, expressions) {
   const flat = lines.flatMap((l) => l.blanks);
   const correct = okFlags.filter(Boolean).length;
   const missed = flat.filter((_, i) => !okFlags[i]).map((b) => expressions[b.exprIndex]).filter(Boolean);
 
-  const body = weave(lines, (i, blank) => blankResultHTML(blank.answer, wordFlags[i], typedByBlank[i]));
+  const body = weaveHTML(lines, (i, blank) => blankResultHTML(blank.answer, wordFlags[i], typedByBlank[i]));
 
   root.innerHTML = `
     <h4>🔤 원어민 문장 되찾기</h4>
@@ -51,7 +37,7 @@ export function mountCloze(root, result, onReveal) {
     <div class="card">
       <p class="reason">원어민이라면 이렇게 썼어요. 한국어 해석을 힌트 삼아 빈칸을 채워 보세요. 칸 하나가 글자 하나고, 스페이스바를 누르면 다음 단어로 넘어가요.</p>
       <form id="cloze-form">
-        ${weave(lines, (i, blank) => blankInputsHTML(blank.answer, i))}
+        ${weaveHTML(lines, (i, blank) => blankInputsHTML(blank.answer, i))}
         <div class="row-end">
           <button class="btn-text" id="cloze-hint" type="button">🔤 첫 글자 힌트</button>
           <button class="btn-text" id="cloze-skip" type="button">⏭ 건너뛰고 첨삭 보기</button>

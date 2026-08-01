@@ -6,6 +6,7 @@ import * as github from "./shared/github.js";
 import { $, toast } from "./shared/dom.js";
 import * as conversation from "./features/conversation/ui.js";
 import * as writing from "./features/writing/ui.js";
+import * as writingBasic from "./features/writing-basic/ui.js";
 import * as report from "./features/report/ui.js";
 import * as sync from "./features/sync/ui.js";
 import * as stats from "./features/stats/ui.js";
@@ -93,6 +94,7 @@ function initTabs() {
       $(`#view-${tab.dataset.view}`).classList.add("active");
       if (tab.dataset.view === "stats") stats.render();
       if (tab.dataset.view === "srs") srs.render();
+      if (tab.dataset.view === "writing-basic") writingBasic.render();
     });
   });
 }

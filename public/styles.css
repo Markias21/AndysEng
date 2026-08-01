@@ -489,6 +489,25 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 .expr-add { padding: 6px 12px; font-size: 13px; margin-top: 8px; }
 .expr-add:disabled { background: #d7f5e6; color: var(--green); cursor: default; }
 
+/* 글쓰기 기본: 난이도 칩 + 템플릿별 지문 카드 그리드 */
+.diff-picker { display: flex; gap: 8px; margin-bottom: 6px; }
+.diff-picker .btn-chip.active { background: var(--primary); color: #fff; }
+.diff-desc { margin-bottom: 20px; }
+.basic-template-title { margin-bottom: 2px; }
+.essay-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+  margin-bottom: 24px;
+}
+.essay-card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  text-align: left; padding: 14px 16px;
+}
+.essay-card .reason { margin: 0; }
+@media (max-width: 480px) {
+  .essay-grid { grid-template-columns: 1fr; }
+}
+.hide-ko .answer-ko { display: none; }
+
 /* 단어장·복습 목록의 오른쪽(예정일 + 빼기), 자가평가 버튼 줄 */
 .row-actions { display: inline-flex; align-items: center; gap: 8px; }
 .row-actions .btn-text { text-decoration: none; font-size: 15px; }

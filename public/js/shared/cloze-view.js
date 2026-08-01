@@ -8,6 +8,20 @@ import { esc } from "./dom.js";
 
 const CELL = ".cloze-cell";
 
+/** parts/blanks를 번갈아 이어 붙인다. blank(i)는 parts[i+1] 앞에 온다. */
+export function weaveHTML(lines, blankHTML) {
+  let index = 0;
+  return lines
+    .map((line) => {
+      const body = line.parts
+        .map((part, p) => (p === 0 ? esc(part) : blankHTML(index++, line.blanks[p - 1]) + esc(part)))
+        .join("");
+      const ko = line.translation ? `<span class="answer-ko">${esc(line.translation)}</span>` : "";
+      return `<div class="cloze-line">${body}${ko}</div>`;
+    })
+    .join("");
+}
+
 /** 표현 하나를 단어 → 글자 순으로 쪼갠 입력칸들. blankIndex로 그룹을 구분한다. */
 export function blankInputsHTML(answer, blankIndex = 0) {
   const words = wordsOf(answer)
