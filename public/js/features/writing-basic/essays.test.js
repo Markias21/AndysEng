@@ -16,8 +16,8 @@ function wordCount(essay) {
     .split(/\s+/).length;
 }
 
-test("essays: 12개, id가 유일하다", () => {
-  assert.equal(ESSAYS.length, 12);
+test("essays: 32개, id가 유일하다", () => {
+  assert.equal(ESSAYS.length, 32);
   assert.equal(new Set(ESSAYS.map((e) => e.id)).size, ESSAYS.length);
 });
 
