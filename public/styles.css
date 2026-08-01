@@ -489,6 +489,12 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 .expr-add { padding: 6px 12px; font-size: 13px; margin-top: 8px; }
 .expr-add:disabled { background: #d7f5e6; color: var(--green); cursor: default; }
 
+/* 이메일 유형: 요구 항목 목록(질문 카드)·충족 여부 체크리스트(첨삭 결과) 공용 */
+.bullet-list { list-style: none; margin: 8px 0; padding: 0; }
+.bullet-list li { padding: 6px 0; line-height: 1.5; }
+.bullet-ok { color: var(--text); }
+.bullet-miss { color: var(--red); }
+
 /* 글쓰기 기본: 난이도 칩 + 템플릿별 지문 카드 그리드 */
 .diff-picker { display: flex; gap: 8px; margin-bottom: 6px; }
 .diff-picker .btn-chip.active { background: var(--primary); color: #fff; }

@@ -31,7 +31,8 @@ function writingSection(records) {
   if (records.length === 0) return [];
   const lines = [`## ✍️ 글쓰기 (${records.length}편, 평균 ${avg(records.map((r) => r.score))}점)`, ""];
   for (const r of records) {
-    lines.push(`### (${r.score}점) ${r.question}`, "");
+    const modeLabel = r.mode === "email" ? "이메일" : "토론형";
+    lines.push(`### (${r.score}점, ${modeLabel}) ${r.question}`, "");
     lines.push(`**내 답안**`, "", r.answer, "");
     if (r.feedback?.corrected_answer) lines.push(`**교정된 답안**`, "", ...answerLines(r.feedback.corrected_answer));
     if (r.feedback?.native_answer) lines.push(`**원어민 모범 답안**`, "", ...answerLines(r.feedback.native_answer));
@@ -60,7 +61,8 @@ function writingBasicSection(records) {
   if (records.length === 0) return [];
   const lines = [`## 📝 글쓰기 기본 (${records.length}회)`, ""];
   for (const r of records) {
-    lines.push(`- (${r.difficulty}) ${r.essayId}: ${r.correct}/${r.total}개 맞음`);
+    const modeLabel = r.mode === "email" ? "이메일" : "토론형";
+    lines.push(`- (${modeLabel}, ${r.difficulty}) ${r.essayId}: ${r.correct}/${r.total}개 맞음`);
   }
   lines.push("");
   return lines;

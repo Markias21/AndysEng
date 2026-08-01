@@ -80,9 +80,8 @@
     <section id="view-writing" class="view">
       <div class="card intro-card" id="writing-intro">
         <h2>✍️ 글쓰기 공부</h2>
-        <p>AI가 주는 질문에 3~4문장으로 가볍게 주장해 보세요.<br/>문법 첨삭과 원어민 모범 답안을 받아요.</p>
-        <button class="btn-primary" id="writing-start">질문 받기</button>
-        <div id="writing-rubric"></div>
+        <p>유형을 골라 시작하세요.<br/>문법 첨삭과 원어민 모범 답안을 받아요.</p>
+        <div id="writing-modes" class="category-grid"></div>
       </div>
       <div id="writing-room" class="hidden">
         <div id="writing-structure" class="card hidden">
@@ -92,9 +91,12 @@
           <div id="structure-exprs"></div>
         </div>
         <div class="card question-card">
-          <div class="room-toolbar"><span class="chip">오늘의 질문</span><span class="toolbar-actions"><button class="btn-secondary btn-chip dict-open-btn" type="button">📖 사전</button><button class="btn-secondary btn-chip translate-open-btn" type="button" data-feature="writing">🌐 번역기</button><button class="btn-secondary btn-chip" id="writing-structure-btn" type="button">🧱 구조 제시</button><button class="btn-secondary btn-chip" id="writing-reroll" type="button">🔄 다른 질문</button></span></div>
+          <div class="room-toolbar"><span class="chip">오늘의 질문</span><span class="toolbar-actions"><button class="btn-secondary btn-chip dict-open-btn" type="button">📖 사전</button><button class="btn-secondary btn-chip translate-open-btn" type="button" data-feature="writing">🌐 번역기</button><button class="btn-secondary btn-chip" id="writing-structure-btn" type="button">🧱 구조 제시</button><button class="btn-secondary btn-chip" id="writing-mode-btn" type="button">🔀 유형 바꾸기</button><button class="btn-secondary btn-chip" id="writing-reroll" type="button">🔄 다른 질문</button></span></div>
           <p id="writing-question" class="question-text"></p>
+          <p id="writing-recipient" class="reason hidden"></p>
+          <ul id="writing-bullets" class="bullet-list hidden"></ul>
           <p id="writing-tip" class="writing-tip"></p>
+          <div id="writing-rubric"></div>
         </div>
         <form id="writing-form">
           <textarea id="writing-input" rows="5" placeholder="3~4문장으로 자유롭게 써 보세요..."></textarea>

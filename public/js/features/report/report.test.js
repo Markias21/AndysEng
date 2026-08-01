@@ -102,15 +102,33 @@ test("buildReport: 문장 단위 답안은 해석과 함께 줄을 나누고 밑
   assert.ok(!md.includes("[["), "밑줄 마커가 리포트에 남으면 안 된다");
 });
 
-test("buildReport: 글쓰기 기본 결과를 지문·난이도·정답 개수로 요약한다", () => {
+test("buildReport: 글쓰기 기본 결과를 유형·난이도·정답 개수로 요약한다", () => {
   const md = buildReport(
     {
-      writingBasic: [{ essayId: "big-city-small-town", template: "preference", difficulty: "mid", total: 14, correct: 11 }],
+      writingBasic: [
+        { essayId: "big-city-small-town", template: "preference", difficulty: "mid", total: 14, correct: 11 },
+        { essayId: "email-prof-research-meeting", template: "email-request", mode: "email", difficulty: "high", total: 12, correct: 12 },
+      ],
     },
     { dateLabel: "2026-08-01 10:00" }
   );
-  assert.match(md, /📝 글쓰기 기본 \(1회\)/);
-  assert.match(md, /\(mid\) big-city-small-town: 11\/14개 맞음/);
+  assert.match(md, /📝 글쓰기 기본 \(2회\)/);
+  assert.match(md, /\(토론형, mid\) big-city-small-town: 11\/14개 맞음/);
+  assert.match(md, /\(이메일, high\) email-prof-research-meeting: 12\/12개 맞음/);
+});
+
+test("buildReport: 글쓰기 기록에 이메일/토론형 유형을 표시한다", () => {
+  const md = buildReport(
+    {
+      writing: [
+        { score: 90, mode: "email", question: "Apologize to your advisor.", answer: "Dear ..." },
+        { score: 80, question: "Is social media good?", answer: "I think yes." },
+      ],
+    },
+    { dateLabel: "2026-08-01 11:00" }
+  );
+  assert.match(md, /\(90점, 이메일\) Apologize to your advisor\./);
+  assert.match(md, /\(80점, 토론형\) Is social media good\?/);
 });
 
 test("buildReport: 복습 퀴즈 결과를 정답률과 함께 담는다", () => {

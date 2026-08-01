@@ -38,6 +38,15 @@ export const RUBRICS = {
       { key: "fluency", label: "유창성·자연스러움", max: 25 },
     ],
   },
+  email: {
+    label: "이메일",
+    components: [
+      { key: "task", label: "항목 충족·목적 전달", max: 35 },
+      { key: "accuracy", label: "정확성(문법)", max: 25 },
+      { key: "range", label: "표현 범위", max: 15 },
+      { key: "fluency", label: "어조·격식", max: 25 },
+    ],
+  },
 };
 
 // AI 채점 시스템 프롬프트에 넣는 공통 지침(회화·글쓰기·표현 세 기능 공유, 드리프트 방지).
@@ -61,6 +70,19 @@ export const RANGE_RUBRIC = `Range grade (variety and sophistication of vocabula
 - Top (S+/S): a wide range of precise vocabulary and varied, complex sentence structures, used naturally.
 - Bottom (F): only the most basic memorized words and short, formulaic simple sentences.
 A simple but fully correct sentence should get a high accuracy grade and a LOW range grade — that is expected, not a contradiction.`;
+
+// 이메일 전용 task 절대 밴드. 토플 "Write an Email"은 3개 지정 항목을 각각 얼마나 충분히
+// 다뤘는지가 핵심이라, 일반 TASK_RUBRIC(내용 전개)보다 항목 충족을 명시적으로 요구한다.
+export const EMAIL_TASK_RUBRIC = `Task grade for an email response (judged on substance, not on language): how fully and appropriately the response covers ALL of the required bullet points and conveys a clear purpose.
+- Top (S+/S): every required bullet point is addressed clearly and with enough relevant detail; the email's purpose is unmistakable.
+- Bottom (F): most bullet points are missing, ignored, or the purpose of the email is unclear.
+Missing even one bullet point should noticeably lower this grade, regardless of how well-written the rest of the email is.`;
+
+// 이메일 전용 fluency 절대 밴드. 수신자와의 관계에 맞는 공손함·격식이 핵심이라
+// 일반 NATURALNESS_NOTE(구어체/문어체)보다 어조·격식을 명시적으로 요구한다.
+export const EMAIL_REGISTER_NOTE = `Fluency grade for an email response: judge whether the tone and level of formality suit the stated relationship with the recipient (e.g. a professor vs. a classmate), and whether the email reads smoothly with natural transitions between the greeting, body, and closing.
+- Top (S+/S): consistently polite and appropriately formal throughout, with a natural flow from greeting to closing.
+- Bottom (F): tone is rude, overly casual, or inconsistent for the relationship, or the email reads as a disconnected list of sentences.`;
 
 // 9단계 등급 집합과 절대 채점 지시. 각 기능 프롬프트에 넣어 등급 스케일을 고정한다.
 export const GRADE_SCALE_NOTE = `Grade each rubric component on this 9-level scale, from best to worst: S+, S, A+, A, B+, B, C+, C, F (S+ is flawless/native-like, F is very poor).

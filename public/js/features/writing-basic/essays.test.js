@@ -16,15 +16,28 @@ function wordCount(essay) {
     .split(/\s+/).length;
 }
 
-test("essays: 32개, id가 유일하다", () => {
-  assert.equal(ESSAYS.length, 32);
+function modeOf(essay) {
+  return findTemplate(essay.template)?.mode;
+}
+
+const discussionEssays = ESSAYS.filter((e) => modeOf(e) === "discussion");
+const emailEssays = ESSAYS.filter((e) => modeOf(e) === "email");
+
+test("essays: 40개(토론형 32 + 이메일 8), id가 유일하다", () => {
+  assert.equal(ESSAYS.length, 40);
+  assert.equal(discussionEssays.length, 32);
+  assert.equal(emailEssays.length, 8);
   assert.equal(new Set(ESSAYS.map((e) => e.id)).size, ESSAYS.length);
 });
 
-test("essays: 영문 250~300단어 분량이다", () => {
-  for (const e of ESSAYS) {
+test("essays: 토론형은 영문 250~300단어, 이메일은 110~160단어 분량이다", () => {
+  for (const e of discussionEssays) {
     const words = wordCount(e);
     assert.ok(words >= 250 && words <= 300, `${e.id}: ${words}단어`);
+  }
+  for (const e of emailEssays) {
+    const words = wordCount(e);
+    assert.ok(words >= 110 && words <= 160, `${e.id}: ${words}단어`);
   }
 });
 
@@ -34,9 +47,16 @@ test("essays: template이 실제 정의된 템플릿을 가리킨다", () => {
   }
 });
 
-test("essays: prompt가 writing/prompts.js에 존재한다", () => {
-  for (const e of ESSAYS) {
+test("essays: 토론형 prompt는 writing/prompts.js에 존재한다", () => {
+  for (const e of discussionEssays) {
     assert.ok(writingPrompts.includes(e.prompt), `${e.id}: prompts.js에 없는 질문`);
+  }
+});
+
+test("essays: 이메일 지문은 bullets가 정확히 3개다", () => {
+  for (const e of emailEssays) {
+    assert.equal(e.bullets?.length, 3, `${e.id}: bullets는 3개여야 함`);
+    assert.ok(e.bullets.every((b) => typeof b === "string" && b.length > 0), `${e.id}: 빈 bullet`);
   }
 });
 

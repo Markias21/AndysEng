@@ -87,6 +87,45 @@ export const REVIEW_SCHEMA = {
   additionalProperties: false,
 };
 
+// 이메일 유형 전용 스키마. REVIEW_SCHEMA와 대부분 같지만 토플 이메일 밴드(0~5)를 쓰고,
+// 이메일 채점의 핵심인 "요구된 3개 항목을 각각 다뤘는가"를 bullets_covered로 명시적으로 받는다.
+export const EMAIL_REVIEW_SCHEMA = {
+  type: "object",
+  properties: {
+    spelling: REVIEW_SCHEMA.properties.spelling,
+    corrections: REVIEW_SCHEMA.properties.corrections,
+    corrected_answer: { type: "array", items: SENTENCE_ITEM, description: "문법적으로 맞게 고친 답안, 문장 단위(제목·인사말 포함)" },
+    native_answer: { type: "array", items: SENTENCE_ITEM, description: "원어민이 쓴 것처럼 다듬은 모범 이메일, 문장 단위(제목·인사말 포함)" },
+    native_expressions: REVIEW_SCHEMA.properties.native_expressions,
+    bullets_covered: {
+      type: "array",
+      description: "학생의 답안이 프롬프트에서 요구한 항목 각각을 다뤘는지. 프롬프트의 항목 순서와 개수를 그대로 따를 것",
+      items: {
+        type: "object",
+        properties: {
+          bullet: { type: "string", description: "프롬프트에 주어진 항목 문구 그대로" },
+          covered: { type: "boolean" },
+          comment: { type: "string", description: "다뤘는지/왜 부족한지 한국어로 한 줄" },
+        },
+        required: ["bullet", "covered", "comment"],
+        additionalProperties: false,
+      },
+    },
+    cefr_level: REVIEW_SCHEMA.properties.cefr_level,
+    toefl_score: {
+      type: "integer",
+      enum: [0, 1, 2, 3, 4, 5],
+      description: "토플 이메일 밴드(0~5)로 매긴 홀리스틱 점수",
+    },
+    grades: REVIEW_SCHEMA.properties.grades,
+  },
+  required: [
+    "spelling", "corrections", "corrected_answer", "native_answer", "native_expressions",
+    "bullets_covered", "cefr_level", "toefl_score", "grades",
+  ],
+  additionalProperties: false,
+};
+
 export const QNA_SCHEMA = {
   type: "object",
   properties: {

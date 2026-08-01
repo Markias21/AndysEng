@@ -1,13 +1,15 @@
 // 글쓰기 기본: 토플 수준 모범 답안에서 핵심 표현을 빈칸으로 뚫어 채우는 연습. AI 호출 없음(사전·번역기 제외) —
 // 지문·해석·빈칸이 전부 정적 데이터라, 빈칸 판정도 shared/cloze.js를 그대로 재사용한다.
+// 두 유형을 다룬다: 토론형(discussion) 논설문과 이메일(email) 답장 — 시작 화면에서 매번 유형을 고른다
+// (회화 카테고리 그리드와 같은 패턴 — 지난 선택을 기억해 건너뛰지 않는다).
 import { appendRecord, getProfile, getRecords, setProfile } from "../../shared/store.js";
 import { pickFresh } from "../../shared/pick.js";
 import { buildCloze, checkWords } from "../../shared/cloze.js";
 import { blankInputsHTML, blankResultHTML, readWords, showFirstLetters, weaveHTML, wireCells } from "../../shared/cloze-view.js";
 import { $, esc, expressionAddHTML, toast, wireExpressionAdds } from "../../shared/dom.js";
-import { TEMPLATES, findTemplate } from "./templates.js";
+import { MODES, findTemplate, templatesOf } from "./templates.js";
 import { DIFFICULTIES, DEFAULT_DIFFICULTY, blanksFor, findDifficulty } from "./difficulty.js";
-import { ESSAYS, essaysOf, findEssay } from "./essays.js";
+import { essaysOf, essaysOfMode, findEssay } from "./essays.js";
 
 // 최근 이 개수만큼 푼 지문은 "🎲 아무거나"에서 피한다.
 const RECENT_ESSAYS = 20;
@@ -40,18 +42,28 @@ function essayCardHTML(essay, difficultyId) {
     </button>`;
 }
 
-function renderIntro() {
-  const difficultyId = currentDifficulty();
+function renderModePicker() {
   const root = $("#basic-content");
-  const templateSections = TEMPLATES.map(
-    (t) => `<h3 class="basic-template-title">${esc(t.label)}</h3>
-      <p class="small muted">${esc(t.ko)}</p>
-      <div class="essay-grid">${essaysOf(t.id).map((e) => essayCardHTML(e, difficultyId)).join("")}</div>`
-  ).join("");
-
   root.innerHTML = `
     <h2 class="page-title">📝 글쓰기 기본</h2>
     <p class="muted">토플 만점 수준 모범 답안에서 핵심 표현을 빈칸으로 뚫었어요.<br/>사전이나 번역기를 쓰지 않는 한 AI를 전혀 쓰지 않아요.</p>
+    <div class="category-grid">${MODES.map((m) => `<button class="btn-secondary category-btn" type="button" data-mode="${m.id}">${esc(m.label)}</button>`).join("")}</div>`;
+  root.querySelectorAll("[data-mode]").forEach((b) => b.addEventListener("click", () => renderIntro(b.dataset.mode)));
+}
+
+function renderIntro(mode) {
+  const difficultyId = currentDifficulty();
+  const root = $("#basic-content");
+  const templateSections = templatesOf(mode)
+    .map(
+      (t) => `<h3 class="basic-template-title">${esc(t.label)}</h3>
+      <p class="small muted">${esc(t.ko)}</p>
+      <div class="essay-grid">${essaysOf(t.id).map((e) => essayCardHTML(e, difficultyId)).join("")}</div>`
+    )
+    .join("");
+
+  root.innerHTML = `
+    <div class="room-toolbar"><button class="btn-text" id="basic-back-modes" type="button">← 유형</button><span class="chip">${esc(MODES.find((m) => m.id === mode)?.label ?? "")}</span></div>
     <div class="diff-picker">${DIFFICULTIES.map(
       (d) => `<button class="btn-chip${d.id === difficultyId ? " active" : ""}" type="button" data-diff="${d.id}">${esc(d.label)}</button>`
     ).join("")}</div>
@@ -59,19 +71,20 @@ function renderIntro() {
     <div class="row-end"><button class="btn-secondary btn-chip" id="basic-random" type="button">🎲 아무거나</button></div>
     ${templateSections}`;
 
+  $("#basic-back-modes").addEventListener("click", renderModePicker);
   root.querySelectorAll("[data-diff]").forEach((btn) =>
     btn.addEventListener("click", () => {
       setProfile({ basicDifficulty: btn.dataset.diff });
-      renderIntro();
+      renderIntro(mode);
     })
   );
   root.querySelectorAll("[data-essay]").forEach((btn) =>
-    btn.addEventListener("click", () => startPractice(btn.dataset.essay, difficultyId))
+    btn.addEventListener("click", () => startPractice(btn.dataset.essay, difficultyId, mode))
   );
   $("#basic-random").addEventListener("click", () => {
-    const essay = pickFresh(ESSAYS, recentEssayIds(), (e) => e.id);
+    const essay = pickFresh(essaysOfMode(mode), recentEssayIds(), (e) => e.id);
     if (!essay) return toast("지문을 불러오지 못했습니다.");
-    startPractice(essay.id, difficultyId);
+    startPractice(essay.id, difficultyId, mode);
   });
 }
 
@@ -81,7 +94,7 @@ function sentenceContaining(essay, expression) {
   return essay.sentences.find((s) => s.sentence.toLowerCase().includes(needle)) || null;
 }
 
-function finishAttempt(root, essay, difficultyId, blanks, lines, typedByBlank, wordFlags, okFlags) {
+function finishAttempt(root, essay, difficultyId, mode, blanks, lines, typedByBlank, wordFlags, okFlags) {
   const flat = lines.flatMap((l) => l.blanks);
   const correct = okFlags.filter(Boolean).length;
   const missedExpressions = flat
@@ -111,31 +124,35 @@ function finishAttempt(root, essay, difficultyId, blanks, lines, typedByBlank, w
     wireExpressionAdds(exprsEl, missedExpressions, "writing-basic");
   }
 
-  appendRecord("writingBasic", { essayId: essay.id, template: essay.template, difficulty: difficultyId, total: flat.length, correct });
+  appendRecord("writingBasic", { essayId: essay.id, template: essay.template, mode, difficulty: difficultyId, total: flat.length, correct });
 
-  $("#basic-retry").addEventListener("click", () => startPractice(essay.id, difficultyId));
+  $("#basic-retry").addEventListener("click", () => startPractice(essay.id, difficultyId, mode));
   $("#basic-next").addEventListener("click", () => {
-    const next = pickFresh(ESSAYS, [...recentEssayIds(), essay.id], (e) => e.id);
-    if (next) startPractice(next.id, difficultyId);
+    const next = pickFresh(essaysOfMode(mode), [...recentEssayIds(), essay.id], (e) => e.id);
+    if (next) startPractice(next.id, difficultyId, mode);
   });
 }
 
-function startPractice(essayId, difficultyId) {
+function startPractice(essayId, difficultyId, mode) {
   const essay = findEssay(essayId);
   if (!essay) return toast("지문을 찾을 수 없습니다.");
   const template = findTemplate(essay.template);
   const blanks = blanksFor(essay, difficultyId);
   const lines = buildCloze(essay.sentences, blanks);
   const flat = lines.flatMap((l) => l.blanks);
+  const bulletsHTML = essay.bullets?.length
+    ? `<ul class="bullet-list">${essay.bullets.map((b) => `<li>${esc(b)}</li>`).join("")}</ul>`
+    : "";
 
   const root = $("#basic-content");
   root.innerHTML = `
     <div class="room-toolbar">
       <button class="btn-text" id="basic-back" type="button">← 목록</button>
-      <span class="chip">${esc(template.label)}</span>
+      <span class="toolbar-actions"><span class="chip">${esc(template.label)}</span><button class="btn-secondary btn-chip" id="basic-mode-btn" type="button">🔀 유형 바꾸기</button></span>
     </div>
     <div class="card question-card">
       <p class="question-text">${esc(essay.prompt)}</p>
+      ${bulletsHTML}
       <details class="rubric-guide">
         <summary>🧱 이 글의 구조</summary>
         ${template.skeletonHTML}
@@ -153,7 +170,8 @@ function startPractice(essayId, difficultyId) {
       </form>
     </div>`;
 
-  $("#basic-back").addEventListener("click", renderIntro);
+  $("#basic-back").addEventListener("click", () => renderIntro(mode));
+  $("#basic-mode-btn").addEventListener("click", renderModePicker);
 
   $("#basic-toggle-ko").addEventListener("change", (ev) => {
     root.classList.toggle("hide-ko", !ev.target.checked);
@@ -170,7 +188,7 @@ function startPractice(essayId, difficultyId) {
     const typedByBlank = flat.map(() => []);
     const wordFlags = flat.map((blank) => checkWords([], blank.answer));
     const okFlags = wordFlags.map((flags) => flags.every(Boolean));
-    finishAttempt(root, essay, difficultyId, blanks, lines, typedByBlank, wordFlags, okFlags);
+    finishAttempt(root, essay, difficultyId, mode, blanks, lines, typedByBlank, wordFlags, okFlags);
   });
 
   $("#basic-form").addEventListener("submit", (ev) => {
@@ -178,10 +196,10 @@ function startPractice(essayId, difficultyId) {
     const typedByBlank = flat.map((_, i) => readWords(root, i));
     const wordFlags = flat.map((blank, i) => checkWords(typedByBlank[i], blank.answer));
     const okFlags = wordFlags.map((flags) => flags.every(Boolean));
-    finishAttempt(root, essay, difficultyId, blanks, lines, typedByBlank, wordFlags, okFlags);
+    finishAttempt(root, essay, difficultyId, mode, blanks, lines, typedByBlank, wordFlags, okFlags);
   });
 }
 
 export function render() {
-  renderIntro();
+  renderModePicker();
 }
