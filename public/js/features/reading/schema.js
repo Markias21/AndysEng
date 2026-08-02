@@ -82,11 +82,22 @@ export const GRADE_SCHEMA = {
       required: ["task", "accuracy", "range", "fluency"],
       additionalProperties: false,
     },
-    // 항목 문구는 이미 로컬에 있으므로 되돌려받지 않는다 — 순서만 맞춘 불리언 배열로 출력 토큰을 아낀다.
+    // 항목 문구는 이미 로컬에 있으므로 되돌려받지 않는다 — 순서만 맞춘 배열로 출력 토큰을 아낀다.
     covered: {
       type: "array",
-      description: "One true/false per key point, in the same order as the numbered list given.",
-      items: { type: "boolean" },
+      description: "One entry per key point above, in the same order and the same count.",
+      items: {
+        type: "object",
+        properties: {
+          covered: { type: "boolean" },
+          comment: {
+            type: "string",
+            description: "Korean, one short sentence: quote or point to what the learner wrote that shows this (if covered), or say it was missing/wrong (if not).",
+          },
+        },
+        required: ["covered", "comment"],
+        additionalProperties: false,
+      },
     },
     inaccuracies: {
       type: "array",

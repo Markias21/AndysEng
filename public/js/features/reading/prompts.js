@@ -56,7 +56,7 @@ Key points a good summary must contain:
 ${checklist}
 Sentence the learner was asked to restate: "${restateSentence}"
 ${skipNote ? `\n${skipNote} Judge only what was actually written, and grade the missing part as if it were not required.\n` : ""}
-1. covered: one true/false for EACH key point above, in the same order and the same count. Do not repeat the point text — the array position identifies it.
+1. covered: one entry for EACH key point above, in the same order and the same count (do not repeat the point text — the array position identifies it). For each: covered (true/false) and comment — like a TOEFL answer explanation, say concretely what the learner wrote that satisfies the point (or quote it), or exactly what was missing or got wrong if it wasn't.
 2. inaccuracies: list, in Korean, anything the learner asserted that contradicts or goes beyond the main idea and key points above. Empty array if none. Do NOT list omissions here — those are already covered by 1.
 3. corrections: real grammar errors only, with the reason in Korean. Never typos or capitalization.
 4. spelling: typos, capitalization, and apostrophe slips only, as original -> corrected, with no explanation.

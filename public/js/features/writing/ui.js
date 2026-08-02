@@ -17,6 +17,7 @@ import { REVIEW_SCHEMA, EMAIL_REVIEW_SCHEMA } from "./schema.js";
 import { discussionSystem, emailSystem } from "./review-prompt.js";
 import { startQna, resetQna, askQna, qnaLogHTML } from "./qna.js";
 import { mountCloze } from "./cloze-ui.js";
+import { attachTypingTimer } from "../../shared/typing-timer.js";
 import {
   $, esc, toast, scoreBreakdownHTML, rubricGuideHTML, correctionsHTML,
   spellingHTML, sentenceLinesHTML, expressionAddHTML, wireExpressionAdds,
@@ -39,6 +40,8 @@ const RECENT_PROMPTS = 20;
 
 let currentMode = "discussion";
 let currentEmailPrompt = null;
+let currentQuestion = "";
+let typingTimer = null;
 
 function recentQuestions() {
   return getRecords("writing")
@@ -77,6 +80,7 @@ function renderQuestionCard() {
     bullets.innerHTML = p.bullets.map((b) => `<li>${esc(b)}</li>`).join("");
     bullets.classList.remove("hidden");
   } else {
+    $("#writing-question").textContent = currentQuestion;
     $("#writing-recipient").classList.add("hidden");
     $("#writing-bullets").classList.add("hidden");
   }
@@ -98,9 +102,11 @@ function newQuestion() {
   } else {
     const question = pickFresh(writingPrompts, recentQuestions());
     if (!question) return toast("글쓰기 질문을 불러오지 못했습니다.");
+    currentQuestion = question;
     currentEmailPrompt = null;
   }
   renderQuestionCard();
+  typingTimer.reset();
   $("#writing-input").value = "";
   $("#writing-result").innerHTML = "";
   $("#writing-intro").classList.add("hidden");
@@ -222,6 +228,7 @@ function feedbackHTML(r, mode) {
 
 export function init() {
   renderModes();
+  typingTimer = attachTypingTimer([$("#writing-input")], [$("#writing-timer")]);
   $("#writing-structure-btn").addEventListener("click", toggleStructure);
   $("#structure-refresh").addEventListener("click", renderStructureExpressions);
   $("#writing-mode-btn").addEventListener("click", backToModes);
@@ -231,12 +238,13 @@ export function init() {
     ev.preventDefault();
     const answer = $("#writing-input").value.trim();
     if (!answer) return toast("답안을 먼저 작성해 주세요.");
+    typingTimer.stop();
     const btn = ev.target.querySelector("button");
     btn.disabled = true;
     btn.textContent = "첨삭 중...";
     try {
       const mode = currentMode;
-      const questionText = mode === "email" ? currentEmailPrompt.situation : $("#writing-question").textContent;
+      const questionText = mode === "email" ? currentEmailPrompt.situation : currentQuestion;
       const r = mode === "email" ? await reviewEmail(currentEmailPrompt, answer) : await reviewDiscussion(questionText, answer);
       startQna({ question: questionText, answer, feedback: r });
       const result = $("#writing-result");

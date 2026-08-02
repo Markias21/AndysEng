@@ -72,11 +72,16 @@ function summaryCardHTML({ comprehension, weak, elapsedMs, detail, penalty, fina
     </div>`;
 }
 
-/** 항목 문구는 로컬(key_points)에 있고 AI는 순서대로 불리언만 준다. 모자란 자리는 못 담은 것으로 본다. */
+/** 항목 문구는 로컬(key_points)에 있고 AI는 순서대로 covered+comment만 준다. 모자란 자리는 못 담은 것으로 본다. */
 function coveredHTML(keyPoints, covered) {
   if (!keyPoints?.length) return "";
   const rows = keyPoints
-    .map((point, i) => `<li class="${covered?.[i] ? "res-ok" : "res-miss"}">${covered?.[i] ? "✅" : "❌"} ${esc(point)}</li>`)
+    .map((point, i) => {
+      const c = covered?.[i];
+      return `<li class="${c?.covered ? "res-ok" : "res-miss"}">${c?.covered ? "✅" : "❌"} ${esc(point)}${
+        c?.comment ? `<br/><span class="reason">${esc(c.comment)}</span>` : ""
+      }</li>`;
+    })
     .join("");
   return `<h4>🎯 핵심 논지 체크리스트</h4><ul class="covered-list">${rows}</ul>`;
 }

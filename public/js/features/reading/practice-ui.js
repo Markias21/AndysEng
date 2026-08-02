@@ -7,6 +7,7 @@ import { buildCloze } from "../../shared/cloze.js";
 import { blankInputsHTML, readWords, showFirstLetters, weaveHTML, wireCells } from "../../shared/cloze-view.js";
 import { $, esc, toast } from "../../shared/dom.js";
 import { getProfile } from "../../shared/store.js";
+import { attachTypingTimer } from "../../shared/typing-timer.js";
 import { estimatedCost, generateSet, readySet } from "./ai.js";
 import { gradeBlanks, gradeChoices } from "./score.js";
 import { typeLabel } from "./types.js";
@@ -16,6 +17,8 @@ const ROOT = "#reading-content";
 
 // 읽기 시간 표시용 타이머. 화면을 떠날 때 반드시 멈춘다.
 let ticking = null;
+// 요약·재진술 입력창에 타이핑을 시작한 순간부터 재는 타이머. 화면(문제 세트)이 바뀔 때마다 새로 붙는다.
+let productionTimer = null;
 
 function stopTimer() {
   clearInterval(ticking);
@@ -88,12 +91,14 @@ function produceHTML(set) {
       <p class="small muted">아래 문장을 뜻은 그대로, 표현과 구조는 바꿔서 다시 써 보세요.</p>
       <p class="question-text">${esc(set.restate_sentence)}</p>
       <textarea id="reading-restate" rows="3" placeholder="Same meaning, different words..."></textarea>
+      <span class="chip hidden" id="reading-restate-timer"></span>
     </div>
 
     <h3 class="section-title">📝 요약</h3>
     <div class="card">
       <p class="small muted">지문 전체를 영어 <b>3문장 이내</b>로 요약하세요. 지문을 그대로 베끼지 말고 자기 말로 쓰는 것이 핵심이에요.</p>
       <textarea id="reading-summary" rows="4" placeholder="In this passage, ..."></textarea>
+      <span class="chip hidden" id="reading-summary-timer"></span>
     </div>`;
 }
 
@@ -132,6 +137,10 @@ function mountForm(article, set, context, startedAt) {
   const host = $("#reading-questions");
   host.innerHTML = formHTML(set, items);
   wireCells(host);
+  productionTimer = attachTypingTimer(
+    [$("#reading-restate"), $("#reading-summary")],
+    [$("#reading-restate-timer"), $("#reading-summary-timer")]
+  );
 
   if (items.length) {
     $("#reading-hint").addEventListener("click", () => {
@@ -142,6 +151,7 @@ function mountForm(article, set, context, startedAt) {
   $("#reading-form").addEventListener("submit", (ev) => {
     ev.preventDefault();
     stopTimer();
+    productionTimer.stop();
     const submitted = collect(host, set, items);
     showResult({ article, set, items, ...submitted, elapsedMs: Date.now() - startedAt, ...context });
   });
@@ -150,6 +160,7 @@ function mountForm(article, set, context, startedAt) {
 /** 지문을 열어 읽기+문제 화면을 그린다. context: { onBackToList, onBackToCategories } */
 export async function startPractice(article, context) {
   stopTimer();
+  productionTimer?.stop();
   const startedAt = Date.now();
   $(ROOT).innerHTML = `
     <div class="room-toolbar">
@@ -165,6 +176,7 @@ export async function startPractice(article, context) {
 
   $("#reading-back").addEventListener("click", () => {
     stopTimer();
+    productionTimer?.stop();
     context.onBackToList();
   });
   startTimer(startedAt);
