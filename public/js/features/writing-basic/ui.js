@@ -164,7 +164,6 @@ function startPractice(essayId, difficultyId, mode) {
         ${weaveHTML(lines, (i, blank) => blankInputsHTML(blank.answer, i))}
         <div class="row-end">
           <button class="btn-text" id="basic-hint" type="button">🔤 첫 글자 힌트</button>
-          <button class="btn-text" id="basic-skip" type="button">⏭ 정답 보기</button>
           <button class="btn-primary" type="submit">확인하기</button>
         </div>
       </form>
@@ -182,13 +181,6 @@ function startPractice(essayId, difficultyId, mode) {
 
   $("#basic-hint").addEventListener("click", () => {
     flat.forEach((blank, i) => showFirstLetters(root, blank.answer, i));
-  });
-
-  $("#basic-skip").addEventListener("click", () => {
-    const typedByBlank = flat.map(() => []);
-    const wordFlags = flat.map((blank) => checkWords([], blank.answer));
-    const okFlags = wordFlags.map((flags) => flags.every(Boolean));
-    finishAttempt(root, essay, difficultyId, mode, blanks, lines, typedByBlank, wordFlags, okFlags);
   });
 
   $("#basic-form").addEventListener("submit", (ev) => {
