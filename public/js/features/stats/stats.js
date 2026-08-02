@@ -52,6 +52,7 @@ export function dailyStats(records) {
         quizCount: 0,
         quizCorrect: 0,
         listenCount: 0,
+        shortReadCount: 0,
         scoreSum: 0,
         scoreCount: 0,
         // 기능별 점수 합/개수 (달력에서 그날의 회화/글쓰기/표현 평균을 보여주기 위해)
@@ -106,6 +107,11 @@ export function dailyStats(records) {
     const d = day(r.ts);
     d.topics += 1;
     d.listenCount += 1;
+  }
+  for (const r of records.shortReading || []) {
+    const d = day(r.ts);
+    d.topics += 1;
+    d.shortReadCount += 1;
   }
 
   const bucketAvg = (b) => (b.count ? round1(b.sum / b.count) : null);

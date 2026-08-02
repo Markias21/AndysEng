@@ -97,6 +97,20 @@ test("dailyStats: 짧은 학습(listening)은 점수 없이 주제 수·횟수�
   assert.equal(d.avgScore, null);
 });
 
+test("dailyStats: 문단 연습(shortReading)도 점수 없이 주제 수·횟수만 센다", () => {
+  const ts = "2026-07-15T03:00:00Z";
+  const records = {
+    shortReading: [
+      { ts, itemId: "sr-science-1", category: "science", type: "mcq", correct: true },
+      { ts, itemId: "sr-health-1", category: "health", type: "produce", correct: false },
+    ],
+  };
+  const [d] = dailyStats(records);
+  assert.equal(d.topics, 2);
+  assert.equal(d.shortReadCount, 2);
+  assert.equal(d.avgScore, null);
+});
+
 test("dailyStats: 기능별 평균 점수를 따로 집계한다", () => {
   const ts = "2026-07-15T03:00:00Z";
   const records = {
