@@ -23,11 +23,19 @@ export function dataPath(nickname) {
   return `data/${name}/andyseng-data.json`;
 }
 
-function toB64(str) {
-  return btoa(String.fromCharCode(...new TextEncoder().encode(str)));
+// str이 커지면 스프레드로 fromCharCode에 한 번에 넘길 때 인자 개수 제한(Maximum call stack size
+// exceeded)에 걸리므로, 바이트를 청크로 나눠 문자열에 이어 붙인다.
+export function toB64(str) {
+  const bytes = new TextEncoder().encode(str);
+  const CHUNK = 0x8000;
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(binary);
 }
 
-function fromB64(b64) {
+export function fromB64(b64) {
   const bytes = Uint8Array.from(atob(b64.replace(/\s/g, "")), (c) => c.charCodeAt(0));
   return new TextDecoder().decode(bytes);
 }
