@@ -1,25 +1,38 @@
 // 리딩의 AI 호출. 두 가지뿐이고, 둘 다 토큰을 아끼도록 좁혀 놨다.
 //
-//  1) 문제 세트 생성 — 지문당 평생 1회. 결과를 store에 영구 캐시하므로 재도전은 0회다.
+//  1) 문제 세트 생성 — 지문당 유저 1인당 평생 1회. 결과를 store에 영구 캐시하므로 재도전은 0회다.
 //     객관식 정답 키를 함께 받아 두기 때문에 객관식·빈칸 채점에는 AI가 아예 관여하지 않는다.
+//     비용이 실제로 드는 유일한 지점이라 readySet()/generateSet()으로 나눠 뒀다 — UI가 그
+//     사이에서 예상 비용을 보여 주고 확인을 받은 뒤에만 generateSet()을 부른다.
 //  2) 요약·재진술 채점 — 지문 대신 (1)에서 받아 둔 main_idea·key_points만 보낸다.
 //     둘 다 비우고 제출하면 호출 자체를 하지 않는다(ui.js가 판단).
-import { chatJSON } from "../../shared/claude.js";
+//
+// 생성 결과는 이 유저의 store(readingSets)에만 남는다 — 레포에 자동으로 커밋해 모두와 공유하는
+// 것은 하지 않는다. 브라우저에서 쓰는 GitHub 토큰으로 앱 소스 레포에 자동 커밋하게 하면, 그 토큰이
+// 유출되거나 코드에 버그가 있을 때 개인 학습 기록이 아니라 배포 중인 사이트 자체가 위험해지기
+// 때문이다(유저 판단). 대신 GitHub Actions는 지문 수집만 하고(AI 미사용), 문제 세트를 미리
+// 채워 두고 싶으면 scripts/gen-reading-sets.js를 사람이 손으로 돌린다.
+import { chatJSON, getModel } from "../../shared/claude.js";
 import { getReadingSet, setReadingSet } from "../../shared/store.js";
+import { estimateUsd } from "../../shared/usage.js";
 import { loadShippedSet } from "./catalog.js";
 import { GENERATE_SCHEMA, GRADE_SCHEMA } from "./schema.js";
 import { generateSystem, gradeSystem } from "./prompts.js";
 import { bodyText, resolveBlanks } from "./passage.js";
 import { validQuestions } from "./score.js";
 
+// 실측(헤드리스 브라우저로 실제 호출) 기준 문제 생성 1회의 출력 토큰은 대략 이 정도였다.
+// 사전 비용 안내는 정확한 청구액이 아니라 어림값이다 — 실제 토큰 수는 지문 길이·모델 사고
+// 분량에 따라 달라지고, 실제 청구액은 매번 usage.costUsd로 사후 집계된다.
+const EST_OUTPUT_TOKENS = 2000;
+
 /**
- * 이 지문의 문제 세트. 순서대로 확인한다: ① 이 유저가 이미 생성해 둔 것 ② 레포에 미리 실어 둔
- * 기본 세트(scripts/gen-reading-sets.js가 만들어 public/data/reading/sets/에 커밋한 것,
- * AI 호출 없이 same-origin fetch만 함) ③ 그래도 없으면 그때 생성. ②를 찾으면 유저 캐시에도
- * 저장해 둬 다음부터는 fetch조차 없이 바로 뜬다.
- * 반환한 세트의 blanks에는 지문에서 되찾은 영어 예문(sentence)이 붙어 있다.
+ * 이미 확보된 문제 세트가 있으면 그것을 반환하고, AI는 호출하지 않는다. 순서: ① 이 유저가
+ * 이미 생성해 둔 것 ② 레포에 미리 실어 둔 기본 세트(public/data/reading/sets/, same-origin
+ * fetch만 함). ②를 찾으면 유저 캐시에도 저장해 둬 다음부터는 fetch조차 없이 바로 뜬다.
+ * 둘 다 없으면 null — 이 경우 estimatedCost()로 비용을 안내하고 확인받은 뒤 generateSet()을 불러야 한다.
  */
-export async function questionSet(article, level) {
+export async function readySet(article) {
   const cached = getReadingSet(article.id);
   if (cached) return withSentences(article, cached);
 
@@ -28,7 +41,17 @@ export async function questionSet(article, level) {
     setReadingSet(article.id, shipped);
     return withSentences(article, shipped);
   }
+  return null;
+}
 
+/** 이 지문의 문제를 지금 새로 생성한다면 드는 비용의 대략적인 추정치(달러). */
+export function estimatedCost(article, level) {
+  const promptChars = generateSystem(level).length + article.title.length + bodyText(article).length;
+  return estimateUsd(getModel(), { promptChars, estOutputTokens: EST_OUTPUT_TOKENS });
+}
+
+/** 실제로 AI를 호출해 문제를 생성하고 유저 캐시에 저장한다. 비용이 드는 유일한 지점. */
+export async function generateSet(article, level) {
   const set = await chatJSON({
     system: generateSystem(level),
     messages: [{ role: "user", content: `Title: ${article.title}\n\n${bodyText(article)}` }],

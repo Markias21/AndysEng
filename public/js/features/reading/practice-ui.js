@@ -1,13 +1,13 @@
 // 리딩 연습 화면. 지문 + 객관식 + 표현 빈칸 + 재진술 + 요약을 한 화면에 내고 제출 한 번으로 끝낸다.
 // 실제 토플 리딩 섹션처럼 지문을 보면서 풀고, 답하지 않은 문제는 스킵으로 처리한다.
 //
-// 문제 세트 생성(AI)은 지문을 그리는 즉시 백그라운드로 돌린다 — 유저가 읽는 동안 준비되므로
-// 기다리는 느낌이 없다. 세트는 영구 캐시되므로 두 번째부터는 호출조차 없다.
+// 문제 세트가 이미 있으면(유저 캐시·레포 기본 세트) AI 호출 없이 바로 뜬다. 없으면 비용이 드는
+// 지점이라 예상 비용을 confirm()으로 안내하고 확인받은 뒤에만 생성한다(유저 요구).
 import { buildCloze } from "../../shared/cloze.js";
 import { blankInputsHTML, readWords, showFirstLetters, weaveHTML, wireCells } from "../../shared/cloze-view.js";
-import { $, esc } from "../../shared/dom.js";
+import { $, esc, toast } from "../../shared/dom.js";
 import { getProfile } from "../../shared/store.js";
-import { questionSet } from "./ai.js";
+import { estimatedCost, generateSet, readySet } from "./ai.js";
 import { gradeBlanks, gradeChoices } from "./score.js";
 import { typeLabel } from "./types.js";
 import { showResult } from "./result-ui.js";
@@ -169,8 +169,22 @@ export async function startPractice(article, context) {
   });
   startTimer(startedAt);
 
+  const level = getProfile().level;
   try {
-    const set = await questionSet(article, getProfile().level);
+    let set = await readySet(article);
+    if (!set) {
+      const cost = estimatedCost(article, level);
+      if (!$("#reading-questions")) return; // 확인 전에 화면을 떠났을 수 있다.
+      if (!confirm(`이 지문은 아직 문제가 준비되어 있지 않아요.\nAI로 새로 만들면 약 $${cost.toFixed(3)}이 들어요. 계속할까요?`)) {
+        stopTimer();
+        toast("문제 생성을 취소했어요.");
+        context.onBackToList();
+        return;
+      }
+      if (!$("#reading-questions")) return; // 확인하는 동안 화면을 떠났을 수 있다.
+      $("#reading-questions").innerHTML = `<p class="muted">문제를 만들고 있어요…</p>`;
+      set = await generateSet(article, level);
+    }
     // 준비되는 동안 유저가 화면을 떠났을 수 있다.
     if ($("#reading-questions")) mountForm(article, set, context, startedAt);
   } catch (e) {

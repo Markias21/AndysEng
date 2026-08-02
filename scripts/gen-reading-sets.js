@@ -2,7 +2,11 @@
 // 앱의 온디맨드 생성(features/reading/ai.js)과 완전히 같은 프롬프트·스키마를 그대로 재사용한다 —
 // 유일한 차이는 브라우저의 유저별 API 키 대신 로컬 .env의 ANTHROPIC_API_KEY로, 유저 localStorage
 // 대신 파일로 저장한다는 점이다. 이렇게 미리 실어 둔 지문은 어떤 유저가 열어도 AI 호출이 0회다
-// (features/reading/catalog.js의 loadShippedSet → ai.js의 questionSet이 이 파일을 먼저 확인한다).
+// (features/reading/catalog.js의 loadShippedSet → ai.js의 readySet이 이 파일을 먼저 확인한다).
+//
+// 브라우저에서 유저의 GitHub 토큰으로 이 레포에 자동 커밋하게 하지는 않는다 — 앱 배포 레포까지
+// 쓰기 권한을 넓히면 토큰 유출이나 코드 버그가 개인 학습 기록이 아니라 배포 중인 사이트 자체를
+// 위협하게 되기 때문(유저 판단). 그래서 이 스크립트는 사람이 손으로 돌리는 백필 전용이다.
 //
 // 실행: node scripts/gen-reading-sets.js (ANTHROPIC_API_KEY는 .env 또는 환경변수)
 import { readFile, readdir, writeFile, mkdir } from "node:fs/promises";
