@@ -38,6 +38,9 @@ function stripTags(html) {
   return decodeEntities(String(html ?? "").replace(/<[^>]+>/g, " "))
     .replace(/ /g, " ")
     .replace(/\s+/g, " ")
+    // VOA는 사전 풀이가 걸린 단어를 <a>/<span>으로 감싸는데, 태그를 공백으로 치환하면
+    // "smoggy , said"처럼 그 단어 뒤 구두점 앞에 불필요한 공백이 남는다. 구두점 앞 공백을 없앤다.
+    .replace(/\s+([,.;:!?])/g, "$1")
     .trim();
 }
 

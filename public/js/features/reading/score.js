@@ -40,6 +40,17 @@ export function gradeBlanks(blanks, typed) {
   });
 }
 
+/**
+ * 4지선다·정답 인덱스가 성립하는 문제만 남긴다. 구조화 출력 스키마가 배열 길이와 정수 범위를
+ * 강제하지 못해(minItems>1·minimum 미지원), AI 응답을 받은 뒤 여기서 대신 검증한다.
+ * 문제 생성(ai.js)과 미리 생성 스크립트(scripts/gen-reading-sets.js)가 함께 쓴다.
+ */
+export function validQuestions(questions) {
+  return (questions || []).filter(
+    (q) => Array.isArray(q.options) && q.options.length === 4 && Number.isInteger(q.answer) && q.answer >= 0 && q.answer <= 3
+  );
+}
+
 /** 객관식 + 빈칸을 합친 이해도 집계. */
 export function comprehensionSummary(results) {
   const count = (status) => results.filter((r) => r.status === status).length;

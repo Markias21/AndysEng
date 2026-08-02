@@ -6,17 +6,28 @@
 //     둘 다 비우고 제출하면 호출 자체를 하지 않는다(ui.js가 판단).
 import { chatJSON } from "../../shared/claude.js";
 import { getReadingSet, setReadingSet } from "../../shared/store.js";
+import { loadShippedSet } from "./catalog.js";
 import { GENERATE_SCHEMA, GRADE_SCHEMA } from "./schema.js";
 import { generateSystem, gradeSystem } from "./prompts.js";
 import { bodyText, resolveBlanks } from "./passage.js";
+import { validQuestions } from "./score.js";
 
 /**
- * 이 지문의 문제 세트. 캐시에 있으면 그대로 쓰고, 없을 때만 생성한다.
+ * 이 지문의 문제 세트. 순서대로 확인한다: ① 이 유저가 이미 생성해 둔 것 ② 레포에 미리 실어 둔
+ * 기본 세트(scripts/gen-reading-sets.js가 만들어 public/data/reading/sets/에 커밋한 것,
+ * AI 호출 없이 same-origin fetch만 함) ③ 그래도 없으면 그때 생성. ②를 찾으면 유저 캐시에도
+ * 저장해 둬 다음부터는 fetch조차 없이 바로 뜬다.
  * 반환한 세트의 blanks에는 지문에서 되찾은 영어 예문(sentence)이 붙어 있다.
  */
 export async function questionSet(article, level) {
   const cached = getReadingSet(article.id);
   if (cached) return withSentences(article, cached);
+
+  const shipped = await loadShippedSet(article.id);
+  if (shipped) {
+    setReadingSet(article.id, shipped);
+    return withSentences(article, shipped);
+  }
 
   const set = await chatJSON({
     system: generateSystem(level),
@@ -31,14 +42,10 @@ export async function questionSet(article, level) {
 /**
  * 캐시에는 AI가 준 그대로 두고, 화면에 줄 때만 손질한다.
  * - blanks: 지문 속 예문을 되찾아 붙인다(지문이 있어야 찾을 수 있다).
- * - questions: 4지선다·정답 인덱스가 성립하는 것만 남긴다. 구조화 출력 스키마가 배열 길이와
- *   정수 범위를 강제하지 못해(minItems>1·minimum 미지원), 그 검증을 여기서 대신한다.
+ * - questions: 4지선다·정답 인덱스가 성립하는 것만 남긴다(score.validQuestions).
  */
 function withSentences(article, set) {
-  const questions = (set.questions || []).filter(
-    (q) => Array.isArray(q.options) && q.options.length === 4 && Number.isInteger(q.answer) && q.answer >= 0 && q.answer <= 3
-  );
-  return { ...set, questions, blanks: resolveBlanks(article, set.blanks) };
+  return { ...set, questions: validQuestions(set.questions), blanks: resolveBlanks(article, set.blanks) };
 }
 
 /** 요약·재진술 채점. 지문은 보내지 않는다 — 체크리스트(key_points)만으로 채점하게 설계했다. */

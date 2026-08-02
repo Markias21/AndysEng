@@ -75,6 +75,14 @@ test("parseArticle은 본문·소제목·어휘 풀이·오디오를 나누고 �
   assert.equal(audio, "https://voa-audio.voanews.eu/vle/2025/01/02/abc.mp3");
 });
 
+test("사전 풀이 링크로 감싸인 단어 뒤 구두점 앞에 공백이 남지 않는다", () => {
+  // VOA는 "smoggy"처럼 사전 풀이가 걸린 단어를 <a>로 감싼다. 태그를 공백으로 치환하는 과정에서
+  // "smoggy , said"처럼 그 단어 뒤 구두점 앞에 불필요한 공백이 남는 버그가 있었다.
+  const html = `<div class="wsw"><p>It looks <a href="#">smoggy</a> , said the expert<a href="#">.</a></p></div>`;
+  const { paragraphs } = parseArticle(html);
+  assert.equal(paragraphs[0].text, "It looks smoggy, said the expert.");
+});
+
 test("wordCount는 소제목을 빼고 본문 단어만 센다", () => {
   const { paragraphs } = parseArticle(ARTICLE);
   assert.equal(wordCount(paragraphs), 12 + 11);

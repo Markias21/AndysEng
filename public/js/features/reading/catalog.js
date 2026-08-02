@@ -49,3 +49,15 @@ export async function articlesOf(categoryId) {
 export function loadArticle(id) {
   return getJSON(`${id}.json`);
 }
+
+/**
+ * scripts/gen-reading-sets.js가 미리 만들어 커밋해 둔 문제 세트(있으면). 없는 지문이 대부분이라
+ * (매일 새로 들어오는 지문은 아직 없다) 404를 정상 상황으로 보고 null을 반환한다.
+ */
+export async function loadShippedSet(articleId) {
+  try {
+    return await getJSON(`sets/${articleId}.json`);
+  } catch {
+    return null;
+  }
+}
