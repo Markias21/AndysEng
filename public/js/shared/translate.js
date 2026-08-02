@@ -5,7 +5,8 @@ import { chatJSON } from "./claude.js";
 const TRANSLATE_MODEL = "claude-haiku-4-5-20251001";
 
 // 번역기를 한 번 쓸 때마다 그 기능의 판정에서 깎이는 점수.
-export const TRANSLATOR_PENALTY = { writing: 5, conversation: 10 };
+// 리딩이 가장 큰 이유는, 요약을 번역기로 쓰면 "읽고 이해해 자기 말로 옮기기"라는 과제 자체가 사라지기 때문이다.
+export const TRANSLATOR_PENALTY = { writing: 5, conversation: 10, reading: 10 };
 
 const SCHEMA = {
   type: "object",
@@ -26,7 +27,7 @@ export async function translateToEnglish(korean) {
 }
 
 // 기능별 번역기 사용 횟수. 판정 시점(글쓰기 제출/회화 턴 전송)에 꺼내 쓰고 그 즉시 0으로 되돌린다.
-const uses = { writing: 0, conversation: 0 };
+const uses = { writing: 0, conversation: 0, reading: 0 };
 
 export function recordTranslatorUse(feature) {
   uses[feature] += 1;

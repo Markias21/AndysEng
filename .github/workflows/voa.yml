@@ -1,0 +1,40 @@
+name: Collect VOA reading passages
+
+# VOA Learning English는 퍼블릭 도메인이지만 RSS·기사 서버가 CORS 헤더를 주지 않아
+# 브라우저에서 직접 읽을 수 없다. 그래서 여기서 모아 public/data/reading/에 커밋하고,
+# pages.yml이 그 커밋을 받아 배포하면 앱은 same-origin으로 지문을 읽는다.
+
+on:
+  schedule:
+    - cron: "0 20 * * *" # 매일 05:00 KST
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: voa
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: node scripts/fetch-voa.js
+
+      - name: Commit new passages
+        run: |
+          if [ -z "$(git status --porcelain public/data/reading)" ]; then
+            echo "새 지문이 없습니다."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/reading
+          git commit -m "chore: VOA 리딩 지문 수집 ($(date -u +%Y-%m-%d))"
+          git push

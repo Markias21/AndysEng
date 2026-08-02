@@ -68,6 +68,18 @@ function writingBasicSection(records) {
   return lines;
 }
 
+/** 리딩은 이해 문제(로컬 채점) 성적과, 있다면 요약·재진술 점수를 함께 남긴다. */
+function readingSection(records) {
+  if (records.length === 0) return [];
+  const lines = [`## 📖 리딩 (${records.length}편)`, ""];
+  for (const r of records) {
+    const score = Number.isFinite(r.score) ? `, 요약·재진술 ${r.score}점` : ", 요약·재진술 건너뜀";
+    lines.push(`- ${r.title} — 이해 ${r.correct}/${r.total}${score}`);
+  }
+  lines.push("");
+  return lines;
+}
+
 function quizSection(records) {
   if (records.length === 0) return [];
   const correct = records.filter((r) => r.correct).length;
@@ -82,18 +94,19 @@ function quizSection(records) {
 
 /**
  * 한 세션의 학습 기록을 마크다운 리포트로 만든다.
- * records: { conversation, writing, expression, quiz } (각각 배열)
+ * records: { conversation, writing, expression, reading, quiz, writingBasic } (각각 배열)
  * meta: { dateLabel, userName? }
  */
 export function buildReport(records, meta) {
-  const { conversation = [], writing = [], expression = [], quiz = [], writingBasic = [] } = records;
-  const total = conversation.length + writing.length + expression.length;
+  const { conversation = [], writing = [], expression = [], quiz = [], writingBasic = [], reading = [] } = records;
+  const total = conversation.length + writing.length + expression.length + reading.length;
   const lines = [`# AndysEng 학습 리포트 — ${meta.dateLabel}`, ""];
   if (meta.userName) lines.push(`- 학습자: ${meta.userName}`);
   lines.push(`- 학습한 문장 수: ${total}개`, "");
   lines.push(...conversationSection(conversation));
   lines.push(...writingSection(writing));
   lines.push(...writingBasicSection(writingBasic));
+  lines.push(...readingSection(reading));
   lines.push(...expressionSection(expression));
   lines.push(...quizSection(quiz));
   return lines.join("\n").replace(/\n+$/, "\n");

@@ -1,9 +1,9 @@
 // 학습 데이터 저장소. localStorage에 단일 JSON으로 보관한다.
-// 기록 종류: conversation/writing/expression(점수 있음), quiz(복습 결과), sessions(주제 시작 이벤트),
+// 기록 종류: conversation/writing/expression/reading(점수 있음), quiz(복습 결과), sessions(주제 시작 이벤트),
 // writingBasic(글쓰기 기본 빈칸 채우기 결과 — 점수 통계에는 반영하지 않고 기록만 남긴다).
 const DATA_KEY = "andyseng:data";
 
-const RECORD_KINDS = ["conversation", "writing", "expression", "quiz", "sessions", "writingBasic"];
+const RECORD_KINDS = ["conversation", "writing", "expression", "quiz", "sessions", "writingBasic", "reading"];
 
 // 유저 프로필(설정): CEFR 학습 레벨, 회화 표현 수집 개수, 화면 테마, AI 모델.
 // 레벨/표현수는 회화·글쓰기·복습에 공통 적용. theme는 화면 색, model은 Claude 호출 모델.
@@ -27,14 +27,16 @@ function emptyData() {
   for (const kind of RECORD_KINDS) records[kind] = [];
   // deck: 표현 복습 카드. words: 단어장 카드. dict: 사전 조회 영구 캐시(질의 → entries).
   // usage: 모델별 누적 AI 비용(달러, 추정치). romanceMemory: 연애 상대(id)별 관계 기억 요약 한 줄.
+  // readingSets: 리딩 지문(기사 id)별 문제 세트 영구 캐시 — 지문 하나에 생성 호출은 평생 1회다.
   return {
-    version: 4,
+    version: 5,
     records,
     deck: [],
     words: [],
     dict: {},
     usage: {},
     romanceMemory: {},
+    readingSets: {},
     profile: { ...DEFAULT_PROFILE },
     lastReportAt: null,
     lastSyncedAt: null,
@@ -60,6 +62,7 @@ function normalize(data) {
     dict: data.dict && typeof data.dict === "object" ? data.dict : {},
     usage: data.usage && typeof data.usage === "object" ? data.usage : {},
     romanceMemory: data.romanceMemory && typeof data.romanceMemory === "object" ? data.romanceMemory : {},
+    readingSets: data.readingSets && typeof data.readingSets === "object" ? data.readingSets : {},
     profile: { ...base.profile, ...(data.profile || {}) },
   };
 }
@@ -227,6 +230,18 @@ export function getCachedLookup(key) {
 
 export function setCachedLookup(key, entries) {
   load().dict[key] = entries;
+  save();
+}
+
+// ===== 리딩 문제 세트 캐시 =====
+// 지문 하나의 문제 세트(객관식·빈칸·핵심 논지)를 영구 보관한다. 같은 지문을 몇 번을 다시 풀어도
+// 생성 호출은 평생 1회다. 백업·GitHub 동기화에 함께 실려 다른 기기에서도 재사용된다.
+export function getReadingSet(articleId) {
+  return load().readingSets[articleId] || null;
+}
+
+export function setReadingSet(articleId, set) {
+  load().readingSets[articleId] = set;
   save();
 }
 

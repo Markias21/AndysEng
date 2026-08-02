@@ -46,7 +46,9 @@ export function init() {
   document.addEventListener("keydown", (ev) => {
     if (ev.key === "Escape" && !$("#translate-modal").classList.contains("hidden")) closeModal();
   });
-  document.querySelectorAll(".translate-open-btn").forEach((b) =>
-    b.addEventListener("click", () => openModal(b.dataset.feature))
-  );
+  // 위임으로 붙인다 — 리딩처럼 툴바를 동적으로 그리는 화면에서도 버튼이 동작해야 한다.
+  document.addEventListener("click", (ev) => {
+    const btn = ev.target.closest(".translate-open-btn");
+    if (btn) openModal(btn.dataset.feature);
+  });
 }

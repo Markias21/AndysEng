@@ -1,3 +1,4 @@
 node_modules/
-data/
+# 옛 서버 시절의 루트 data/ 만 무시한다. public/data/(리딩 지문)는 배포에 포함돼야 한다.
+/data/
 .env

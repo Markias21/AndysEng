@@ -32,7 +32,7 @@ function calCell(cell, today) {
   const cls = grade ? `cal-${grade.replace("+", "")}` : "cal-none";
   const isToday = cell.date === today ? " cal-today" : "";
   const chip = (emoji, v) => (v != null ? `<span class="cal-chip">${emoji}${Math.round(v)}</span>` : "");
-  const chips = chip("💬", cell.convAvg) + chip("✍️", cell.writeAvg) + chip("💡", cell.exprAvg);
+  const chips = chip("💬", cell.convAvg) + chip("✍️", cell.writeAvg) + chip("📖", cell.readAvg) + chip("💡", cell.exprAvg);
   const title = cell.avgScore != null ? `${cell.date} · 평균 ${cell.avgScore}점 (${grade})` : cell.date;
   return `<div class="cal-cell ${cls}${isToday}" title="${title}">
       <div class="cal-day">${cell.day}</div>
@@ -61,7 +61,7 @@ function calendarSection(daily, today) {
       <div class="cal-grid">${head}${body}</div>
       <div class="cal-legend">
         ${legend}
-        <span class="muted small">칸 색 = 그날 평균 등급 · 💬회화 ✍️글쓰기 💡표현</span>
+        <span class="muted small">칸 색 = 그날 평균 등급 · 💬회화 ✍️글쓰기 📖리딩 💡표현</span>
       </div>
     </div>`;
 }
@@ -70,6 +70,7 @@ const UNSYNCED_LABELS = {
   conversation: "💬 회화 기록",
   writing: "✍️ 글쓰기 기록",
   expression: "💡 표현 기록",
+  reading: "📖 리딩 기록",
   quiz: "🔁 복습 결과",
   sessions: "📌 학습 시작 기록",
   deck: "🔁 복습 카드",
@@ -171,6 +172,7 @@ export function render() {
     ${charts(daily)}
     ${statBlock("💬 회화", summarize(records.conversation))}
     ${statBlock("✍️ 글쓰기", summarize(records.writing))}
+    ${statBlock("📖 리딩", summarize(records.reading))}
     ${statBlock("💡 표현", summarize(records.expression))}
     ${historyDetails(records)}
     <div class="card">

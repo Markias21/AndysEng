@@ -47,6 +47,18 @@ export const RUBRICS = {
       { key: "fluency", label: "어조·격식", max: 25 },
     ],
   },
+  // 리딩의 산출 과제(요약·재진술). task를 크게 잡은 이유는 이 둘의 본질이 "원문의 뜻을 정확히
+  // 옮겼는가"이기 때문이고, range를 20으로 둔 이유는 원문을 베끼지 않고 자기 말로 바꿔 썼는지가
+  // 요약·재진술의 핵심 기술이라 별도로 재야 하기 때문이다.
+  reading: {
+    label: "리딩",
+    components: [
+      { key: "task", label: "핵심 내용 포착", max: 40 },
+      { key: "accuracy", label: "정확성(문법)", max: 20 },
+      { key: "range", label: "자기 말로 바꿔쓰기", max: 20 },
+      { key: "fluency", label: "유창성·응집성", max: 20 },
+    ],
+  },
 };
 
 // AI 채점 시스템 프롬프트에 넣는 공통 지침(회화·글쓰기·표현 세 기능 공유, 드리프트 방지).
@@ -83,6 +95,20 @@ Missing even one bullet point should noticeably lower this grade, regardless of 
 export const EMAIL_REGISTER_NOTE = `Fluency grade for an email response: judge whether the tone and level of formality suit the stated relationship with the recipient (e.g. a professor vs. a classmate), and whether the email reads smoothly with natural transitions between the greeting, body, and closing.
 - Top (S+/S): consistently polite and appropriately formal throughout, with a natural flow from greeting to closing.
 - Bottom (F): tone is rude, overly casual, or inconsistent for the relationship, or the email reads as a disconnected list of sentences.`;
+
+// 리딩 전용 task 절대 밴드. 요약·재진술은 "얼마나 잘 썼는가"보다 "원문의 뜻을 빠짐없이,
+// 왜곡 없이 옮겼는가"가 핵심이라 일반 TASK_RUBRIC(아이디어 전개)과 축이 다르다.
+export const READING_TASK_RUBRIC = `Task grade for reading responses (judged on faithfulness to the source passage, not on writing style): how completely and accurately the response captures what the passage actually says.
+- Top (S+/S): captures the main idea and every major supporting point, with nothing distorted, invented, or contradicted.
+- Bottom (F): misses the main idea, or states things the passage never said.
+Two failures matter most and must lower this grade sharply: (1) missing a major point the passage builds on, and (2) an inaccuracy — claiming something the passage does not support. Leaving out MINOR details is correct behavior for a summary and must NOT be penalized.`;
+
+// 리딩 전용 range 절대 밴드. 요약·재진술에서 range는 "어휘가 화려한가"가 아니라
+// "원문 표현에서 벗어나 자기 말로 다시 표현했는가"다. 베껴 쓰기를 가장 무겁게 본다.
+export const READING_RANGE_RUBRIC = `Range grade for reading responses: how far the learner moved the wording away from the passage — genuine paraphrase, not copying.
+- Top (S+/S): the ideas are re-expressed in the learner's own words and sentence structures; only unavoidable technical terms and proper nouns are reused.
+- Bottom (F): long stretches are copied word-for-word from the passage, or only a few words are swapped while the original sentence structure is kept.
+Copying is the single biggest problem here — a response that is accurate but largely lifted from the passage must get a LOW range grade even if its other grades are high.`;
 
 // 9단계 등급 집합과 절대 채점 지시. 각 기능 프롬프트에 넣어 등급 스케일을 고정한다.
 export const GRADE_SCALE_NOTE = `Grade each rubric component on this 9-level scale, from best to worst: S+, S, A+, A, B+, B, C+, C, F (S+ is flawless/native-like, F is very poor).

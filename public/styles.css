@@ -588,3 +588,52 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
   .cloze-cell { font-size: 15px; width: 1.1em; }
   .cloze-blank { gap: 4px 8px; margin: 0 2px; }
 }
+
+/* ===== 리딩 ===== */
+/* 지문: 읽기 편하도록 본문만 폭·행간을 넉넉히 잡는다 */
+.reading-passage p { margin-bottom: 14px; line-height: 1.85; font-size: 16px; }
+.reading-passage p:last-of-type { margin-bottom: 0; }
+.passage-heading { margin: 20px 0 10px; font-size: 16px; color: var(--primary); }
+.reading-passage .rubric-guide li { margin-bottom: 6px; line-height: 1.5; }
+.section-title { margin: 28px 0 10px; font-size: 17px; }
+
+/* 객관식 문항 */
+.mc-card { margin-bottom: 14px; }
+.mc-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.mc-status { margin-left: auto; font-size: 13px; font-weight: 700; }
+.mc-stem { font-weight: 700; line-height: 1.6; margin-bottom: 12px; }
+.mc-options { display: flex; flex-direction: column; gap: 2px; }
+.mc-option {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px; border-radius: 12px; cursor: pointer; line-height: 1.55;
+}
+.mc-option:hover { background: #eef0ff; }
+.mc-option input { margin-top: 4px; flex-shrink: 0; accent-color: var(--primary); }
+.mc-review { list-style: none; display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
+.mc-review li { display: flex; gap: 10px; padding: 9px 12px; border-radius: 12px; line-height: 1.55; }
+.mc-mark { width: 1em; flex-shrink: 0; font-weight: 800; }
+.mc-correct { background: #e6f9f1; color: var(--green); font-weight: 700; }
+.mc-wrong { background: #ffecee; color: var(--red); }
+.mc-evidence {
+  font-size: 13px; color: var(--muted); line-height: 1.6;
+  border-left: 3px solid var(--border); padding-left: 10px; margin-top: 8px;
+}
+
+/* 빈칸 문제 카드 */
+.cloze-card { margin-bottom: 12px; }
+
+/* 종합 평가 */
+.result-summary .score-overall { margin: 12px 0; }
+.covered-list { list-style: none; }
+.covered-list li { padding: 7px 0; line-height: 1.55; }
+.res-ok { color: var(--text); }
+.res-miss { color: var(--red); }
+
+@media (max-width: 560px) {
+  .reading-passage p { font-size: 15px; line-height: 1.8; }
+  .mc-option, .mc-review li { padding: 9px 8px; }
+}
+
+:root[data-theme="dark"] .mc-option:hover { background: #2a2c44; }
+:root[data-theme="dark"] .mc-correct { background: #163b2c; }
+:root[data-theme="dark"] .mc-wrong { background: #3d1f26; }

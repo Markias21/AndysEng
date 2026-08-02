@@ -16,9 +16,10 @@ export function avgLastN(scores, n) {
 /**
  * 기능 하나의 학습 기록 요약.
  * records: [{ts, score, ...}] (시간순)
+ * 점수가 없는 기록도 있어(리딩에서 요약·재진술을 모두 건너뛴 경우) 평균은 점수가 있는 것만 센다.
  */
 export function summarize(records) {
-  const scores = records.map((r) => r.score);
+  const scores = records.map((r) => r.score).filter(Number.isFinite);
   return {
     count: records.length,
     avg10: avgLastN(scores, 10),
@@ -32,7 +33,7 @@ function round1(n) {
 }
 
 /**
- * 일별 학습 통계. records: {conversation, writing, expression, quiz, sessions}.
+ * 일별 학습 통계. records: {conversation, writing, expression, reading, quiz, sessions}.
  * 반환: 날짜 오름차순 [{date, topics, spoken, written, quizCount, quizCorrect, avgScore}]
  * - topics: 그날 다룬 주제 수 = 회화 세션 + 글쓰기 편수 + 표현 개수
  * - spoken: 회화에서 말한 문장 수, written: 글쓰기+표현에서 쓴 문장 수
@@ -56,12 +57,15 @@ export function dailyStats(records) {
         conv: { sum: 0, count: 0 },
         write: { sum: 0, count: 0 },
         expr: { sum: 0, count: 0 },
+        read: { sum: 0, count: 0 },
       });
     }
     return days.get(key);
   };
 
   const addScore = (d, bucket, score) => {
+    // 점수 없는 기록도 있다(리딩에서 요약·재진술을 모두 건너뛴 경우). 평균을 NaN으로 만들지 않는다.
+    if (!Number.isFinite(score)) return;
     d.scoreSum += score;
     d.scoreCount += 1;
     d[bucket].sum += score;
@@ -86,6 +90,12 @@ export function dailyStats(records) {
     d.written += 1;
     addScore(d, "expr", r.score);
   }
+  for (const r of records.reading || []) {
+    const d = day(r.ts);
+    d.topics += 1;
+    d.written += 1;
+    addScore(d, "read", r.score);
+  }
   for (const r of records.quiz || []) {
     const d = day(r.ts);
     d.quizCount += 1;
@@ -95,12 +105,13 @@ export function dailyStats(records) {
   const bucketAvg = (b) => (b.count ? round1(b.sum / b.count) : null);
   return [...days.values()]
     .sort((a, b) => (a.date < b.date ? -1 : 1))
-    .map(({ scoreSum, scoreCount, conv, write, expr, ...rest }) => ({
+    .map(({ scoreSum, scoreCount, conv, write, expr, read, ...rest }) => ({
       ...rest,
       avgScore: scoreCount ? round1(scoreSum / scoreCount) : null,
       convAvg: bucketAvg(conv),
       writeAvg: bucketAvg(write),
       exprAvg: bucketAvg(expr),
+      readAvg: bucketAvg(read),
     }));
 }
 
@@ -112,7 +123,7 @@ function pad2(n) {
  * 월별 달력 격자를 만든다. daily는 dailyStats()의 결과, month는 1~12.
  * 반환: { year, month, weeks: [[cell,...7], ...] }
  * cell(빈칸): { date: null }
- * cell(날짜): { date, day, avgScore, convAvg, writeAvg, exprAvg, hasStudy }
+ * cell(날짜): { date, day, avgScore, convAvg, writeAvg, exprAvg, readAvg, hasStudy }
  */
 export function calendarMonth(daily, year, month) {
   const byDate = new Map(daily.map((d) => [d.date, d]));
@@ -131,6 +142,7 @@ export function calendarMonth(daily, year, month) {
       convAvg: d?.convAvg ?? null,
       writeAvg: d?.writeAvg ?? null,
       exprAvg: d?.exprAvg ?? null,
+      readAvg: d?.readAvg ?? null,
       hasStudy: !!d && (d.spoken + d.written + d.quizCount > 0 || d.topics > 0),
     });
   }
