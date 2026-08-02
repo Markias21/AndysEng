@@ -1,19 +1,29 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CATEGORIES, articleId, parseArticle, parseFeed, wordCount } from "./voa-parse.js";
+import { CATEGORIES, LISTENING_CATEGORIES, articleId, parseArticle, parseFeed, wordCount } from "./voa-parse.js";
 import { CATEGORIES as APP_CATEGORIES } from "../public/js/features/reading/catalog.js";
+import { CATEGORIES as APP_LISTENING_CATEGORIES } from "../public/js/features/listening/catalog.js";
 
 test("카테고리 id와 피드 id는 서로 겹치지 않는다", () => {
   assert.equal(new Set(CATEGORIES.map((c) => c.id)).size, CATEGORIES.length);
   assert.equal(new Set(CATEGORIES.map((c) => c.feed)).size, CATEGORIES.length);
+  assert.equal(new Set(LISTENING_CATEGORIES.map((c) => c.id)).size, LISTENING_CATEGORIES.length);
+  assert.equal(new Set(LISTENING_CATEGORIES.map((c) => c.feed)).size, LISTENING_CATEGORIES.length);
 });
 
 // 수집 스크립트(Node)와 앱(브라우저)은 배포 경계가 달라 모듈을 공유할 수 없고 목록을 각자 들고 있다.
 // 한쪽만 고치면 앱에 영영 안 보이는 카테고리가 생기므로 여기서 어긋남을 잡는다.
-test("수집 스크립트와 앱의 카테고리 목록이 일치한다", () => {
+test("수집 스크립트와 앱의 카테고리 목록이 일치한다 (리딩)", () => {
   assert.deepEqual(
     APP_CATEGORIES.map((c) => ({ id: c.id, label: c.label })),
     CATEGORIES.map((c) => ({ id: c.id, label: c.label }))
+  );
+});
+
+test("수집 스크립트와 앱의 카테고리 목록이 일치한다 (짧은 학습)", () => {
+  assert.deepEqual(
+    APP_LISTENING_CATEGORIES.map((c) => ({ id: c.id, label: c.label })),
+    LISTENING_CATEGORIES.map((c) => ({ id: c.id, label: c.label }))
   );
 });
 

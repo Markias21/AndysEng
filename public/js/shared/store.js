@@ -1,15 +1,17 @@
 // 학습 데이터 저장소. localStorage에 단일 JSON으로 보관한다.
 // 기록 종류: conversation/writing/expression/reading(점수 있음), quiz(복습 결과), sessions(주제 시작 이벤트),
-// writingBasic(글쓰기 기본 빈칸 채우기 결과 — 점수 통계에는 반영하지 않고 기록만 남긴다).
+// writingBasic(글쓰기 기본 빈칸 채우기 결과), listening(짧은 학습 받아쓰기 결과)
+// — writingBasic·listening은 AI 채점이 없어 점수 통계에는 반영하지 않고 기록만 남긴다.
 const DATA_KEY = "andyseng:data";
 
-const RECORD_KINDS = ["conversation", "writing", "expression", "quiz", "sessions", "writingBasic", "reading"];
+const RECORD_KINDS = ["conversation", "writing", "expression", "quiz", "sessions", "writingBasic", "reading", "listening"];
 
 // 유저 프로필(설정): CEFR 학습 레벨, 회화 표현 수집 개수, 화면 테마, AI 모델.
 // 레벨/표현수는 회화·글쓰기·복습에 공통 적용. theme는 화면 색, model은 Claude 호출 모델.
 // gender: 회화 💕연애에서 이성 상대를 정하는 기준. romancePartnerId: 고정된 연애 상대 페르소나 id.
 // dailyNewLimit/dailyReviewLimit: 하루에 새로 시작할 카드 수 / 하루 복습 총량. 표현이 쌓여도 부담을 고정한다.
 // basicDifficulty: 글쓰기 기본 빈칸 난이도(초급/중급/상급) 마지막 선택값.
+// listenDifficulty: 짧은 학습 받아쓰기 난이도(초급/중급/상급) 마지막 선택값.
 const DEFAULT_PROFILE = {
   level: "B1",
   exprPerConv: 2,
@@ -20,6 +22,7 @@ const DEFAULT_PROFILE = {
   dailyNewLimit: 5,
   dailyReviewLimit: 20,
   basicDifficulty: "mid",
+  listenDifficulty: "mid",
 };
 
 function emptyData() {
@@ -29,7 +32,7 @@ function emptyData() {
   // usage: 모델별 누적 AI 비용(달러, 추정치). romanceMemory: 연애 상대(id)별 관계 기억 요약 한 줄.
   // readingSets: 리딩 지문(기사 id)별 문제 세트 영구 캐시 — 지문 하나에 생성 호출은 평생 1회다.
   return {
-    version: 5,
+    version: 6,
     records,
     deck: [],
     words: [],

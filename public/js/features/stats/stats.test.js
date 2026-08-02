@@ -82,6 +82,21 @@ test("dailyStats: 날짜별로 주제/발화/작문/점수를 집계한다", () 
   assert.equal(d2.quizCorrect, 1);
 });
 
+test("dailyStats: 짧은 학습(listening)은 점수 없이 주제 수·횟수만 센다", () => {
+  const ts = "2026-07-15T03:00:00Z";
+  const records = {
+    listening: [
+      { ts, articleId: "1", correct: 5, total: 8 },
+      { ts, articleId: "2", correct: 3, total: 8 },
+    ],
+  };
+  const [d] = dailyStats(records);
+  assert.equal(d.topics, 2);
+  assert.equal(d.listenCount, 2);
+  // 점수(score) 필드가 없으므로 전체 평균에 영향을 주지 않는다.
+  assert.equal(d.avgScore, null);
+});
+
 test("dailyStats: 기능별 평균 점수를 따로 집계한다", () => {
   const ts = "2026-07-15T03:00:00Z";
   const records = {

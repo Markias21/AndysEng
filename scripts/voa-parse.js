@@ -21,6 +21,13 @@ export function findCategory(id) {
   return CATEGORIES.find((c) => c.id === id) || null;
 }
 
+// "짧은 학습"(3분 학습) 리스닝+리딩 겸용 콘텐츠. Words and Their Stories는 관용구 위주 주간 쇼로,
+// VOA가 기사마다 텍스트와 mp3를 함께 제공해 위 CATEGORIES(오디오 없이 텍스트만 쓰던 것)와 다르다.
+// 실제 확인(<channel><title> == "Words and Their Stories - Voice of America"), 기사 300~500단어대,
+// mp3 항상 존재, 본문 구조는 CATEGORIES와 동일(<div class="wsw"> + 무클래스 <p>)이라 parseArticle 그대로 재사용.
+// News Words(zone 3620)도 후보였으나 비디오 시리즈라 본문 div·mp3가 없어(영상만 있음) 제외했다.
+export const LISTENING_CATEGORIES = [{ id: "idioms", label: "🗣 관용구 이야기", feed: "zmypyl-vomx-tpeyry_" }];
+
 const BASE = "https://learningenglish.voanews.com";
 
 export const feedUrl = (category) => `${BASE}/api/${category.feed}`;
