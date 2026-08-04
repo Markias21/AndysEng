@@ -61,6 +61,8 @@ const ASSETS = [
   "js/features/srs/produce-ui.js",
   "js/features/srs/quiz.js",
   "js/features/srs/quiz-ui.js",
+  "js/features/srs/history.js",
+  "js/features/srs/history-ui.js",
   "js/features/reading/ui.js",
   "js/features/reading/practice-ui.js",
   "js/features/reading/result-ui.js",

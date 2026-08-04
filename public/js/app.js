@@ -11,6 +11,7 @@ import * as report from "./features/report/ui.js";
 import * as sync from "./features/sync/ui.js";
 import * as stats from "./features/stats/ui.js";
 import * as srs from "./features/srs/ui.js";
+import * as srsHistory from "./features/srs/history-ui.js";
 import * as reading from "./features/reading/ui.js";
 import * as listening from "./features/listening/ui.js";
 import * as sixmin from "./features/sixmin/ui.js";
@@ -139,6 +140,7 @@ async function init() {
   sync.init();
   dictionary.init();
   translate.init();
+  srsHistory.init();
 
   if (!(await tryDevAutoLogin())) {
     showGate(hasVault() ? "unlock" : "setup");
