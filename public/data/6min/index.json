@@ -1,0 +1,325 @@
+{
+  "updatedAt": "2026-08-04T13:16:55.293Z",
+  "episodes": [
+    {
+      "id": "260730",
+      "title": "The Enhanced Games",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260730",
+      "date": "2026-07-30",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260730_6_minute_english_the_enhanced_games_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260730_6_minute_english_the_enhanced_games_transcript.pdf"
+    },
+    {
+      "id": "260723",
+      "title": "Children in warzones",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260723",
+      "date": "2026-07-23",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260723_6_minute_english_children_in_warzones.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260723_6_minute_english_children_in_warzones_transcript.pdf"
+    },
+    {
+      "id": "260716",
+      "title": "What's in a footballer's brain?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260716",
+      "date": "2026-07-16",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260716_6_minute_english_what's_in_a_footballer's_brain_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260716_6_minute_english_what's_in_a_footballer's_brain_transcript.pdf"
+    },
+    {
+      "id": "260709",
+      "title": "Should we cycle more?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260709",
+      "date": "2026-07-09",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260709_6_minute_english_should_we_cycle_more_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260709_6_minute_english_should_we_cycle_more_transcript.pdf"
+    },
+    {
+      "id": "260702",
+      "title": "Rude emails",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260702",
+      "date": "2026-07-02",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260702_6_minute_english_rude_emails_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260702_6_minute_english_rude_emails_transcript.pdf"
+    },
+    {
+      "id": "260625",
+      "title": "Stress-free family meals",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260625",
+      "date": "2026-06-25",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260625_6_minute_english_stress_free_family_meals_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260625_6_minute_english_stress_free_family_meals_transcript.pdf"
+    },
+    {
+      "id": "260618",
+      "title": "Limiting screen time for children",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260618",
+      "date": "2026-06-18",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260618_6_minute_english_limiting_screen_time_for_children_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260618_6_minute_english_limiting_screen_time_for_children_transcript_.pdf"
+    },
+    {
+      "id": "260611",
+      "title": "How advertisers make us spend money",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260611",
+      "date": "2026-06-11",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260611_6_minute_english_how_advertisers_make_us_spend_money_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260611_6_minute_english_how_advertisers_make_us_spend_money_transcript.pdf"
+    },
+    {
+      "id": "260604",
+      "title": "The power of poetry",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260604",
+      "date": "2026-06-04",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260604_6_minute_english_the_power_of_poetry_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260604_6_minute_english_the_power_of_poetry__transcript.pdf"
+    },
+    {
+      "id": "260528",
+      "title": "Living with debt",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260528",
+      "date": "2026-05-28",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260528_6_minute_english_living_with_debt_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260528_6_minute_english_living_with_debt_transcript.pdf"
+    },
+    {
+      "id": "260521",
+      "title": "Making cities feel quieter",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260521",
+      "date": "2026-05-21",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260521_6_minute_english_making_cities_feel_quieter_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260521_6_minute_english_making_cities_feel_quieter_transcript.pdf"
+    },
+    {
+      "id": "260514",
+      "title": "How reading shapes your brain",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260514",
+      "date": "2026-05-14",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260514_6_minute_english_how_reading_shapes_your_brain_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260514_6_minute_english_how_reading_shapes_your_brain_transcript_.pdf"
+    },
+    {
+      "id": "260507",
+      "title": "Searching for life on another planet",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260507",
+      "date": "2026-05-07",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260507_searching_for_life_on_another_planet_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260507_searching_for_life_on_another_planet_transcript_.pdf"
+    },
+    {
+      "id": "260430",
+      "title": "Should we eat ultra-processed food?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260430",
+      "date": "2026-04-30",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260430_6_minute_english_should_we_eat_ultra_processed_food_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260430_6_minute_english_should_we_eat_ultra_processed_food_transcript.pdf"
+    },
+    {
+      "id": "260423",
+      "title": "Why are we all so stressed?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260423",
+      "date": "2026-04-23",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260423_6_minute_english_why_are_we_all_so_stressed_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260423_6_minute_english_why_are_we_all_so_stressed_transcript.pdf"
+    },
+    {
+      "id": "260416",
+      "title": "Love the foods you hate",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260416",
+      "date": "2026-04-16",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260416_love_the_foods_you_hate_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260416_love_the_foods_you_hate_transcript_.pdf"
+    },
+    {
+      "id": "260409",
+      "title": "The future of food",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260409",
+      "date": "2026-04-09",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260409_6_minute_english_the_future_of_food_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260409_6_minute_english_the_future_of_food_transcript.pdf"
+    },
+    {
+      "id": "260402",
+      "title": "Are saunas good for you?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260402",
+      "date": "2026-04-02",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260402_6_minute_english_saunas_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260402_6_minute_english_saunas_transcript_.pdf"
+    },
+    {
+      "id": "260326",
+      "title": "Weight loss drugs",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260326",
+      "date": "2026-03-26",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260326_6_minute_english_weight_loss_drugs_download_.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260326_6_minute_english_weight_loss_drugs__transcript.pdf"
+    },
+    {
+      "id": "260319",
+      "title": "How do we adapt to the cold?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260319",
+      "date": "2026-03-19",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260319_6_minute_english_how_do_we_adapt_to_the_cold_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260319_6_minute_english_how_do_we_adapt_to_the_cold_transcript_.pdf"
+    },
+    {
+      "id": "260312",
+      "title": "Should we pay more for chocolate?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260312",
+      "date": "2026-03-12",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260312_should_we_pay_more_for_chocolate_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260312_should_we_pay_more_for_chocolate__transcript_.pdf"
+    },
+    {
+      "id": "260305",
+      "title": "Why are some animals black and white?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260305",
+      "date": "2026-03-05",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260305_6_minute_english_why_are_some_animals_black_and_white_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260305_6_minute_english_why_are_some_animals_black_and_white_transcript__.pdf"
+    },
+    {
+      "id": "260226",
+      "title": "The power of pepper",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260226",
+      "date": "2026-02-26",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260226_6_minute_english_the_power_of_pepper_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260226_6_minute_english_the_power_of_pepper_transcript.pdf"
+    },
+    {
+      "id": "260219",
+      "title": "Dreaming of being a chef",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260219",
+      "date": "2026-02-19",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260219_6_minute_english_dreaming_of_being_a_chef_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260219_6_minute_english_dreaming_of_being_a_chef_transcript.pdf"
+    },
+    {
+      "id": "260212",
+      "title": "Artistic swimming",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260212",
+      "date": "2026-02-12",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260212_6_minute_english_artistic_swimming_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260212_6_minute_english_artistic_swimming_transcript_.pdf"
+    },
+    {
+      "id": "260205",
+      "title": "Rethinking dyslexia",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260205",
+      "date": "2026-02-05",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260205_6_minute_english_rethinking_dyslexia_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260205_6_minute_english_rethinking_dyslexia_transcript.pdf"
+    },
+    {
+      "id": "260129",
+      "title": "Why are billionaires building bunkers?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260129",
+      "date": "2026-01-29",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260129_6_minute_english_why_are_billionaires_building_bunkers_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260129_6_minute_english_why_are_billionaires_building_bunkers_transcript.pdf"
+    },
+    {
+      "id": "260115",
+      "title": "What English phrases really mean",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260115",
+      "date": "2026-01-15",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260115_6_minute_english_what_english_phrases_really_mean_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260115_6_minute_english_what_english_phrases_really_mean_transcript.pdf"
+    },
+    {
+      "id": "260108",
+      "title": "Is social media dead?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260108",
+      "date": "2026-01-08",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260108_6_minute_english_is_social_media_dead_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260108_6_minute_english_is_social_media_dead_transcript_.pdf"
+    },
+    {
+      "id": "260101",
+      "title": "Is it OK to disagree?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260101",
+      "date": "2026-01-01",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260101_6_minute_english_is_it_ok_to_disagree_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260101_6_minute_english__is_it_ok_to_disagree_transcript.pdf"
+    },
+    {
+      "id": "251225",
+      "title": "Was Christmas better in the past?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2025/ep-251225",
+      "date": "2025-12-25",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251225_6_minute_english_was_Christmas_better_in_the_past_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251225_6_minute_english_was_Christmas_better_in_the__past_transcript.pdf"
+    },
+    {
+      "id": "251218",
+      "title": "Finding and eating wild food",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2025/ep-251218",
+      "date": "2025-12-18",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251218_6_minute_english_finding_and_eating_wild_food_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251218_6_minute_english_finding_and_eating_wild_food_transcript.pdf"
+    },
+    {
+      "id": "251211",
+      "title": "How are horses helping to heal humans?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2025/ep-251211",
+      "date": "2025-12-11",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251211_6_minute_english_how_are_horses_helping_to_heal_humans_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251211_6_minute_english_how_are_horses_helping_to_heal_humans_transcript_.pdf"
+    },
+    {
+      "id": "251204",
+      "title": "What’s your favourite flavour of crisp?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2025/ep-251204",
+      "date": "2025-12-04",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251204_6_minute_english_whats_your_favourite_flavour_of_crisp__download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251204_6_minute_english_whats_your_favourite_flavour_of_crisp__transcript.pdf"
+    },
+    {
+      "id": "251127",
+      "title": "How are influencers affecting politics?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2025/ep-251127",
+      "date": "2025-11-27",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251127_6_minute_english_how_are_influencers_affecting_politics_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251127_6_minute_english_how_are_influencers_affecting_politics_transcript.pdf"
+    },
+    {
+      "id": "251120",
+      "title": "Do you have good dining etiquette?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2025/ep-251120",
+      "date": "2025-11-20",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251120_6_minute_english_do_you_have_good_dining_etiquette_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251120_6_minute_english_do_you_have_good_dining_etiquette_transcript.pdf"
+    },
+    {
+      "id": "251113",
+      "title": "How important is play?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2025/ep-251113",
+      "date": "2025-11-13",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251113_6_minute_english_how_important_is_play_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251113_6_minute_english_how_important_is_play_transcript.pdf"
+    },
+    {
+      "id": "251106",
+      "title": "Do you like garlic?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2025/ep-251106",
+      "date": "2025-11-06",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251106_6_minute_english_do_you_like_garlic_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251106_6_minute_english_do_you_like_garlic_transcript_.pdf"
+    },
+    {
+      "id": "251030",
+      "title": "Is breakfast the most important meal of the day?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2025/ep-251030",
+      "date": "2025-10-30",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251030_6_minute_english_is_breakfast_the_most_important_meal_of_the_day_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251030_6_minute_english_is_breakfast_the_most_important_meal_of_the_day_transcript.pdf"
+    },
+    {
+      "id": "251023",
+      "title": "Did a civilisation exist on Earth before humans?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2025/ep-251023",
+      "date": "2025-10-23",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251023_6_minute_english_did_a_civilisation_exist_on_earth_before_humans_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251023_6_minute_english_did__a_civilisation_exist_on_earth_before_humans_transcript.pdf"
+    }
+  ]
+}

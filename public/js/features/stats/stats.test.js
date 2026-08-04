@@ -97,6 +97,20 @@ test("dailyStats: 짧은 학습(listening)은 점수 없이 주제 수·횟수�
   assert.equal(d.avgScore, null);
 });
 
+test("dailyStats: 리스닝(sixMin)도 점수 없이 주제 수·횟수만 센다", () => {
+  const ts = "2026-07-15T03:00:00Z";
+  const records = {
+    sixMin: [
+      { ts, episodeId: "260730", kind: "dictation", total: 40, correct: 31 },
+      { ts, episodeId: "260730", kind: "quiz", total: 5, correct: 4 },
+    ],
+  };
+  const [d] = dailyStats(records);
+  assert.equal(d.topics, 2);
+  assert.equal(d.listenCount, 2);
+  assert.equal(d.avgScore, null);
+});
+
 test("dailyStats: 문단 연습(shortReading)도 점수 없이 주제 수·횟수만 센다", () => {
   const ts = "2026-07-15T03:00:00Z";
   const records = {

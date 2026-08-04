@@ -13,6 +13,7 @@ import * as stats from "./features/stats/ui.js";
 import * as srs from "./features/srs/ui.js";
 import * as reading from "./features/reading/ui.js";
 import * as listening from "./features/listening/ui.js";
+import * as sixmin from "./features/sixmin/ui.js";
 import * as dictionary from "./features/dictionary/ui.js";
 import * as translate from "./features/translate/ui.js";
 import * as settings from "./features/settings/ui.js";
@@ -99,6 +100,7 @@ function initTabs() {
       if (tab.dataset.view === "writing-basic") writingBasic.render();
       if (tab.dataset.view === "reading") reading.render();
       if (tab.dataset.view === "listening") listening.render();
+      if (tab.dataset.view === "sixmin") sixmin.render();
     });
   });
 }

@@ -3,7 +3,7 @@
 import { blankInputsHTML, blankResultHTML, readWords, showFirstLetters, weaveHTML, wireCells } from "../../shared/cloze-view.js";
 import { $, esc } from "../../shared/dom.js";
 import { appendRecord, getProfile, setProfile } from "../../shared/store.js";
-import { DEFAULT_DIFFICULTY, DIFFICULTIES, buildDictation, findDifficulty, gradeDictation } from "./dictation.js";
+import { DEFAULT_DIFFICULTY, DIFFICULTIES, buildDictation, findDifficulty, gradeDictation } from "../../shared/dictation.js";
 
 const ROOT = "#listening-content";
 
@@ -20,7 +20,7 @@ function passageHeaderHTML(article) {
   return `<article class="card reading-passage">
       <h3>${esc(article.title)}</h3>
       <p class="small muted">VOA Words and Their Stories · ${article.words}단어 · 약 ${Math.max(1, Math.round(article.words / 150))}분</p>
-      <audio controls preload="none" src="${esc(article.audio)}" style="width:100%"></audio>
+      <audio controls preload="none" class="audio-player" src="${esc(article.audio)}"></audio>
       ${glossary}
     </article>`;
 }

@@ -1,8 +1,12 @@
-name: Collect VOA reading passages
+name: Collect reading passages and listening links
 
 # VOA Learning English는 퍼블릭 도메인이지만 RSS·기사 서버가 CORS 헤더를 주지 않아
 # 브라우저에서 직접 읽을 수 없다. 그래서 여기서 모아 public/data/reading/·public/data/listening/에
 # 커밋하고, pages.yml이 그 커밋을 받아 배포하면 앱은 same-origin으로 지문/받아쓰기 대본을 읽는다.
+#
+# BBC 6 Minute English는 다르다 — 저작물이라 대본 텍스트를 레포에 담지 않는다. 여기서는 에피소드
+# 페이지(CORS 없음)에서 **링크만** 긁어 public/data/6min/index.json에 남기고, 대본 PDF와 오디오는
+# 앱이 열 때 브라우저가 downloads.bbc.co.uk(CORS 열림)에서 직접 받는다.
 
 on:
   schedule:
@@ -27,15 +31,16 @@ jobs:
 
       - run: node scripts/fetch-voa.js
       - run: node scripts/fetch-voa-listening.js
+      - run: node scripts/fetch-bbc.js
 
       - name: Commit new passages
         run: |
-          if [ -z "$(git status --porcelain public/data/reading public/data/listening)" ]; then
+          if [ -z "$(git status --porcelain public/data/reading public/data/listening public/data/6min)" ]; then
             echo "새 지문이 없습니다."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/data/reading public/data/listening
-          git commit -m "chore: VOA 리딩·짧은 학습 지문 수집 ($(date -u +%Y-%m-%d))"
+          git add public/data/reading public/data/listening public/data/6min
+          git commit -m "chore: VOA 지문·BBC 리스닝 링크 수집 ($(date -u +%Y-%m-%d))"
           git push

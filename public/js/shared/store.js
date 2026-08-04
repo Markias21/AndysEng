@@ -1,7 +1,8 @@
 // 학습 데이터 저장소. localStorage에 단일 JSON으로 보관한다.
 // 기록 종류: conversation/writing/expression/reading(점수 있음), quiz(복습 결과), sessions(주제 시작 이벤트),
-// writingBasic(글쓰기 기본 빈칸 채우기 결과), listening(짧은 학습 받아쓰기 결과), shortReading(문단 연습 결과)
-// — writingBasic·listening·shortReading은 4축 점수 체계 대신 correct(정답 여부)만 남기고 점수 평균에는 반영하지 않는다.
+// writingBasic(글쓰기 기본 빈칸 채우기 결과), listening(짧은 학습 받아쓰기 결과), shortReading(문단 연습 결과),
+// sixMin(리스닝 받아쓰기·이해 문제 결과)
+// — writingBasic·listening·shortReading·sixMin은 4축 점수 체계 대신 correct(정답 여부)만 남기고 점수 평균에는 반영하지 않는다.
 const DATA_KEY = "andyseng:data";
 
 const RECORD_KINDS = [
@@ -14,6 +15,7 @@ const RECORD_KINDS = [
   "reading",
   "listening",
   "shortReading",
+  "sixMin",
 ];
 
 // 유저 프로필(설정): CEFR 학습 레벨, 회화 표현 수집 개수, 화면 테마, AI 모델.
@@ -41,8 +43,9 @@ function emptyData() {
   // deck: 표현 복습 카드. words: 단어장 카드. dict: 사전 조회 영구 캐시(질의 → entries).
   // usage: 모델별 누적 AI 비용(달러, 추정치). romanceMemory: 연애 상대(id)별 관계 기억 요약 한 줄.
   // readingSets: 리딩 지문(기사 id)별 문제 세트 영구 캐시 — 지문 하나에 생성 호출은 평생 1회다.
+  // sixMinSets: 리스닝 에피소드별 문제 세트 영구 캐시(같은 이유).
   return {
-    version: 7,
+    version: 8,
     records,
     deck: [],
     words: [],
@@ -50,6 +53,7 @@ function emptyData() {
     usage: {},
     romanceMemory: {},
     readingSets: {},
+    sixMinSets: {},
     profile: { ...DEFAULT_PROFILE },
     lastReportAt: null,
     lastSyncedAt: null,
@@ -76,6 +80,7 @@ function normalize(data) {
     usage: data.usage && typeof data.usage === "object" ? data.usage : {},
     romanceMemory: data.romanceMemory && typeof data.romanceMemory === "object" ? data.romanceMemory : {},
     readingSets: data.readingSets && typeof data.readingSets === "object" ? data.readingSets : {},
+    sixMinSets: data.sixMinSets && typeof data.sixMinSets === "object" ? data.sixMinSets : {},
     profile: { ...base.profile, ...(data.profile || {}) },
   };
 }
@@ -255,6 +260,19 @@ export function getReadingSet(articleId) {
 
 export function setReadingSet(articleId, set) {
   load().readingSets[articleId] = set;
+  save();
+}
+
+// ===== 리스닝 문제 세트 캐시 =====
+// 에피소드 하나의 이해 문제를 영구 보관한다(리딩과 같은 이유). 대본 자체는 여기 넣지 않는다 —
+// BBC 대본은 저작물이라 백업·GitHub 동기화 페이로드에 싣지 않고, features/sixmin/source.js가
+// 별도 localStorage 키에만 캐시한다.
+export function getSixMinSet(episodeId) {
+  return load().sixMinSets[episodeId] || null;
+}
+
+export function setSixMinSet(episodeId, set) {
+  load().sixMinSets[episodeId] = set;
   save();
 }
 

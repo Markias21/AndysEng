@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; connect-src 'self' https://api.anthropic.com https://api.github.com; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self'" />
+        content="default-src 'self'; connect-src 'self' https://api.anthropic.com https://api.github.com https://downloads.bbc.co.uk; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' https://voa-audio.voanews.eu https://downloads.bbc.co.uk; object-src 'none'; base-uri 'none'; form-action 'self'" />
   <meta name="theme-color" content="#5b5fed" />
   <title>AndysEng — 영어 공부</title>
   <link rel="stylesheet" href="styles.css" />
@@ -47,6 +47,7 @@
       <button class="tab" data-view="writing-basic">📝 글쓰기 기본</button>
       <button class="tab" data-view="reading">📖 리딩</button>
       <button class="tab" data-view="listening">🎧 3분 학습</button>
+      <button class="tab" data-view="sixmin">🎙 리스닝</button>
       <button class="tab" data-view="srs">🔁 복습</button>
       <button class="tab" data-view="stats">📊 통계</button>
     </nav>
@@ -124,6 +125,11 @@
     <!-- 3분 학습 -->
     <section id="view-listening" class="view">
       <div id="listening-content"></div>
+    </section>
+
+    <!-- 리스닝 (BBC 6 Minute English) -->
+    <section id="view-sixmin" class="view">
+      <div id="sixmin-content"></div>
     </section>
 
     <!-- 복습 -->

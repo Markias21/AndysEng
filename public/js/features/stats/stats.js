@@ -113,6 +113,13 @@ export function dailyStats(records) {
     d.topics += 1;
     d.shortReadCount += 1;
   }
+  // 리스닝(BBC 6분)도 짧은 학습과 같이 활동만 센다 — 받아쓰기·객관식은 정답 개수라 0~100 점수 체계에
+  // 억지로 끼워 넣지 않는다.
+  for (const r of records.sixMin || []) {
+    const d = day(r.ts);
+    d.topics += 1;
+    d.listenCount += 1;
+  }
 
   const bucketAvg = (b) => (b.count ? round1(b.sum / b.count) : null);
   return [...days.values()]

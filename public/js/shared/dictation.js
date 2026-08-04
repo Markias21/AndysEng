@@ -1,11 +1,12 @@
 // 받아쓰기 빈칸 선택 — 순수 함수, AI 미사용. 난이도별로 어떤 단어를 빈칸으로 만들지 정한다.
+// 🎧 3분 학습(VOA)과 🎙 리스닝(BBC 6 Minute English)이 함께 쓴다.
 //
 // shared/cloze.js의 buildCloze는 "표현(구) 하나가 지문 전체에서 딱 한 번만 빈칸이 되는" 검색
 // 방식이라(같은 문장 안에 같은 단어가 여러 번 나오면 첫 등장만 잡힌다), the/is/a처럼 흔한 단어를
 // 문장마다 반복해서 빈칸으로 만들어야 하는 받아쓰기(특히 상급 = 전부 빈칸)에는 맞지 않는다.
 // 여기서는 위치를 알고 있는 토큰을 직접 자른다 — 다만 출력 shape({translation, parts, blanks})은
 // buildCloze와 똑같이 맞춰서 shared/cloze-view.js(weaveHTML 등)를 그대로 재사용한다.
-import { checkBlank } from "../../shared/cloze.js";
+import { checkBlank } from "./cloze.js";
 
 const STOPWORDS = new Set(
   `a an the is am are was were be been being do does did have has had will would shall should

@@ -495,6 +495,21 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 .bullet-ok { color: var(--text); }
 .bullet-miss { color: var(--red); }
 
+/* 리스닝(BBC 6분): 오디오 조작 줄 · 구간 칩 · 화자별 대사 */
+/* CSP가 style-src 'self'라 인라인 style 속성이 막힌다 — 오디오 폭도 여기서 준다. */
+.audio-player { width: 100%; }
+.row-audio {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px;
+}
+.row-audio .btn-chip.active { background: var(--primary); color: #fff; }
+.segment-picker {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px;
+}
+.segment-picker .btn-chip.active { background: var(--primary); color: #fff; }
+.segment-picker .btn-chip.active .muted { color: #fff; opacity: 0.8; }
+.tr-turn { margin-bottom: 18px; }
+.tr-speaker { font-weight: 700; margin-bottom: 4px; }
+
 /* 글쓰기 기본: 난이도 칩 + 템플릿별 지문 카드 그리드 */
 .diff-picker { display: flex; gap: 8px; margin-bottom: 6px; }
 .diff-picker .btn-chip.active { background: var(--primary); color: #fff; }
