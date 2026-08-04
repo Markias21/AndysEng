@@ -14,6 +14,7 @@ import { review, clearLeech, masteryLabel, INTERVALS } from "./scheduler.js";
 import { wrap, allItems, todayPlan } from "./items.js";
 import { renderProduce } from "./produce-ui.js";
 import { renderQuiz } from "./quiz-ui.js";
+import { openHistory } from "./history-ui.js";
 import { nounFor, withParticle, dueLabel, leechBadge } from "./labels.js";
 import { updateCard, removeCard, updateWord, removeWord, appendRecord, getProfile } from "../../shared/store.js";
 import { $, esc, toast, nonLiteralBadge } from "../../shared/dom.js";
@@ -46,7 +47,7 @@ function renderHome() {
   const rows = items
     .map(
       (it) =>
-        `<div class="stat-row"><span>${it.kind === "word" ? "📖" : "🔁"} <b>${esc(it.term)}</b>${it.level ? ` <span class="cefr">${esc(it.level)}</span>` : ""}${nonLiteralBadge(it.nonLiteral)}${leechBadge(it.raw)} <span class="mastery">${masteryLabel(it.raw)}</span></span><span class="row-actions">${dueLabel(it.raw, now)}<button class="btn-text card-remove" data-id="${it.raw.id}" data-kind="${it.kind}" title="복습에서 빼기">🗑</button></span></div>`
+        `<div class="stat-row"><span>${it.kind === "word" ? "📖" : "🔁"} <b>${esc(it.term)}</b>${it.level ? ` <span class="cefr">${esc(it.level)}</span>` : ""}${nonLiteralBadge(it.nonLiteral)}${leechBadge(it.raw)} <span class="mastery">${masteryLabel(it.raw)}</span></span><span class="row-actions"><button class="btn-text card-history" data-id="${it.raw.id}" data-kind="${it.kind}" title="복습 기록 보기">📜</button>${dueLabel(it.raw, now)}<button class="btn-text card-remove" data-id="${it.raw.id}" data-kind="${it.kind}" title="복습에서 빼기">🗑</button></span></div>`
     )
     .join("");
 
@@ -79,6 +80,14 @@ function renderHome() {
         else removeCard(b.dataset.id);
         toast("복습에서 뺐어요.");
         renderHome();
+      })
+    );
+  $("#srs-content")
+    .querySelectorAll(".card-history")
+    .forEach((b) =>
+      b.addEventListener("click", () => {
+        const item = items.find((it) => it.raw.id === b.dataset.id && it.kind === b.dataset.kind);
+        if (item) openHistory(item);
       })
     );
 }
@@ -126,6 +135,7 @@ function finish(remembered, score) {
   const updated = review(current.raw, remembered, Date.now());
   saveItem(current, updated);
   appendRecord("quiz", {
+    id: current.raw.id,
     expression: current.term,
     correct: remembered,
     kind: current.kind,

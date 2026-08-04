@@ -87,6 +87,7 @@ export function renderQuiz(item, meta, handlers) {
 
 function renderReveal(quiz, item, typed, flags, meta, handlers) {
   const correct = flags.length > 0 && flags.every(Boolean);
+  const noun = nounFor(item.kind);
   const actions = meta.inRetry
     ? `<div class="row-end"><button class="btn-primary" id="srs-next" type="button">다음 →</button></div>`
     : `<div class="row-rate">
@@ -101,9 +102,12 @@ function renderReveal(quiz, item, typed, flags, meta, handlers) {
       ${revealBody(quiz, item, typed, flags)}
       ${correct || meta.inRetry ? "" : `<p class="reason">방금 놓친 ${withParticle(nounFor(item.kind), "은", "는")} 예문까지 만들어 보면 훨씬 오래 남아요.</p>`}
       ${actions}
+      ${meta.inRetry ? "" : `<div class="row-end"><button class="btn-text btn-chip" id="srs-remove" type="button">🗑 이 ${noun} 빼기</button></div>`}
     </div>`;
 
   $("#srs-next").addEventListener("click", () => handlers.onNext(correct));
   const produceBtn = $("#srs-produce");
   if (produceBtn) produceBtn.addEventListener("click", () => handlers.onProduce(correct));
+  const removeBtn = $("#srs-remove");
+  if (removeBtn) removeBtn.addEventListener("click", handlers.onRemove);
 }
