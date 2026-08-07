@@ -86,7 +86,7 @@ export async function openQuiz(episode, transcript, context) {
   const host = $(HOST);
   host.innerHTML = `<p class="muted">문제를 준비하고 있어요…</p>`;
   try {
-    let set = readySet(episode);
+    let set = await readySet(episode);
     if (!set) {
       const cost = estimatedCost(transcript, getProfile().level);
       if (!$(HOST)) return; // 확인 전에 화면을 떠났을 수 있다.

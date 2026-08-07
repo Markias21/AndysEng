@@ -17,6 +17,7 @@ import { renderQuiz } from "./quiz-ui.js";
 import { openHistory } from "./history-ui.js";
 import { nounFor, withParticle, dueLabel, leechBadge } from "./labels.js";
 import { updateCard, removeCard, updateWord, removeWord, appendRecord, getProfile } from "../../shared/store.js";
+import { scheduleSave } from "../../shared/autosave.js";
 import { $, esc, toast, nonLiteralBadge } from "../../shared/dom.js";
 
 const RETRY_ALLOWANCE = 2; // 놓친 카드를 재도전에서 다시 보여줄 최대 횟수(본 문제 1회 + 재도전 2회)
@@ -142,6 +143,7 @@ function finish(remembered, score) {
     isNew: wasNew,
     ...(score != null ? { score } : {}),
   });
+  scheduleSave();
   sessionTotal += 1;
   if (remembered) sessionCorrect += 1;
   else retryQueue.push({ ...wrap(updated, current.kind), retryLeft: RETRY_ALLOWANCE });

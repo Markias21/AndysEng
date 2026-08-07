@@ -85,7 +85,7 @@ function unsyncedSection() {
     .join("");
   return `
     <div class="card">
-      <h3 class="card-title">☁️ 아직 GitHub에 저장 안 한 항목</h3>
+      <h3 class="card-title">☁️ 아직 저장 안 한 항목</h3>
       ${rows}
     </div>`;
 }

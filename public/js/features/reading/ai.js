@@ -1,19 +1,22 @@
 // 리딩의 AI 호출. 두 가지뿐이고, 둘 다 토큰을 아끼도록 좁혀 놨다.
 //
-//  1) 문제 세트 생성 — 지문당 유저 1인당 평생 1회. 결과를 store에 영구 캐시하므로 재도전은 0회다.
+//  1) 문제 세트 생성 — 지문당 평생 1회(전체 유저 공용). 결과를 store에 영구 캐시하므로 재도전은 0회다.
 //     객관식 정답 키를 함께 받아 두기 때문에 객관식·빈칸 채점에는 AI가 아예 관여하지 않는다.
 //     비용이 실제로 드는 유일한 지점이라 readySet()/generateSet()으로 나눠 뒀다 — UI가 그
 //     사이에서 예상 비용을 보여 주고 확인을 받은 뒤에만 generateSet()을 부른다.
 //  2) 요약·재진술 채점 — 지문 대신 (1)에서 받아 둔 main_idea·key_points만 보낸다.
 //     둘 다 비우고 제출하면 호출 자체를 하지 않는다(ui.js가 판단).
 //
-// 생성 결과는 이 유저의 store(readingSets)에만 남는다 — 레포에 자동으로 커밋해 모두와 공유하는
-// 것은 하지 않는다. 브라우저에서 쓰는 GitHub 토큰으로 앱 소스 레포에 자동 커밋하게 하면, 그 토큰이
-// 유출되거나 코드에 버그가 있을 때 개인 학습 기록이 아니라 배포 중인 사이트 자체가 위험해지기
-// 때문이다(유저 판단). 대신 GitHub Actions는 지문 수집만 하고(AI 미사용), 문제 세트를 미리
-// 채워 두고 싶으면 scripts/gen-reading-sets.js를 사람이 손으로 돌린다.
+// 생성 결과는 Supabase의 공용 캐시 테이블(shared_sets)에 올라가 다음 유저부터는 AI 호출 없이
+// 그대로 재사용된다(supabase/schema.sql — 읽기는 공개, 쓰기는 INSERT만 허용해 한 번 채워진 값은
+// 아무도 못 고친다). 예전에는 "레포에 자동 커밋해 공유"를 검토했다가 공유 GitHub 토큰이 앱
+// 소스 레포 전체에 쓰기 권한을 갖게 되는 문제로 기각했는데(2026-08-02 ADR), RLS는 경로가 아니라
+// 테이블 단위로 권한을 나눌 수 있어 그 문제 없이 같은 목표(공유)를 이룬다. GitHub Actions는
+// 여전히 지문 수집만 하고(AI 미사용), 미리 채워 두고 싶으면 scripts/gen-reading-sets.js를
+// 사람이 손으로 돌린다.
 import { chatJSON, getModel } from "../../shared/claude.js";
 import { getReadingSet, setReadingSet } from "../../shared/store.js";
+import { getShared, putShared } from "../../shared/supabase.js";
 import { estimateUsd } from "../../shared/usage.js";
 import { loadShippedSet } from "./catalog.js";
 import { GENERATE_SCHEMA, GRADE_SCHEMA } from "./schema.js";
@@ -28,19 +31,22 @@ const EST_OUTPUT_TOKENS = 2000;
 
 /**
  * 이미 확보된 문제 세트가 있으면 그것을 반환하고, AI는 호출하지 않는다. 순서: ① 이 유저가
- * 이미 생성해 둔 것 ② 레포에 미리 실어 둔 기본 세트(public/data/reading/sets/, same-origin
- * fetch만 함). ②를 찾으면 유저 캐시에도 저장해 둬 다음부터는 fetch조차 없이 바로 뜬다.
- * 둘 다 없으면 null — 이 경우 estimatedCost()로 비용을 안내하고 확인받은 뒤 generateSet()을 불러야 한다.
+ * 이미 생성해 둔 것(store.readingSets) ② 레포에 미리 실어 둔 기본 세트(public/data/reading/sets/,
+ * same-origin fetch만 함) ③ 다른 유저가 이미 만들어 Supabase 공용 캐시에 올려 둔 것.
+ * ②·③을 찾아도 유저 캐시에는 복사하지 않는다 — ②는 서비스 워커가, ③은 공용 캐시 자체가
+ * 이미 같은 역할을 하므로 localStorage 페이로드를 불릴 이유가 없다.
+ * 셋 다 없으면 null — 이 경우 estimatedCost()로 비용을 안내하고 확인받은 뒤 generateSet()을 불러야 한다.
  */
 export async function readySet(article) {
   const cached = getReadingSet(article.id);
   if (cached) return withSentences(article, cached);
 
   const shipped = await loadShippedSet(article.id);
-  if (shipped) {
-    setReadingSet(article.id, shipped);
-    return withSentences(article, shipped);
-  }
+  if (shipped) return withSentences(article, shipped);
+
+  const shared = await getShared("reading", article.id);
+  if (shared) return withSentences(article, shared);
+
   return null;
 }
 
@@ -59,6 +65,7 @@ export async function generateSet(article, level) {
     maxTokens: 4096,
   });
   setReadingSet(article.id, set);
+  putShared("reading", article.id, set);
   return withSentences(article, set);
 }
 

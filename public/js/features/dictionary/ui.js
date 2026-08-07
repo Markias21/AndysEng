@@ -1,9 +1,12 @@
 // 사전: 회화·글쓰기에서 📖 버튼으로 여는 모달. 양방향(한↔영) 조회.
 // 뜻이 크게 다른 범주만 분리해 각 범주 예문 1개를 준다. AI 호출은 Haiku 고정(빠르고 저렴),
-// 결과는 영구 캐시(store.dict)에 저장해 같은 단어는 평생 한 번만 토큰을 쓴다.
+// 결과는 영구 캐시(store.dict)에 저장해 같은 단어는 평생 한 번만 토큰을 쓴다. 같은 질의를 다른
+// 유저가 이미 찾아본 적이 있으면 Supabase 공용 캐시(shared_sets)에서 가져와 AI 호출 자체를 건너뛴다
+// (리딩/6min 문제 세트 공유와 같은 이유 — features/reading/ai.js 상단 주석 참고).
 // 각 항목은 개별적으로 복습 목록(store.words)에 담을 수 있다.
 import { chatJSON } from "../../shared/claude.js";
 import { getCachedLookup, setCachedLookup, addWord } from "../../shared/store.js";
+import { getShared, putShared } from "../../shared/supabase.js";
 import { detectDirection, cacheKey } from "./detect.js";
 import { $, esc, toast } from "../../shared/dom.js";
 
@@ -46,6 +49,13 @@ async function lookup(query) {
   const key = cacheKey(query);
   const cached = getCachedLookup(key);
   if (cached) return cached;
+
+  const shared = await getShared("dict", key);
+  if (shared) {
+    setCachedLookup(key, shared);
+    return shared;
+  }
+
   const direction = detectDirection(query);
   const { entries } = await chatJSON({
     system: systemFor(direction),
@@ -55,6 +65,7 @@ async function lookup(query) {
     maxTokens: 1024,
   });
   setCachedLookup(key, entries);
+  putShared("dict", key, entries);
   return entries;
 }
 

@@ -2,7 +2,7 @@
 // 요약·재진술만 AI 채점을 기다린다(둘 다 비었으면 호출 자체를 하지 않는다).
 import { appendRecord, getProfile } from "../../shared/store.js";
 import { scoreDetail } from "../../shared/scoring.js";
-import { autoSaveToGithub } from "../../shared/autosave.js";
+import { autoSaveRecord } from "../../shared/autosave.js";
 import { takeTranslatorUses, TRANSLATOR_PENALTY } from "../../shared/translate.js";
 import { blankResultHTML, weaveHTML } from "../../shared/cloze-view.js";
 import {
@@ -191,7 +191,7 @@ export async function showResult(ctx) {
     // 산출 과제를 건너뛰면 점수가 없다. 통계는 점수가 있는 기록만 센다.
     ...(detail ? { score: finalScore, grades: review.grades } : {}),
   });
-  autoSaveToGithub();
+  autoSaveRecord();
 
   $("#reading-back").addEventListener("click", ctx.onBackToList);
   $("#reading-retry").addEventListener("click", () => ctx.onRetry(article));

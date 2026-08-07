@@ -5,6 +5,7 @@
 import { DEFAULT_DIFFICULTY, DIFFICULTIES, findDifficulty } from "../../shared/dictation.js";
 import { $, esc, expressionAddHTML, wireExpressionAdds } from "../../shared/dom.js";
 import { appendRecord, getProfile, setProfile } from "../../shared/store.js";
+import { scheduleSave } from "../../shared/autosave.js";
 import { mountDictation } from "./dictation-ui.js";
 import { openQuiz } from "./quiz-ui.js";
 import { buildSegments, formatClock, startSecOf } from "./segments.js";
@@ -117,8 +118,10 @@ export async function startPractice(episode, transcript, context) {
         seekToSegment(segments[current], totalWords);
         mountSegment();
       },
-      onGraded: ({ total, correct }) =>
-        appendRecord("sixMin", { episodeId: episode.id, kind: "dictation", difficulty, total, correct }),
+      onGraded: ({ total, correct }) => {
+        appendRecord("sixMin", { episodeId: episode.id, kind: "dictation", difficulty, total, correct });
+        scheduleSave();
+      },
     });
   };
 
@@ -165,8 +168,10 @@ export async function startPractice(episode, transcript, context) {
   $("#sixmin-quiz-open").addEventListener("click", () =>
     openQuiz(episode, transcript, {
       onCancel: () => startPractice(episode, transcript, context),
-      onGraded: (summary) =>
-        appendRecord("sixMin", { episodeId: episode.id, kind: "quiz", total: summary.total, correct: summary.correct }),
+      onGraded: (summary) => {
+        appendRecord("sixMin", { episodeId: episode.id, kind: "quiz", total: summary.total, correct: summary.correct });
+        scheduleSave();
+      },
     })
   );
 

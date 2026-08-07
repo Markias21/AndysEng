@@ -1,21 +1,21 @@
-// GitHub 동기화: 수동 저장/불러오기 버튼. 자동 저장 없음.
-import { exportJSON, importJSON, setLastSyncedAt } from "../../shared/store.js";
-import { saveRecord, loadRecord } from "../../shared/github.js";
+// 동기화: 수동 저장/불러오기 버튼. 자동 저장은 shared/autosave.js가 맡는다.
+import { syncPayload, importJSON, setLastSyncedAt } from "../../shared/store.js";
+import { saveRecord, loadRecord } from "../../shared/supabase.js";
 import { $, toast } from "../../shared/dom.js";
 
 async function handleSave() {
-  await saveRecord(exportJSON());
+  await saveRecord(syncPayload());
   setLastSyncedAt(Date.now());
-  toast("GitHub에 저장했어요.");
+  toast("저장했어요.");
 }
 
 async function handleLoad() {
-  if (!confirm("GitHub에서 불러오면 현재 기기의 학습 기록을 덮어써요. 계속할까요?")) return;
+  if (!confirm("불러오면 현재 기기의 학습 기록을 덮어써요. 계속할까요?")) return;
   const text = await loadRecord();
-  if (text === null) return toast("GitHub에 저장된 기록이 없어요.");
+  if (text === null) return toast("저장된 기록이 없어요.");
   importJSON(text);
   setLastSyncedAt(Date.now());
-  toast("GitHub에서 불러왔어요.");
+  toast("불러왔어요.");
 }
 
 export function init() {

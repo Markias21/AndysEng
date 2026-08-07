@@ -33,6 +33,14 @@ jobs:
       - run: node scripts/fetch-voa-listening.js
       - run: node scripts/fetch-bbc.js
 
+      - name: Keep Supabase project awake
+        # 무료 등급은 7일 무활동 시 자동 일시정지된다. 이 워크플로가 매일 도니 여기 얹는다.
+        # anon 키는 클라이언트 번들(shared/supabase.js)에 이미 공개된 publishable 키라 시크릿이 필요 없다.
+        run: |
+          curl -sf -o /dev/null \
+            -H "apikey: sb_publishable_2DBuyYp3xW3NMkZ3wd8Ndw_6IIvUuQG" \
+            "https://loixxhvevfjbokpjqsaq.supabase.co/rest/v1/shared_sets?select=kind&limit=1"
+
       - name: Commit new passages
         run: |
           if [ -z "$(git status --porcelain public/data/reading public/data/listening public/data/6min)" ]; then

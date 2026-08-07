@@ -3,6 +3,7 @@
 // 두 유형을 다룬다: 토론형(discussion) 논설문과 이메일(email) 답장 — 시작 화면에서 매번 유형을 고른다
 // (회화 카테고리 그리드와 같은 패턴 — 지난 선택을 기억해 건너뛰지 않는다).
 import { appendRecord, getProfile, getRecords, setProfile } from "../../shared/store.js";
+import { scheduleSave } from "../../shared/autosave.js";
 import { pickFresh } from "../../shared/pick.js";
 import { buildCloze, checkWords } from "../../shared/cloze.js";
 import { blankInputsHTML, blankResultHTML, readWords, showFirstLetters, weaveHTML, wireCells } from "../../shared/cloze-view.js";
@@ -125,6 +126,7 @@ function finishAttempt(root, essay, difficultyId, mode, blanks, lines, typedByBl
   }
 
   appendRecord("writingBasic", { essayId: essay.id, template: essay.template, mode, difficulty: difficultyId, total: flat.length, correct });
+  scheduleSave();
 
   $("#basic-retry").addEventListener("click", () => startPractice(essay.id, difficultyId, mode));
   $("#basic-next").addEventListener("click", () => {

@@ -12,8 +12,8 @@ CLAUDE.md
 - 정적 PWA (서버 없음, 의존성 0개). public/이 앱 전부이며 GitHub Pages 등 정적 호스팅에 배포한다.
 - 빌드 스텝 없는 vanilla JS (브라우저 네이티브 ES 모듈). 개발 서버는 dev-server.js (node 내장 http).
 - AI: 브라우저에서 Anthropic REST API를 fetch로 직접 호출, 모델 claude-sonnet-5 (public/js/shared/claude.js 경계 뒤에만 존재)
-- 로그인 정보(닉네임·GitHub PAT·Claude 키): 비밀번호로 암호화(PBKDF2→AES-GCM)해 localStorage 보관 (public/js/shared/keyvault.js)
-- 저장소: localStorage 단일 JSON (public/js/shared/store.js). 리포트는 File System Access API로 로컬 폴더 저장 (public/js/shared/localfs.js). 학습 기록은 GitHub Contents API로 공유 프라이빗 레포에 수동 저장/불러오기 가능 (public/js/shared/github.js)
+- 로그인 정보(닉네임·Claude 키): 비밀번호로 암호화(PBKDF2→AES-GCM)해 localStorage 보관 (public/js/shared/keyvault.js). 계정 자체(닉네임+비밀번호)는 Supabase Auth가 담당.
+- 저장소: localStorage 단일 JSON (public/js/shared/store.js)이 1차 저장소이고, 학습 기록은 Supabase(Postgres, 무료 등급)의 `andyseng_data` 테이블에 수동/자동 저장·불러오기 (public/js/shared/supabase.js). 리포트는 File System Access API로 로컬 폴더 저장 (public/js/shared/localfs.js)
 
 자주 쓰는 명령어
 
@@ -190,3 +190,13 @@ npm test           # 전체 테스트 (node --test)
   **곁들여 고친 기존 버그:** `index.html`의 CSP가 `default-src 'self'`인데 `media-src`가 없어, **2026-08-02에 넣은 🎧 3분 학습의 VOA 오디오가 배포 이후 줄곧 CSP에 막혀 재생되지 않고 있었다**(`media-src`는 `default-src`로 폴백한다). 옛 CSP를 그대로 쓴 테스트 페이지에서 `Refused to load media`를 재현해 확인했다. `media-src 'self' https://voa-audio.voanews.eu https://downloads.bbc.co.uk`를 신설하고 `connect-src`에 `https://downloads.bbc.co.uk`를 더했다. 인라인 `style="width:100%"`도 `style-src 'self'`에 막히고 있어 `.audio-player` 클래스로 옮겼다(3분 학습도 함께).
 
   검증은 `chrome-headless-shell`을 CDP로 직접 몰아(playwright 미설치, node 내장 WebSocket) 실제 앱에서 확인했다: 에피소드 40편 목록 → BBC PDF 실시간 파싱 → 오디오 길이 375초 로드(CSP 통과) → 구간 7개·추정 시각(00:00·00:45·01:32…) → 속도·⏪⏩·구간 점프 → 난이도별 빈칸 40/74/116 → 받아쓰기 채점·기록 → 어휘 ➕ → 🔁 복습에서 그 문장 빈칸으로 출제 → 문제 생성 취소($0)/확인($0.0315)/채점/재도전($0) → 모바일 390px 무가로스크롤. 기록은 `records.sixMin`(점수 없음), 통계는 활동 카운트만(3분 학습과 동일) | BBC 대본을 공개 재배포하지 않으면서도 받아쓰기·문제 생성을 다 하려면 이 구조뿐이었다. 유저가 "레포에 저장하지 말고 그때그때 불러올 수 없나"라고 먼저 물어 조사에 들어갔고, 그 결과 CORS가 열려 있어 가능하다는 것이 확인됐다.
+
+- 2026-08-07 | **GitHub Contents API 동기화 → Supabase(Postgres, 무료 등급) 전환.** 위 "친구 그룹 공유 지원"(2026-07-17, `shared/github.js`로 로그 프라이빗 레포에 push/pull) ADR을 **대체**한다. 계기는 이전에 별도 세션이 마이그레이션 코드(`shared/supabase.js`, `supabase/schema.sql`)를 작성해 뒀지만 커밋되지 않은 채 방치돼 있었던 것 — 병합 전 점검에서 두 번째 기기 로그인 불가·CSP 회귀(BBC·VOA 미디어 재생 재차단)·오프라인 실행 불가 등 여러 결함을 발견해 고치고 병합했다. **가입·로그인 화면(게이트) 설계는 이번 범위에서 제외** — 유저가 직접 다듬기로 해, 기존 2-모드 게이트(setup/unlock)를 최소한으로 Supabase Auth(`signUp`/`signIn`, 닉네임을 `<slug>@andyseng.internal` 가짜 이메일로 변환)에 연결하는 선까지만 했다(멀티유저 로그인·오프라인 분리·초대 코드 가입 제한 등은 후속 작업). 이번에 실제로 바꾼 것:
+  1. **동기화 자체.** `andyseng_data` 테이블(user_id 1행, RLS로 본인 행만 select/insert/update)에 학습 기록을 저장. `saveRecord()`는 마지막으로 안 원격 `updated_at`이 있으면 그 값으로 조건부 PATCH(0행이면 "다른 기기에서 저장했어요" 충돌 안내), 없으면 insert — GitHub 시절의 `sha` 충돌 감지와 같은 역할을 낙관적 잠금으로 재현했다.
+  2. **공용 콘텐츠 캐시로 2026-08-02 "레포 자동 커밋해 공유" 기각 ADR을 부분 재개.** 당시 기각 사유는 GitHub Contents API가 경로 단위 권한을 못 줘서 공유 PAT가 앱 소스 레포 전체(`index.html`·CSP 등)에 쓰기 권한을 갖게 되는 것이었다. Supabase RLS는 **테이블 단위**로 권한을 나눌 수 있어 그 문제가 없다 — `shared_sets(kind, key, payload, created_by)` 테이블을 새로 두고 select는 완전 공개(`anon`도 가능), insert는 로그인한 유저만, **update/delete 정책은 아예 두지 않아**(스키마 자체가 강제) 한 번 채워진 값을 아무도 못 고친다(첫 생성자 승). 리딩 문제 세트(`ai.js readySet`이 유저 캐시→레포 기본 세트→**공용 캐시** 순으로 확인)·6min 문제 세트(`sixmin/ai.js`, `readySet`을 동기에서 async로 변경)·사전 조회(`dictionary/ui.js lookup`)가 생성 직후 `putShared()`로 업로드해, 다음 유저부터는 이 셋 모두 AI 호출이 $0이 된다. 실패는 조용히 `null`/무시로 떨어져 오프라인·서버 오류에서도 기존 개인 캐시 폴백을 깨지 않는다.
+  3. **동기화 페이로드 다이어트.** `store.syncPayload()`(순수 함수 `withoutSharedCaches`+테스트)가 `readingSets`·`sixMinSets`·`dict`를 뺀 나머지만 Supabase에 올린다 — 이 셋은 이제 공용 캐시에 있어 개인 페이로드에 중복 저장할 이유가 없다(리딩 세트만 지문당 최대 ~5KB, 유저 수만큼 곱해지던 것을 없앰). `exportJSON()`(로컬 리포트 백업용)은 그대로 전체를 담는다. 곁들여 `reading/ai.js readySet`이 레포 기본 세트를 찾았을 때 유저의 `store.readingSets`에 복사해 두던 동작도 없앴다(same-origin 파일은 서비스워커가 이미 캐시하므로 localStorage에 중복할 이유가 없다).
+  4. **자동저장 범위 확장.** 기존엔 글쓰기 첨삭·회화 주제 전환·리딩 제출 3곳에서만 즉시 자동저장했고 가장 자주 쓰이는 복습(SRS)에는 아예 없었다. `shared/autosave.js`에 5초 디바운스 `scheduleSave()`(화면을 벗어나면 `visibilitychange`로 즉시 플러시)를 추가해 복습 채점·3분 학습(듣기·문단연습)·글쓰기 기본·리스닝(받아쓰기·이해문제) 기록 직후에도 자동저장이 걸리게 했다.
+  5. **무료 등급 7일 무활동 일시정지 방지.** 이미 매일 도는 `.github/workflows/voa.yml`에 `curl` 한 스텝을 추가해 `shared_sets`를 조회한다(anon 키는 클라이언트 번들에 이미 공개된 publishable 키라 시크릿 불필요).
+
+  위 "친구 그룹 공유 지원" ADR과 함께, 그 아래 **"코드스페이스 개발 환경 `/__dev/session`" ADR(2026-07-17)도 수정**한다 — `dev-server.js`가 더 이상 `GITHUB_PAT_API_KEY`를 요구하지 않고 `ANTHROPIC_API_KEY`만으로 `{claudeKey}`를 내려준다(닉네임 "Andy" 자동 설정도 제거 — Supabase 로그인은 이 경로로 이어지지 않으므로 동기화가 필요하면 정상 게이트로 한 번 로그인해야 한다).
+  | 유저가 "이제 Supabase(무료 등급)를 쓰는데 코드에서 득을 볼 수 있는 부분이 있는지" 물어 전체 데이터·동기화·AI 호출 경로를 감사한 결과, 방치된 마이그레이션의 결함 수정, GitHub PAT 공유의 보안 문제를 RLS로 해소, 그리고 3분 학습 등 여러 기능에서 매 유저가 같은 콘텐츠를 중복 생성/과금하던 비효율을 한 번에 해결할 수 있다고 판단.

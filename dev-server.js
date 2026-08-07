@@ -41,14 +41,12 @@ const env = await loadEnv();
 /**
  * 코드스페이스 등 개발 환경에서 .env에 키가 있으면 게이트를 건너뛸 수 있도록 세션을 내려준다.
  * 정적 배포에는 이 서버 자체가 없으므로 프로덕션에는 존재하지 않는 라우트다.
+ * Claude 키만 즉시 쓸 수 있게 하고, Supabase 로그인은 이어지지 않는다 — 동기화가 필요하면
+ * 정상 게이트로 한 번 로그인해 두면 된다.
  */
 function devSession() {
-  if (!env.ANTHROPIC_API_KEY || !env.GITHUB_PAT_API_KEY) return null;
-  return {
-    nickname: "Andy",
-    claudeKey: env.ANTHROPIC_API_KEY,
-    githubToken: env.GITHUB_PAT_API_KEY,
-  };
+  if (!env.ANTHROPIC_API_KEY) return null;
+  return { claudeKey: env.ANTHROPIC_API_KEY };
 }
 
 createServer(async (req, res) => {

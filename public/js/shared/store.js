@@ -305,6 +305,21 @@ export function exportJSON() {
   return JSON.stringify(load(), null, 2);
 }
 
+/**
+ * readingSets·sixMinSets·dict를 뺀 나머지. Supabase 공용 캐시(shared_sets)로 옮겨간 만큼을
+ * 개인 동기화 페이로드에서 덜어낸다 — 지문마다 수 KB인 문제 세트가 유저 수만큼 중복
+ * 저장되던 것을 없앤다. load()에 의존하지 않는 순수 함수라 별도로 테스트한다.
+ */
+export function withoutSharedCaches(data) {
+  const { readingSets, sixMinSets, dict, ...rest } = data;
+  return rest;
+}
+
+/** Supabase 동기화용 페이로드. exportJSON()은 로컬 리포트 백업용이라 그대로 전체를 담는다. */
+export function syncPayload() {
+  return JSON.stringify(withoutSharedCaches(load()));
+}
+
 export function importJSON(text) {
   const parsed = JSON.parse(text);
   if (!parsed || typeof parsed !== "object" || !parsed.records) {

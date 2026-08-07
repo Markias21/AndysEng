@@ -5,7 +5,7 @@ import { appendRecord, getRecords, getProfile, getRomanceMemory, setRomanceMemor
 import { pickFresh } from "../../shared/pick.js";
 import { scoreDetail, GRADES, GRADE_SCALE_NOTE, GRAMMAR_RUBRIC, NATURALNESS_NOTE, TASK_RUBRIC, RANGE_RUBRIC } from "../../shared/scoring.js";
 import { CONV_GUIDANCE, CEFR_SPEAKING_DESCRIPTORS, descriptorBlock } from "../../shared/levels.js";
-import { autoSaveToGithub } from "../../shared/autosave.js";
+import { autoSaveRecord } from "../../shared/autosave.js";
 import { takeTranslatorUses, TRANSLATOR_PENALTY } from "../../shared/translate.js";
 import { CATEGORIES, HOBBY_SUBS, topicPool } from "./categories.js";
 import { findPersona, oppositeGender, counselPersona } from "../../shared/personas.js";
@@ -238,7 +238,7 @@ async function updateRomanceMemory(partnerId) {
   }
 }
 
-// 세션을 떠나기 전 뒷정리: GitHub 자동 저장 + (연애라면) 관계 기억 갱신. beginSession과
+// 세션을 떠나기 전 뒷정리: 자동 저장 + (연애라면) 관계 기억 갱신. beginSession과
 // "다른 카테고리" 버튼 양쪽에서 공통으로 쓴다.
 // 기억 요약은 논블로킹으로 실행해 화면 전환을 기다리게 하지 않는다. 갱신이 끝났을 때 마침
 // 같은 상대와 새로고침해 다시 대화 중이라면(가장 흔한 경우) 그 자리에서 memory를 최신값으로
@@ -247,7 +247,7 @@ function persistLeavingSession() {
   if (!currentSession || userTurns === 0) return;
   const leaving = currentSession;
   const leavingCategory = currentCategory;
-  autoSaveToGithub();
+  autoSaveRecord();
   if (leavingCategory !== "romance" || !leaving.partnerId) return;
   updateRomanceMemory(leaving.partnerId).then(() => {
     if (currentSession && currentSession.partnerId === leaving.partnerId) {

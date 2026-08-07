@@ -6,7 +6,7 @@ import { appendRecord, getRecords, getProfile } from "../../shared/store.js";
 import { pickFresh, sampleN } from "../../shared/pick.js";
 import { scoreDetail } from "../../shared/scoring.js";
 import { WRITING_TIPS } from "../../shared/levels.js";
-import { autoSaveToGithub } from "../../shared/autosave.js";
+import { autoSaveRecord } from "../../shared/autosave.js";
 import { takeTranslatorUses, TRANSLATOR_PENALTY } from "../../shared/translate.js";
 import { writingPrompts } from "./prompts.js";
 import { emailPrompts } from "./email-prompts.js";
@@ -279,7 +279,7 @@ export function init() {
           qbtn.textContent = "질문하기";
         }
       });
-      autoSaveToGithub();
+      autoSaveRecord();
     } catch (e) {
       toast(e.message);
     } finally {

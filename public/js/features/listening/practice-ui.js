@@ -3,6 +3,7 @@
 import { blankInputsHTML, blankResultHTML, readWords, showFirstLetters, weaveHTML, wireCells } from "../../shared/cloze-view.js";
 import { $, esc } from "../../shared/dom.js";
 import { appendRecord, getProfile, setProfile } from "../../shared/store.js";
+import { scheduleSave } from "../../shared/autosave.js";
 import { DEFAULT_DIFFICULTY, DIFFICULTIES, buildDictation, findDifficulty, gradeDictation } from "../../shared/dictation.js";
 
 const ROOT = "#listening-content";
@@ -41,6 +42,7 @@ function finishAttempt(root, article, difficultyId, context, lines, typedByBlank
     </div>`;
 
   appendRecord("listening", { articleId: article.id, category: article.category, difficulty: difficultyId, total, correct });
+  scheduleSave();
 
   $("#listening-retry").addEventListener("click", () => mountForm(root, article, difficultyId, context));
   $("#listening-list-btn").addEventListener("click", context.onBackToList);

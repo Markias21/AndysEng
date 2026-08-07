@@ -3,6 +3,7 @@
 // 🎧 3분 학습 탭 안에서 listening/ui.js가 이 모듈의 start()를 호출해 진입시킨다(같은 #listening-content를 공유).
 import { $, esc, toast } from "../../shared/dom.js";
 import { appendRecord, getProfile, getRecords } from "../../shared/store.js";
+import { scheduleSave } from "../../shared/autosave.js";
 import { pickFresh } from "../../shared/pick.js";
 import { CATEGORIES, categoryLabel, itemsOf } from "./items.js";
 import { gradeProduce } from "./grading.js";
@@ -68,6 +69,7 @@ function finishMcq(item, correct, onNext) {
     <div class="row-end"><button class="btn-primary" id="sr-next" type="button">다음 문제 →</button></div>`;
 
   appendRecord("shortReading", { itemId: item.id, category: item.category, type: "mcq", correct });
+  scheduleSave();
   $("#sr-next").addEventListener("click", onNext);
 }
 
@@ -107,6 +109,7 @@ function finishProduce(item, result, onNext) {
     <div class="row-end"><button class="btn-primary" id="sr-next" type="button">다음 문제 →</button></div>`;
 
   appendRecord("shortReading", { itemId: item.id, category: item.category, type: "produce", correct: result.good });
+  scheduleSave();
   $("#sr-next").addEventListener("click", onNext);
 }
 

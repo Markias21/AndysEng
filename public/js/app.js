@@ -1,8 +1,8 @@
 // 앱 부트스트랩: 키 금고 게이트 → 탭 전환 → 기능 초기화 → 서비스 워커 등록.
 import { hasVault, createVault, unlockVault, deleteVault } from "./shared/keyvault.js";
 import { setApiKey, clearApiKey } from "./shared/claude.js";
-import { purgeExpressionCards } from "./shared/store.js";
-import * as github from "./shared/github.js";
+import { syncPayload, purgeExpressionCards, setLastSyncedAt } from "./shared/store.js";
+import * as authSync from "./shared/supabase.js";
 import { $, toast } from "./shared/dom.js";
 import * as conversation from "./features/conversation/ui.js";
 import * as writing from "./features/writing/ui.js";
@@ -38,20 +38,28 @@ function initGate() {
   $("#gate-setup").addEventListener("submit", async (ev) => {
     ev.preventDefault();
     const nickname = $("#setup-nickname").value.trim();
-    const githubToken = $("#setup-github-token").value.trim();
     const key = $("#setup-key").value.trim();
     const pw = $("#setup-password").value;
     const pw2 = $("#setup-password2").value;
     if (!nickname) return toast("닉네임을 입력해 주세요.");
-    if (!githubToken) return toast("GitHub Personal Access Token을 입력해 주세요.");
     if (!key.startsWith("sk-ant-")) return toast("Anthropic API 키(sk-ant-...)를 입력해 주세요.");
-    if (pw.length < 4) return toast("비밀번호는 4자 이상으로 정해 주세요.");
+    if (pw.length < 6) return toast("비밀번호는 6자 이상으로 정해 주세요.");
     if (pw !== pw2) return toast("비밀번호가 서로 달라요.");
-    await createVault({ nickname, claudeKey: key, githubToken }, pw);
+    try {
+      await authSync.signUp(nickname, pw);
+    } catch (e) {
+      return toast(e.message);
+    }
+    await createVault({ nickname, claudeKey: key }, pw);
     setApiKey(key);
-    github.setSession({ nickname, token: githubToken });
+    // 이 기기에 있던 기존 학습 기록을 새 계정으로 최초 1회 올려 둔다.
+    try {
+      await authSync.saveRecord(syncPayload());
+      setLastSyncedAt(Date.now());
+    } catch (e) {
+      toast(`최초 저장 실패: ${e.message}`);
+    }
     $("#setup-nickname").value = "";
-    $("#setup-github-token").value = "";
     $("#setup-key").value = "";
     $("#setup-password").value = "";
     $("#setup-password2").value = "";
@@ -61,10 +69,11 @@ function initGate() {
 
   $("#gate-unlock").addEventListener("submit", async (ev) => {
     ev.preventDefault();
+    const pw = $("#unlock-password").value;
     try {
-      const { nickname, claudeKey, githubToken } = await unlockVault($("#unlock-password").value);
+      const { nickname, claudeKey } = await unlockVault(pw);
+      await authSync.signIn(nickname, pw);
       setApiKey(claudeKey);
-      github.setSession({ nickname, token: githubToken });
       $("#unlock-password").value = "";
       showApp();
     } catch (e) {
@@ -76,13 +85,13 @@ function initGate() {
     if (!confirm("저장된 정보를 삭제하고 다시 설정할까요? (학습 기록은 유지됩니다)")) return;
     deleteVault();
     clearApiKey();
-    github.clearSession();
+    authSync.clearSession();
     showGate("setup");
   });
 
   $("#lock-btn").addEventListener("click", () => {
     clearApiKey();
-    github.clearSession();
+    authSync.clearSession();
     showGate("unlock");
     toast("잠갔어요. 비밀번호로 다시 열 수 있어요.");
   });
@@ -109,14 +118,15 @@ function initTabs() {
 /**
  * 개발 서버(dev-server.js)가 .env 기반으로 제공하는 /__dev/session이 있으면 게이트를 건너뛴다.
  * 정적 배포(GitHub Pages 등)에는 이 라우트가 존재하지 않아 항상 실패하고 정상 게이트로 넘어간다.
+ * Claude 키만 즉시 쓸 수 있게 하고, Supabase 로그인은 이어지지 않는다 — 동기화가 필요하면
+ * 정상 게이트로 한 번 로그인해 두면 된다.
  */
 async function tryDevAutoLogin() {
   try {
     const res = await fetch("/__dev/session");
     if (!res.ok) return false;
-    const { nickname, claudeKey, githubToken } = await res.json();
+    const { claudeKey } = await res.json();
     setApiKey(claudeKey);
-    github.setSession({ nickname, token: githubToken });
     showApp();
     return true;
   } catch {
