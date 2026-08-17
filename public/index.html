@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; connect-src 'self' https://api.anthropic.com https://loixxhvevfjbokpjqsaq.supabase.co https://downloads.bbc.co.uk; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' https://voa-audio.voanews.eu https://downloads.bbc.co.uk; object-src 'none'; base-uri 'none'; form-action 'self'" />
+        content="default-src 'self'; connect-src 'self' https://loixxhvevfjbokpjqsaq.supabase.co https://downloads.bbc.co.uk; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self' https://voa-audio.voanews.eu https://downloads.bbc.co.uk; object-src 'none'; base-uri 'none'; form-action 'self'" />
   <meta name="theme-color" content="#5b5fed" />
   <title>AndysEng — 영어 공부</title>
   <link rel="stylesheet" href="styles.css" />
@@ -12,28 +12,32 @@
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
 </head>
 <body>
-  <!-- API 키 게이트: 키는 비밀번호로 암호화되어 이 브라우저에만 저장된다 -->
+  <!-- 로그인 게이트: 닉네임·비밀번호만 쓴다. 비밀번호는 로컬 금고 암호화에도 같이 쓰여 이 브라우저에서는 비밀번호만 다시 입력하면 된다 -->
   <section id="key-gate" class="login-gate">
     <div class="login-card">
       <div class="logo big">🦊 AndysEng</div>
 
       <form id="gate-setup" class="gate-form hidden">
-        <p class="muted">닉네임, Anthropic API 키를 등록하세요.<br/>Anthropic 키는 비밀번호로 암호화되어 <b>이 브라우저에만</b> 저장돼요.</p>
+        <p class="muted">닉네임과 비밀번호를 등록하면 <b>가입 신청</b>이 접수돼요.<br/>관리자가 승인해야 로그인할 수 있어요.</p>
         <input id="setup-nickname" type="text" placeholder="닉네임 (예: andy)" autocomplete="off" />
-        <input id="setup-key" type="password" placeholder="sk-ant-..." autocomplete="off" />
-        <input id="setup-password" type="password" placeholder="잠금 비밀번호" autocomplete="new-password" />
+        <input id="setup-password" type="password" placeholder="비밀번호" autocomplete="new-password" />
         <input id="setup-password2" type="password" placeholder="비밀번호 확인" autocomplete="new-password" />
-        <button class="btn-primary" type="submit">암호화해서 저장</button>
-        <p class="small muted">⚠️ 공용 컴퓨터에서는 사용을 마친 뒤 꼭 키를 삭제하세요.</p>
+        <input id="setup-note" type="text" placeholder="관리자에게 남길 한마디 (예: 실명·소개)" autocomplete="off" maxlength="200" />
+        <button class="btn-primary" type="submit">가입 신청</button>
       </form>
 
       <form id="gate-unlock" class="gate-form hidden">
-        <p class="muted">비밀번호를 입력해 API 키 잠금을 해제하세요.</p>
-        <input id="unlock-password" type="password" placeholder="잠금 비밀번호" autocomplete="current-password" />
-        <button class="btn-primary" type="submit">잠금 해제</button>
+        <p class="muted">비밀번호를 입력해 로그인하세요.</p>
+        <input id="unlock-password" type="password" placeholder="비밀번호" autocomplete="current-password" />
+        <button class="btn-primary" type="submit">로그인</button>
       </form>
 
-      <button class="btn-text" id="gate-reset" type="button">키 삭제 후 다시 설정</button>
+      <div id="gate-pending" class="gate-form hidden">
+        <p class="muted" id="gate-pending-msg">⏳ 가입 승인을 기다리고 있어요. 관리자가 승인하면 다시 로그인할 수 있어요.</p>
+        <button class="btn-secondary" id="gate-pending-retry" type="button">다시 로그인</button>
+      </div>
+
+      <button class="btn-text" id="gate-reset" type="button">저장된 정보 삭제 후 다시 설정</button>
     </div>
   </section>
 
@@ -227,6 +231,15 @@
           <span class="setting-desc">지금까지 쓴 Claude API 누적 비용 추정치예요.</span>
         </div>
         <div class="setting-value" id="usage-total">$0.0000</div>
+      </div>
+
+      <div id="admin-panel" class="hidden">
+        <div class="setting-row admin-head">
+          <div class="setting-label">🛠 가입 승인 관리
+            <span class="setting-desc">신청자를 승인·거절해요. 거절은 나중에 다시 승인으로 되돌릴 수 있어요.</span>
+          </div>
+        </div>
+        <div id="admin-list"></div>
       </div>
     </div>
   </div>

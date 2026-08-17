@@ -1,6 +1,5 @@
 // 앱 부트스트랩: 키 금고 게이트 → 탭 전환 → 기능 초기화 → 서비스 워커 등록.
 import { hasVault, createVault, unlockVault, deleteVault } from "./shared/keyvault.js";
-import { setApiKey, clearApiKey } from "./shared/claude.js";
 import { syncPayload, purgeExpressionCards, setLastSyncedAt } from "./shared/store.js";
 import * as authSync from "./shared/supabase.js";
 import { $, toast } from "./shared/dom.js";
@@ -18,15 +17,24 @@ import * as sixmin from "./features/sixmin/ui.js";
 import * as dictionary from "./features/dictionary/ui.js";
 import * as translate from "./features/translate/ui.js";
 import * as settings from "./features/settings/ui.js";
+import * as admin from "./features/admin/ui.js";
 
 // ===== 키 게이트 =====
+// setup(가입 신청) → pending(승인 대기) → unlock(로그인)이 정상 경로다.
+// 승인 전에는 로그인 자체가 막힌다 — 화면 게이트는 UX이고, 실제 강제는 Supabase RLS(profiles.status)가 한다.
 function showGate(mode) {
   $("#app").classList.add("hidden");
   $("#key-gate").classList.remove("hidden");
   $("#gate-setup").classList.toggle("hidden", mode !== "setup");
   $("#gate-unlock").classList.toggle("hidden", mode !== "unlock");
-  const focus = mode === "setup" ? $("#setup-nickname") : $("#unlock-password");
-  focus.focus();
+  $("#gate-pending").classList.toggle("hidden", mode !== "pending");
+  if (mode === "setup") $("#setup-nickname").focus();
+  if (mode === "unlock") $("#unlock-password").focus();
+}
+
+function showPending(message) {
+  $("#gate-pending-msg").textContent = message;
+  showGate("pending");
 }
 
 function showApp() {
@@ -34,64 +42,93 @@ function showApp() {
   $("#app").classList.remove("hidden");
 }
 
+/**
+ * 로그인(signIn) 성공 뒤 호출. 가입 승인 상태를 확인해 승인된 계정만 실제로 들여보낸다.
+ * profiles 행이 아직 없으면(가입 신청이 중간에 끊긴 경우) 다시 신청해 둔다.
+ */
+async function enterIfApproved(nickname) {
+  let profile;
+  try {
+    profile = (await authSync.fetchProfile(nickname)) || (await authSync.ensureProfile(nickname));
+  } catch (e) {
+    authSync.clearSession();
+    return toast(`계정 확인 실패: ${e.message}`);
+  }
+  if (profile.status !== "approved") {
+    authSync.clearSession();
+    return showPending(
+      profile.status === "rejected"
+        ? "🚫 가입 신청이 거절됐어요. 관리자에게 문의해 주세요."
+        : "⏳ 가입 승인을 기다리고 있어요. 관리자가 승인하면 다시 로그인할 수 있어요."
+    );
+  }
+
+  showApp();
+  if (profile.is_admin) admin.render();
+
+  // 이 계정으로 처음 승인된 로그인이면(원격 기록이 아직 비어 있으면) 이 기기 기록을 최초 1회 올려 둔다.
+  try {
+    const remote = await authSync.loadRecord();
+    if (remote === null) {
+      await authSync.saveRecord(syncPayload());
+      setLastSyncedAt(Date.now());
+    }
+  } catch (e) {
+    toast(`최초 저장 확인 실패: ${e.message}`);
+  }
+}
+
 function initGate() {
   $("#gate-setup").addEventListener("submit", async (ev) => {
     ev.preventDefault();
     const nickname = $("#setup-nickname").value.trim();
-    const key = $("#setup-key").value.trim();
     const pw = $("#setup-password").value;
     const pw2 = $("#setup-password2").value;
+    const note = $("#setup-note").value.trim();
     if (!nickname) return toast("닉네임을 입력해 주세요.");
-    if (!key.startsWith("sk-ant-")) return toast("Anthropic API 키(sk-ant-...)를 입력해 주세요.");
     if (pw.length < 6) return toast("비밀번호는 6자 이상으로 정해 주세요.");
     if (pw !== pw2) return toast("비밀번호가 서로 달라요.");
     try {
-      await authSync.signUp(nickname, pw);
+      await authSync.signUpRequest(nickname, pw, note);
     } catch (e) {
       return toast(e.message);
     }
-    await createVault({ nickname, claudeKey: key }, pw);
-    setApiKey(key);
-    // 이 기기에 있던 기존 학습 기록을 새 계정으로 최초 1회 올려 둔다.
-    try {
-      await authSync.saveRecord(syncPayload());
-      setLastSyncedAt(Date.now());
-    } catch (e) {
-      toast(`최초 저장 실패: ${e.message}`);
-    }
+    // 로컬 금고는 그대로 지금 만들어 둔다 — 승인 후에는 평소처럼 비밀번호만 넣는 unlock으로 들어온다.
+    await createVault({ nickname }, pw);
     $("#setup-nickname").value = "";
-    $("#setup-key").value = "";
     $("#setup-password").value = "";
     $("#setup-password2").value = "";
-    toast("암호화해서 저장했어요.");
-    showApp();
+    $("#setup-note").value = "";
+    showPending("⏳ 가입 신청을 접수했어요. 관리자가 승인하면 다시 로그인할 수 있어요.");
   });
 
   $("#gate-unlock").addEventListener("submit", async (ev) => {
     ev.preventDefault();
     const pw = $("#unlock-password").value;
+    let nickname;
     try {
-      const { nickname, claudeKey } = await unlockVault(pw);
+      ({ nickname } = await unlockVault(pw));
       await authSync.signIn(nickname, pw);
-      setApiKey(claudeKey);
-      $("#unlock-password").value = "";
-      showApp();
     } catch (e) {
-      toast(e.message);
+      return toast(e.message);
     }
+    $("#unlock-password").value = "";
+    await enterIfApproved(nickname);
   });
+
+  $("#gate-pending-retry").addEventListener("click", () => showGate("unlock"));
 
   $("#gate-reset").addEventListener("click", () => {
     if (!confirm("저장된 정보를 삭제하고 다시 설정할까요? (학습 기록은 유지됩니다)")) return;
     deleteVault();
-    clearApiKey();
     authSync.clearSession();
+    $("#admin-panel").classList.add("hidden");
     showGate("setup");
   });
 
   $("#lock-btn").addEventListener("click", () => {
-    clearApiKey();
     authSync.clearSession();
+    $("#admin-panel").classList.add("hidden");
     showGate("unlock");
     toast("잠갔어요. 비밀번호로 다시 열 수 있어요.");
   });
@@ -115,25 +152,6 @@ function initTabs() {
   });
 }
 
-/**
- * 개발 서버(dev-server.js)가 .env 기반으로 제공하는 /__dev/session이 있으면 게이트를 건너뛴다.
- * 정적 배포(GitHub Pages 등)에는 이 라우트가 존재하지 않아 항상 실패하고 정상 게이트로 넘어간다.
- * Claude 키만 즉시 쓸 수 있게 하고, Supabase 로그인은 이어지지 않는다 — 동기화가 필요하면
- * 정상 게이트로 한 번 로그인해 두면 된다.
- */
-async function tryDevAutoLogin() {
-  try {
-    const res = await fetch("/__dev/session");
-    if (!res.ok) return false;
-    const { claudeKey } = await res.json();
-    setApiKey(claudeKey);
-    showApp();
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 async function init() {
   // 옛 "표현 공부"에서 쌓인 복습 카드를 한 번 정리한다(복습은 이제 회화·글쓰기 표현만 다룬다).
   purgeExpressionCards();
@@ -151,10 +169,9 @@ async function init() {
   dictionary.init();
   translate.init();
   srsHistory.init();
+  admin.init();
 
-  if (!(await tryDevAutoLogin())) {
-    showGate(hasVault() ? "unlock" : "setup");
-  }
+  showGate(hasVault() ? "unlock" : "setup");
 
   if ("serviceWorker" in navigator) {
     // updateViaCache: "none" — GitHub Pages가 sw.js에 max-age 캐시 헤더를 붙이므로,

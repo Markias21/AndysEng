@@ -413,6 +413,7 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
   outline: none; cursor: pointer; flex-shrink: 0;
 }
 .setting-select:focus { border-color: var(--primary); }
+.admin-head { border-top: none; padding-bottom: 8px; }
 
 /* 툴바 액션 묶음 (사전·리롤 버튼) */
 .toolbar-actions { display: flex; align-items: center; gap: 12px; }

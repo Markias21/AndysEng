@@ -1,16 +1,19 @@
 // 외부 서비스(Claude API) 경계. 기능 코드는 이 모듈의 함수만 사용한다.
-// 브라우저에서 직접 호출하며, 키는 메모리에만 존재한다 (keyvault가 복호화해 넘겨줌).
+// 진짜 Anthropic 키는 브라우저에 없다 — Supabase Edge Function(claude-proxy)이 대신 갖고 있고,
+// 여기서는 로그인 세션(shared/supabase.js)의 access token으로 그 함수를 호출한다.
 import { recordUsage } from "./store.js";
 import { costUsd } from "./usage.js";
+import { getAccessToken, hasSession, ANON_KEY } from "./supabase.js";
+
 // 선택 가능한 모델. 설정에서 고른 값이 profile.model로 저장되고 setModel으로 반영된다.
+// supabase/functions/claude-proxy의 ALLOWED_MODELS와 같은 목록으로 유지해야 한다.
 export const MODELS = {
   "claude-sonnet-5": "Sonnet (더 똑똑함)",
   "claude-haiku-4-5-20251001": "Haiku (더 빠르고 저렴)",
 };
 const DEFAULT_MODEL = "claude-sonnet-5";
-const API_URL = "https://api.anthropic.com/v1/messages";
+const PROXY_URL = "https://loixxhvevfjbokpjqsaq.supabase.co/functions/v1/claude-proxy";
 
-let apiKey = null;
 let model = DEFAULT_MODEL;
 
 export function setModel(id) {
@@ -21,34 +24,22 @@ export function getModel() {
   return model;
 }
 
-export function setApiKey(key) {
-  apiKey = key;
-}
-
-export function clearApiKey() {
-  apiKey = null;
-}
-
-export function hasApiKey() {
-  return apiKey !== null;
-}
-
 async function request(body) {
-  if (!apiKey) throw new Error("API 키가 잠겨 있습니다. 비밀번호로 잠금을 해제하세요.");
-  const res = await fetch(API_URL, {
+  if (!hasSession()) throw new Error("로그인되어 있지 않습니다. 다시 로그인해 주세요.");
+  const res = await fetch(PROXY_URL, {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
+      apikey: ANON_KEY,
+      Authorization: `Bearer ${await getAccessToken()}`,
     },
     body: JSON.stringify(body),
   });
   const data = await res.json();
   if (!res.ok) {
-    if (res.status === 401) throw new Error("API 키가 올바르지 않습니다. 키를 다시 설정하세요.");
-    throw new Error(data.error?.message || `Claude API 요청 실패 (${res.status})`);
+    // claude-proxy 자체 오류는 data.error가 문자열(이미 한국어), Anthropic을 그대로 통과시킨
+    // 오류는 data.error가 {message} 객체다 — 둘 다 처리한다.
+    throw new Error(data.error?.message || data.error || `Claude API 요청 실패 (${res.status})`);
   }
   if (data.usage) recordUsage(body.model, costUsd(body.model, data.usage));
   return data;
