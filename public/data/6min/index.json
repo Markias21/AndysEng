@@ -1,6 +1,14 @@
 {
-  "updatedAt": "2026-08-26T22:34:09.707Z",
+  "updatedAt": "2026-08-28T03:54:10.653Z",
   "episodes": [
+    {
+      "id": "260827",
+      "title": "How do we describe smells?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260827",
+      "date": "2026-08-27",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260827_6_minute_english_smells_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260827_6_minute_english_smells_transcript_.pdf"
+    },
     {
       "id": "260820",
       "title": "Sharing the road with driverless cars",
@@ -312,14 +320,6 @@
       "date": "2025-11-20",
       "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251120_6_minute_english_do_you_have_good_dining_etiquette_download.mp3",
       "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251120_6_minute_english_do_you_have_good_dining_etiquette_transcript.pdf"
-    },
-    {
-      "id": "251113",
-      "title": "How important is play?",
-      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2025/ep-251113",
-      "date": "2025-11-13",
-      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251113_6_minute_english_how_important_is_play_download.mp3",
-      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251113_6_minute_english_how_important_is_play_transcript.pdf"
     }
   ]
 }
