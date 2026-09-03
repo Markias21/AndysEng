@@ -1,6 +1,14 @@
 {
-  "updatedAt": "2026-09-02T22:05:23.901Z",
+  "updatedAt": "2026-09-03T21:58:40.233Z",
   "episodes": [
+    {
+      "id": "260903",
+      "title": "Climate change and extreme weather",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260903",
+      "date": "2026-09-03",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260903_6_minute_english_storms_and_climate_change_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260903_6_minute_english_storms_and_climate_change_transcript.pdf"
+    },
     {
       "id": "260827",
       "title": "How do we describe smells?",
@@ -312,14 +320,6 @@
       "date": "2025-11-27",
       "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251127_6_minute_english_how_are_influencers_affecting_politics_download.mp3",
       "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251127_6_minute_english_how_are_influencers_affecting_politics_transcript.pdf"
-    },
-    {
-      "id": "251120",
-      "title": "Do you have good dining etiquette?",
-      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2025/ep-251120",
-      "date": "2025-11-20",
-      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251120_6_minute_english_do_you_have_good_dining_etiquette_download.mp3",
-      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251120_6_minute_english_do_you_have_good_dining_etiquette_transcript.pdf"
     }
   ]
 }
