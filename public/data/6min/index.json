@@ -1,6 +1,14 @@
 {
-  "updatedAt": "2026-09-09T22:04:44.094Z",
+  "updatedAt": "2026-09-10T22:02:37.381Z",
   "episodes": [
+    {
+      "id": "260910",
+      "title": "Can apps teach you a language?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260910",
+      "date": "2026-09-10",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260910_6_minute_english_can_apps_teach_you_a_language_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260910_6_minute_english_can_apps_teach_you_a_language_transcript.pdf"
+    },
     {
       "id": "260903",
       "title": "Climate change and extreme weather",
@@ -312,14 +320,6 @@
       "date": "2025-12-04",
       "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251204_6_minute_english_whats_your_favourite_flavour_of_crisp__download.mp3",
       "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251204_6_minute_english_whats_your_favourite_flavour_of_crisp__transcript.pdf"
-    },
-    {
-      "id": "251127",
-      "title": "How are influencers affecting politics?",
-      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2025/ep-251127",
-      "date": "2025-11-27",
-      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251127_6_minute_english_how_are_influencers_affecting_politics_download.mp3",
-      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251127_6_minute_english_how_are_influencers_affecting_politics_transcript.pdf"
     }
   ]
 }
