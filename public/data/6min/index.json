@@ -1,6 +1,14 @@
 {
-  "updatedAt": "2026-09-23T22:32:13.477Z",
+  "updatedAt": "2026-09-24T22:48:07.831Z",
   "episodes": [
+    {
+      "id": "260924",
+      "title": "Why do we itch?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260924",
+      "date": "2026-09-24",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260924_6_minute_english_why_do_we_itch_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260924_6_minute_english_why_do_we_itch_transcript.pdf"
+    },
     {
       "id": "260917",
       "title": "Is rejection good for us?",
@@ -312,14 +320,6 @@
       "date": "2025-12-18",
       "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251218_6_minute_english_finding_and_eating_wild_food_download.mp3",
       "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251218_6_minute_english_finding_and_eating_wild_food_transcript.pdf"
-    },
-    {
-      "id": "251211",
-      "title": "How are horses helping to heal humans?",
-      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2025/ep-251211",
-      "date": "2025-12-11",
-      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251211_6_minute_english_how_are_horses_helping_to_heal_humans_download.mp3",
-      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251211_6_minute_english_how_are_horses_helping_to_heal_humans_transcript_.pdf"
     }
   ]
 }
