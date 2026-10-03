@@ -54,6 +54,7 @@ export function dailyStats(records) {
         listenCount: 0,
         shortReadCount: 0,
         basicCount: 0,
+        rewriteCount: 0,
         scoreSum: 0,
         scoreCount: 0,
         // 기능별 점수 합/개수 (달력에서 그날의 회화/글쓰기/표현 평균을 보여주기 위해)
@@ -113,6 +114,13 @@ export function dailyStats(records) {
     const d = day(r.ts);
     d.topics += 1;
     d.shortReadCount += 1;
+  }
+  // 다시 쓰기도 활동만 센다 — 쓴 표현 개수뿐이라 0~100 점수 체계에 넣지 않는다.
+  for (const r of records.writingRewrite || []) {
+    const d = day(r.ts);
+    d.topics += 1;
+    d.written += 1;
+    d.rewriteCount += 1;
   }
   // 글쓰기 기본(빈칸 채우기)도 활동만 센다 — 정답 개수라 0~100 점수 체계에 넣지 않는다.
   for (const r of records.writingBasic || []) {

@@ -13,6 +13,9 @@ import { emailPromptBlock } from "./email.js";
 export function discussionSystem(level) {
   return `You are an English writing tutor for a Korean learner whose target level is CEFR ${level}. Pitch your model answer to that level, but grade the rubric on an absolute scale (see below).
 
+0. Korean text inside parentheses, e.g. "(~에 큰 영향을 미치다)", is NOT an error or a typo. It marks a spot where the learner got stuck and could not produce the English. Never list it under spelling or corrections.
+- gap_solutions: one entry per such Korean parenthesis, in the order they appear. Echo the learner's Korean in ko, give the English expression a native writer would use there, its Korean meaning, a different example sentence containing it, that sentence's Korean translation, its CEFR level and non_literal. Empty array if there are none. These expressions do NOT have to appear in native_answer - weave one in only where it fits naturally.
+- Grade only the English the learner actually wrote. Treat each Korean parenthesis as content that was simply not produced: do not award credit for it, but do not add any extra penalty for marking it either.
 1. spelling: list only typos, capitalization, and apostrophe slips, as original -> corrected. No explanation, no reason. Empty array if none.
 2. corrections: real grammar errors and awkward phrasing only (never typos, capitalization, or apostrophes), with the reason explained in Korean.
 3. corrected_answer: the learner's own answer with only grammatical fixes applied (keep their voice and argument), split into one object per sentence with a Korean translation of that sentence.
@@ -42,6 +45,9 @@ Recipient: ${promptData.recipient}
 Required points the learner's email should cover, in this order:
 ${bulletList}
 
+0. Korean text inside parentheses, e.g. "(~에 큰 영향을 미치다)", is NOT an error or a typo. It marks a spot where the learner got stuck and could not produce the English. Never list it under spelling or corrections.
+- gap_solutions: one entry per such Korean parenthesis, in the order they appear. Echo the learner's Korean in ko, give the English expression a native writer would use there, its Korean meaning, a different example sentence containing it, that sentence's Korean translation, its CEFR level and non_literal. Empty array if there are none. These expressions do NOT have to appear in native_answer - weave one in only where it fits naturally.
+- Grade only the English the learner actually wrote. Treat each Korean parenthesis as content that was simply not produced: do not award credit for it, but do not add any extra penalty for marking it either.
 1. spelling: list only typos, capitalization, and apostrophe slips, as original -> corrected. No explanation, no reason. Empty array if none.
 2. corrections: real grammar errors and awkward phrasing only (never typos, capitalization, or apostrophes), with the reason explained in Korean.
 3. corrected_answer: the learner's own email with only grammatical fixes applied (keep their voice, subject line, greeting, and closing), split into one object per line with a Korean translation of that line.

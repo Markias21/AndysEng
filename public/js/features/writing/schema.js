@@ -60,6 +60,25 @@ export const REVIEW_SCHEMA = {
         additionalProperties: false,
       },
     },
+    gap_solutions: {
+      type: "array",
+      description:
+        "학생이 영어가 떠오르지 않아 한국어 괄호로 표시한 '막힌 곳'마다 하나씩, 글에 나온 순서 그대로. 괄호가 없으면 빈 배열",
+      items: {
+        type: "object",
+        properties: {
+          ko: { type: "string", description: "학생이 괄호 안에 쓴 한국어를 그대로" },
+          expression: { type: "string", description: "그 자리에 원어민이 쓸 영어 표현" },
+          meaning: { type: "string", description: "뜻을 한국어로" },
+          example: { type: "string", description: "그 표현이 들어간 다른 예문" },
+          example_ko: { type: "string", description: "example의 한국어 해석" },
+          level: { type: "string", enum: ["A1", "A2", "B1", "B2", "C1", "C2"], description: "이 표현의 CEFR 난이도" },
+          non_literal: { type: "boolean", description: "한국어를 그대로 직역해서는 나오지 않는 표현이면 true" },
+        },
+        required: ["ko", "expression", "meaning", "example", "example_ko", "level", "non_literal"],
+        additionalProperties: false,
+      },
+    },
     cefr_level: {
       type: "string",
       enum: ["A1", "A2", "B1", "B2", "C1", "C2"],
@@ -83,7 +102,7 @@ export const REVIEW_SCHEMA = {
       additionalProperties: false,
     },
   },
-  required: ["spelling", "corrections", "corrected_answer", "native_answer", "native_expressions", "cefr_level", "toefl_score", "grades"],
+  required: ["spelling", "corrections", "corrected_answer", "native_answer", "native_expressions", "gap_solutions", "cefr_level", "toefl_score", "grades"],
   additionalProperties: false,
 };
 
@@ -111,6 +130,7 @@ export const EMAIL_REVIEW_SCHEMA = {
         additionalProperties: false,
       },
     },
+    gap_solutions: REVIEW_SCHEMA.properties.gap_solutions,
     cefr_level: REVIEW_SCHEMA.properties.cefr_level,
     toefl_score: {
       type: "integer",
@@ -121,7 +141,7 @@ export const EMAIL_REVIEW_SCHEMA = {
   },
   required: [
     "spelling", "corrections", "corrected_answer", "native_answer", "native_expressions",
-    "bullets_covered", "cefr_level", "toefl_score", "grades",
+    "gap_solutions", "bullets_covered", "cefr_level", "toefl_score", "grades",
   ],
   additionalProperties: false,
 };

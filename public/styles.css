@@ -91,7 +91,7 @@ main { max-width: 760px; margin: 0 auto; padding: 28px 16px 80px; }
 .chip {
   display: inline-block; font-size: 12px; font-weight: 800;
   background: #eef0ff; color: var(--primary);
-  padding: 4px 12px; border-radius: 999px; margin-bottom: 10px;
+  padding: 4px 12px; border-radius: 999px; margin-bottom: 10px; white-space: nowrap;
 }
 .chip-yellow { background: #fff4cc; color: #a07800; }
 .chip-green { background: #d7f5e6; color: var(--green); }
@@ -293,7 +293,7 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 .logout-btn { padding: 8px 14px; font-size: 13px; }
 
 /* 회화/글쓰기 방 상단 툴바 (다른 주제 받기 등) */
-.room-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.room-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
 
 /* 글쓰기 레벨 목표 팁 */
 .writing-tip {
@@ -416,10 +416,10 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 .admin-head { border-top: none; padding-bottom: 8px; }
 
 /* 툴바 액션 묶음 (사전·리롤 버튼) */
-.toolbar-actions { display: flex; align-items: center; gap: 12px; }
+.toolbar-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
 /* 작은 보조 버튼(사전 열기·다른 주제/질문·항목 빼기): 밑줄 텍스트 대신 알약형 버튼 */
-.btn-chip { padding: 7px 14px; font-size: 13px; border-radius: 999px; }
+.btn-chip { padding: 7px 14px; font-size: 13px; border-radius: 999px; white-space: nowrap; }
 
 /* 사전 모달 */
 .dict-search { display: flex; gap: 8px; margin: 12px 0 16px; }
@@ -701,3 +701,33 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 
 :root[data-theme="dark"] .goal-bar { background: #2a2c44; }
 :root[data-theme="dark"] .task-open:hover { background: #2a2c44; }
+
+/* ===== 🧩 막힌 곳 표시 (글쓰기) ===== */
+.gap-chip { background: #fff4e0; color: #9a6400; }
+.gap-item { border-left: 3px solid var(--primary); padding-left: 10px; }
+.gap-ko { font-size: 13px; font-weight: 700; color: var(--muted); }
+
+/* ===== 🔁 다시 쓰기 ===== */
+.category-dim { opacity: .6; }
+.hint-list, .target-list, .upcoming-list { margin: 4px 0 10px; padding-left: 20px; }
+.hint-list li, .target-list li { margin: 3px 0; line-height: 1.5; }
+.target-list { list-style: none; padding-left: 0; }
+.target-used { color: inherit; }
+.target-missed { opacity: .6; }
+.upcoming-list li { margin: 8px 0; line-height: 1.5; }
+.compare { display: grid; gap: 12px; }
+.compare-col h5 { margin: 0 0 4px; font-size: 13px; color: var(--muted); }
+.compare-col p { margin: 0; line-height: 1.7; }
+@media (min-width: 721px) {
+  .compare { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+/* 🖨 "이번 주에 돌아올 질문"만 인쇄한다 — 종이에 먼저 써 두기 위한 화면이다. */
+@media print {
+  .topbar, .subnav, .room-toolbar, .row-end, .essay-grid, .modal-overlay, #toast { display: none !important; }
+  main { max-width: none; padding: 0; }
+  .upcoming-list li { page-break-inside: avoid; margin: 0 0 34px; }
+  .upcoming-list li::after { content: ""; display: block; border-bottom: 1px solid #999; margin-top: 26px; }
+}
+
+:root[data-theme="dark"] .gap-chip { background: #4a3a1a; color: #ffd591; }

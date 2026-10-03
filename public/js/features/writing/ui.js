@@ -1,28 +1,24 @@
 // 글쓰기 공부: 로컬 질문 제시 → 유저가 답 작성 → 문법 첨삭 + 교정문 + 원어민 답안 + 표현 제시.
 // 두 유형을 다룬다: 토론형(discussion, 3~4문장 논설)과 이메일(email, 토플 2026 Write an Email).
 // 질문·상황은 로컬 데이터에서 뽑아 토큰을 아끼고, AI 호출은 첨삭에만 쓴다.
-import { chatJSON } from "../../shared/claude.js";
-import { appendRecord, getRecords, getProfile } from "../../shared/store.js";
+import { addRewrites, getProfile, getRecords } from "../../shared/store.js";
 import { pickFresh, sampleN } from "../../shared/pick.js";
-import { scoreDetail } from "../../shared/scoring.js";
 import { WRITING_TIPS } from "../../shared/levels.js";
 import { autoSaveRecord } from "../../shared/autosave.js";
-import { takeTranslatorUses, TRANSLATOR_PENALTY } from "../../shared/translate.js";
+import { takeTranslatorUses } from "../../shared/translate.js";
+import { toSeoulDate } from "../../shared/date.js";
 import { writingPrompts } from "./prompts.js";
 import { emailPrompts } from "./email-prompts.js";
-import { toeflBand } from "./toefl.js";
-import { emailBand } from "./email.js";
 import { structureTemplateHTML, structureExpressions } from "./structure.js";
-import { REVIEW_SCHEMA, EMAIL_REVIEW_SCHEMA } from "./schema.js";
-import { discussionSystem, emailSystem } from "./review-prompt.js";
 import { startQna, resetQna, askQna, qnaLogHTML } from "./qna.js";
 import { mountCloze } from "./cloze-ui.js";
+import { reviewDiscussion, reviewEmail } from "./review.js";
+import { feedbackHTML, gapSolutionsHTML } from "./feedback-ui.js";
+import { scheduleRewrites } from "./rewrite.js";
+import { renderRewriteList, todaysRewrites } from "./rewrite-ui.js";
+import { extractGaps } from "./gaps.js";
 import { attachTypingTimer } from "../../shared/typing-timer.js";
-import {
-  $, esc, toast, scoreBreakdownHTML, rubricGuideHTML, correctionsHTML,
-  spellingHTML, sentenceLinesHTML, expressionAddHTML, wireExpressionAdds,
-  translatorPenaltyHTML,
-} from "../../shared/dom.js";
+import { $, esc, toast, rubricGuideHTML, expressionAddHTML, wireExpressionAdds } from "../../shared/dom.js";
 
 const MODES = [
   { id: "discussion", label: "💬 토론형" },
@@ -43,18 +39,30 @@ let currentEmailPrompt = null;
 let currentQuestion = "";
 let typingTimer = null;
 
+// 다시 쓰기는 **일부러** 같은 질문을 다시 쓰는 것이므로 "최근 쓴 질문" 회피에서 뺀다.
+// 빼지 않으면 새 질문 풀이 좁아지고 자매 질문까지 회피 대상이 된다.
 function recentQuestions() {
   return getRecords("writing")
-    .filter((r) => (r.mode || "discussion") === "discussion")
+    .filter((r) => !r.rewriteOf && (r.mode || "discussion") === "discussion")
     .slice(-RECENT_PROMPTS)
     .map((r) => r.question);
 }
 
 function recentEmailIds() {
   return getRecords("writing")
-    .filter((r) => r.mode === "email")
+    .filter((r) => !r.rewriteOf && r.mode === "email")
     .slice(-RECENT_PROMPTS)
     .map((r) => r.promptId);
+}
+
+const GAP_TIP = "막히면 번역기 대신 (한국어)로 표시하고 넘어가세요 — 감점 없이 그 자리의 표현을 알려드려요.";
+
+/** 입력창 아래에 "막힌 곳 N개 표시됨"을 보여 준다. */
+function updateGapCount() {
+  const el = $("#writing-gap-count");
+  const gaps = extractGaps($("#writing-input").value);
+  el.textContent = gaps.length ? `🧩 막힌 곳 ${gaps.length}개 표시됨` : "";
+  el.classList.toggle("hidden", gaps.length === 0);
 }
 
 function showTip() {
@@ -65,6 +73,7 @@ function showTip() {
     const level = getProfile().level;
     el.innerHTML = `<b>${esc(level)} 목표:</b> ${esc(WRITING_TIPS[level] || WRITING_TIPS.B1)}`;
   }
+  el.innerHTML += `<br/><span class="reason">${esc(GAP_TIP)}</span>`;
 }
 
 function renderQuestionCard() {
@@ -110,7 +119,24 @@ function newQuestion() {
   $("#writing-input").value = "";
   $("#writing-result").innerHTML = "";
   $("#writing-intro").classList.add("hidden");
+  $("#writing-rewrite").classList.add("hidden");
   $("#writing-room").classList.remove("hidden");
+  updateGapCount();
+}
+
+/**
+ * 자매 질문: 같은 유형의 다른 질문. **AI를 쓰지 않는다** — 유저가 다시 쓰기를 할지 모르는 상태에서
+ * 모든 첨삭에 출력 토큰을 더하지 않기 위함이다(ADR 2026-07-18 "미리 가질 수 있는 데이터는 로컬에").
+ */
+function pickSister(mode, used) {
+  if (mode === "email") {
+    const current = emailPrompts.find((p) => p.id === used);
+    const pool = emailPrompts.filter((p) => p.id !== used && (!current || p.category === current.category));
+    const picked = pickFresh(pool, recentEmailIds(), (e) => e.id);
+    return picked ? { text: picked.situation, promptId: picked.id } : null;
+  }
+  const picked = pickFresh(writingPrompts.filter((q) => q !== used), recentQuestions());
+  return picked ? { text: picked } : null;
 }
 
 function startMode(mode) {
@@ -118,16 +144,35 @@ function startMode(mode) {
   newQuestion();
 }
 
+/** 🔁 다시 쓰기 목록 화면. 그리는 일은 rewrite-ui.js가 한다(다시 쓰기 흐름 전체를 거기서 소유). */
+function showRewriteList() {
+  $("#writing-structure").classList.add("hidden");
+  $("#writing-room").classList.add("hidden");
+  $("#writing-intro").classList.add("hidden");
+  $("#writing-rewrite").classList.remove("hidden");
+  renderRewriteList($("#writing-rewrite"), backToModes);
+}
+
 function backToModes() {
   $("#writing-structure").classList.add("hidden");
   $("#writing-room").classList.add("hidden");
+  $("#writing-rewrite").classList.add("hidden");
   $("#writing-intro").classList.remove("hidden");
+  renderModes(); // 다시 쓰기를 끝내고 돌아오면 "오늘 N개"가 줄어 있어야 한다
 }
 
 function renderModes() {
   const grid = $("#writing-modes");
-  grid.innerHTML = MODES.map((m) => `<button class="btn-secondary category-btn" type="button" data-mode="${m.id}">${esc(m.label)}</button>`).join("");
+  const { today, overflow } = todaysRewrites();
+  const rewriteLabel = today.length ? `🔁 다시 쓰기 (오늘 ${today.length}개)` : "🔁 다시 쓰기";
+  grid.innerHTML =
+    MODES.map((m) => `<button class="btn-secondary category-btn" type="button" data-mode="${m.id}">${esc(m.label)}</button>`).join("") +
+    `<button class="btn-secondary category-btn${today.length ? "" : " category-dim"}" type="button" data-rewrite="list">${esc(rewriteLabel)}</button>`;
   grid.querySelectorAll("[data-mode]").forEach((b) => b.addEventListener("click", () => startMode(b.dataset.mode)));
+  grid.querySelector("[data-rewrite]").addEventListener("click", showRewriteList);
+  const note = $("#writing-rewrite-note");
+  note.textContent = overflow > 0 ? `대기 중 ${overflow}개는 내일 이어서 할 수 있어요.` : "";
+  note.classList.toggle("hidden", overflow === 0);
 }
 
 function renderStructureExpressions() {
@@ -147,85 +192,6 @@ function toggleStructure() {
   }
 }
 
-/** bullets_covered([{bullet, covered, comment}])를 체크리스트로 렌더한다. */
-function bulletsCoveredHTML(bulletsCovered) {
-  return `<ul class="bullet-list">${bulletsCovered
-    .map(
-      (b) =>
-        `<li class="${b.covered ? "bullet-ok" : "bullet-miss"}">${b.covered ? "✅" : "❌"} ${esc(b.bullet)}<br/><span class="reason">${esc(b.comment)}</span></li>`
-    )
-    .join("")}</ul>`;
-}
-
-async function reviewDiscussion(question, answer) {
-  const level = getProfile().level;
-  const result = await chatJSON({
-    system: discussionSystem(level),
-    messages: [{ role: "user", content: `Prompt: ${question}\n\nLearner's answer:\n${answer}` }],
-    schema: REVIEW_SCHEMA,
-    maxTokens: 8192,
-  });
-  const rawTotal = scoreDetail("writing", result.grades).total;
-  const translatorUses = takeTranslatorUses("writing");
-  const penalty = translatorUses * TRANSLATOR_PENALTY.writing;
-  const total = Math.max(0, rawTotal - penalty);
-  appendRecord("writing", { mode: "discussion", score: total, grades: result.grades, cefr: result.cefr_level, toefl: result.toefl_score, question, answer, feedback: result, translatorUses });
-  return { ...result, translatorUses, penalty, total };
-}
-
-async function reviewEmail(promptData, answer) {
-  const level = getProfile().level;
-  const result = await chatJSON({
-    system: emailSystem(level, promptData),
-    messages: [{ role: "user", content: `Learner's email draft:\n${answer}` }],
-    schema: EMAIL_REVIEW_SCHEMA,
-    maxTokens: 8192,
-  });
-  const rawTotal = scoreDetail("email", result.grades).total;
-  const translatorUses = takeTranslatorUses("writing");
-  const penalty = translatorUses * TRANSLATOR_PENALTY.writing;
-  const total = Math.max(0, rawTotal - penalty);
-  appendRecord("writing", {
-    mode: "email", promptId: promptData.id, score: total, grades: result.grades,
-    cefr: result.cefr_level, toefl: result.toefl_score, question: promptData.situation, answer, feedback: result, translatorUses,
-  });
-  return { ...result, translatorUses, penalty, total };
-}
-
-function feedbackHTML(r, mode) {
-  const isEmail = mode === "email";
-  const band = isEmail ? emailBand(r.toefl_score) : toeflBand(r.toefl_score);
-  const maxScore = isEmail ? 5 : 4;
-  const bulletsSection = isEmail
-    ? `<h4>📋 요구 항목 충족 여부</h4><div class="card">${bulletsCoveredHTML(r.bullets_covered)}</div>`
-    : "";
-  return `
-    <h4>🎯 TOEFL ${isEmail ? "이메일" : "라이팅"} <span class="cefr">${r.toefl_score} / ${maxScore}</span></h4>
-    <div class="card">${esc(band.ko)}</div>
-    ${bulletsSection}
-    <h4>🏅 점수 <span class="cefr">이 글의 레벨: ${esc(r.cefr_level)}</span></h4>
-    <div class="card">${scoreBreakdownHTML(isEmail ? "email" : "writing", r.grades)}${translatorPenaltyHTML(r.translatorUses, r.penalty, r.total)}</div>
-    <h4>📝 문법 첨삭</h4>
-    <div class="card">${r.corrections.length ? correctionsHTML(r.corrections) : "✅ 문법 오류가 없어요!"}</div>
-    ${r.spelling?.length ? `<h4>✏️ 오타·대소문자 <span class="reason">(점수에는 반영하지 않아요)</span></h4>
-    <div class="card">${spellingHTML(r.spelling)}</div>` : ""}
-    <h4>✔️ 교정된 답안</h4>
-    <div class="card">${sentenceLinesHTML(r.corrected_answer)}</div>
-    <h4>🌟 원어민 모범 ${isEmail ? "이메일" : "답안"} <span class="cefr">${esc(getProfile().level)}</span></h4>
-    <div class="card">${sentenceLinesHTML(r.native_answer)}</div>
-    <h4>💡 익혀두면 좋은 표현 <span class="reason">(담을 것만 골라 복습에 추가하세요)</span></h4>
-    <div class="card" id="writing-exprs"></div>
-    <h4>💬 첨삭에 대해 질문하기</h4>
-    <div class="card">
-      <div id="writing-qna-log"></div>
-      <form id="writing-qna-form">
-        <textarea id="writing-qna-input" rows="2" placeholder="왜 이렇게 고쳐졌는지, 다른 표현은 없는지 물어보세요..."></textarea>
-        <div class="row-end"><button class="btn-secondary" type="submit">질문하기</button></div>
-      </form>
-    </div>
-    <div class="row-end"><button class="btn-secondary" id="writing-next">다음 질문 →</button></div>`;
-}
-
 /**
  * 🎯 토플 허브·🏠 오늘에서 들어올 때 호출된다(router.js).
  * mode가 있으면 그 유형으로 바로 시작하고, 없으면 아무것도 하지 않는다 —
@@ -242,6 +208,7 @@ export function init() {
   $("#structure-refresh").addEventListener("click", renderStructureExpressions);
   $("#writing-mode-btn").addEventListener("click", backToModes);
   $("#writing-reroll").addEventListener("click", newQuestion);
+  $("#writing-input").addEventListener("input", updateGapCount);
 
   $("#writing-form").addEventListener("submit", async (ev) => {
     ev.preventDefault();
@@ -267,6 +234,12 @@ export function init() {
         const exprs = $("#writing-exprs");
         exprs.innerHTML = expressionAddHTML(r.native_expressions, missed);
         wireExpressionAdds(exprs, r.native_expressions, "writing");
+        // 🧩 막혔던 곳도 자동으로 담지 않는다 — 다른 모든 기능과 같이 ➕로 유저가 고른다.
+        const gaps = $("#writing-gaps");
+        if (gaps) {
+          gaps.innerHTML = gapSolutionsHTML(r.gap_solutions);
+          wireExpressionAdds(gaps, r.gap_solutions, "writing");
+        }
       });
       $("#writing-next").addEventListener("click", newQuestion);
       $("#writing-qna-form").addEventListener("submit", async (qev) => {
@@ -288,6 +261,9 @@ export function init() {
           qbtn.textContent = "질문하기";
         }
       });
+      // 다시 쓰기 예약: 같은 질문(+3일) + 자매 질문(+8일). 자매 질문은 로컬에서 고른다(AI 0원).
+      const sister = pickSister(mode, mode === "email" ? currentEmailPrompt.id : questionText);
+      addRewrites(scheduleRewrites(r.record, sister, toSeoulDate(new Date().toISOString())));
       autoSaveRecord();
     } catch (e) {
       toast(e.message);

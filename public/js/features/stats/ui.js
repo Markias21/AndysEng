@@ -69,6 +69,7 @@ function calendarSection(daily, today) {
 const UNSYNCED_LABELS = {
   conversation: "💬 회화 기록",
   writing: "✍️ 글쓰기 기록",
+  writingRewrite: "🔁 다시 쓰기 기록",
   expression: "💡 표현 기록",
   reading: "📖 리딩 기록",
   quiz: "🔁 복습 결과",

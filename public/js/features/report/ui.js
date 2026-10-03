@@ -24,9 +24,11 @@ function recordsSince(all, sinceISO) {
 async function finishStudy() {
   const since = getLastReportAt();
   const records = recordsSince(getAllRecords(), since);
-  const total =
-    records.conversation.length + records.writing.length + records.expression.length + records.quiz.length +
-    records.writingBasic.length;
+  // 종류를 일일이 더하면 새 기록 종류를 넣을 때마다 빠뜨린다(실제로 리딩·리스닝이 빠져 있었다).
+  // sessions는 "주제를 열었다"는 이벤트라 학습 1건으로 세지 않는다.
+  const total = Object.entries(records)
+    .filter(([kind]) => kind !== "sessions")
+    .reduce((sum, [, rows]) => sum + rows.length, 0);
   if (total === 0) return toast("저장할 새 학습 기록이 없어요.");
 
   const now = new Date();

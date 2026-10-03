@@ -95,7 +95,9 @@
         <h2>✍️ 글쓰기 공부</h2>
         <p>유형을 골라 시작하세요.<br/>문법 첨삭과 원어민 모범 답안을 받아요.</p>
         <div id="writing-modes" class="category-grid"></div>
+        <p id="writing-rewrite-note" class="small muted hidden"></p>
       </div>
+      <div id="writing-rewrite" class="hidden"></div>
       <div id="writing-room" class="hidden">
         <div id="writing-structure" class="card hidden">
           <h4>🧱 논설문 구조</h4>
@@ -114,6 +116,7 @@
         <form id="writing-form">
           <textarea id="writing-input" rows="5" placeholder="3~4문장으로 자유롭게 써 보세요..."></textarea>
           <span class="chip hidden" id="writing-timer"></span>
+          <span class="chip gap-chip hidden" id="writing-gap-count"></span>
           <div class="row-end">
             <button class="btn-primary" type="submit">첨삭 받기</button>
           </div>

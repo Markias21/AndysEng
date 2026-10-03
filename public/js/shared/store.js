@@ -1,8 +1,8 @@
 // 학습 데이터 저장소. localStorage에 단일 JSON으로 보관한다.
 // 기록 종류: conversation/writing/expression/reading(점수 있음), quiz(복습 결과), sessions(주제 시작 이벤트),
 // writingBasic(글쓰기 기본 빈칸 채우기 결과), listening(짧은 학습 받아쓰기 결과), shortReading(문단 연습 결과),
-// sixMin(리스닝 받아쓰기·이해 문제 결과)
-// — writingBasic·listening·shortReading·sixMin은 4축 점수 체계 대신 correct(정답 여부)만 남기고 점수 평균에는 반영하지 않는다.
+// sixMin(리스닝 받아쓰기·이해 문제 결과), writingRewrite(다시 쓰기에서 모은 표현을 몇 개 썼는지)
+// — writingBasic·listening·shortReading·sixMin·writingRewrite는 4축 점수 체계 대신 정답/사용 개수만 남기고 점수 평균에는 반영하지 않는다.
 const DATA_KEY = "andyseng:data";
 
 const RECORD_KINDS = [
@@ -16,6 +16,7 @@ const RECORD_KINDS = [
   "listening",
   "shortReading",
   "sixMin",
+  "writingRewrite",
 ];
 
 // 유저 프로필(설정): CEFR 학습 레벨, 회화 표현 수집 개수, 화면 테마, AI 모델.
@@ -48,7 +49,7 @@ function emptyData() {
   // readingSets: 리딩 지문(기사 id)별 문제 세트 영구 캐시 — 지문 하나에 생성 호출은 평생 1회다.
   // sixMinSets: 리스닝 에피소드별 문제 세트 영구 캐시(같은 이유).
   return {
-    version: 9, // 읽히지 않는 메모 — 호환은 normalize()가 담당한다
+    version: 10, // 읽히지 않는 메모 — 호환은 normalize()가 담당한다
     records,
     deck: [],
     words: [],
@@ -57,6 +58,8 @@ function emptyData() {
     romanceMemory: {},
     readingSets: {},
     sixMinSets: {},
+    // rewrites: 글쓰기 다시 쓰기 예약. 첨삭 1회에 같은 질문(+3일)·자매 질문(+8일) 2건이 쌓인다.
+    rewrites: [],
     profile: { ...DEFAULT_PROFILE },
     lastReportAt: null,
     lastSyncedAt: null,
@@ -84,6 +87,7 @@ function normalize(data) {
     romanceMemory: data.romanceMemory && typeof data.romanceMemory === "object" ? data.romanceMemory : {},
     readingSets: data.readingSets && typeof data.readingSets === "object" ? data.readingSets : {},
     sixMinSets: data.sixMinSets && typeof data.sixMinSets === "object" ? data.sixMinSets : {},
+    rewrites: Array.isArray(data.rewrites) ? data.rewrites : [],
     profile: {
       ...base.profile,
       ...(data.profile || {}),
@@ -97,10 +101,22 @@ function save() {
   localStorage.setItem(DATA_KEY, JSON.stringify(cache));
 }
 
+/**
+ * 기록 하나를 만든다(순수 — 테스트용으로 분리했다).
+ * rid는 기록의 고유 id다. **`id`라는 이름을 쓰면 안 된다** — quiz 기록의 `id`는 이미 "복습 카드 id"이고
+ * features/srs/history.js가 그걸로 카드별 이력을 찾는다.
+ * rid·ts를 앞에 깔아 호출자가 넘긴 값이 이기게 한다(불러오기한 기록을 그대로 다시 넣는 경우).
+ */
+export function stampRecord(record, rid = crypto.randomUUID(), ts = new Date().toISOString()) {
+  return { rid, ts, ...record };
+}
+
 export function appendRecord(kind, record) {
   const data = load();
-  data.records[kind].push({ ts: new Date().toISOString(), ...record });
+  const stamped = stampRecord(record);
+  data.records[kind].push(stamped);
   save();
+  return stamped;
 }
 
 export function getRecords(kind) {
@@ -143,6 +159,30 @@ export function unsyncedCounts() {
   counts.deck = data.deck.filter((c) => c.addedAt > since).length;
   counts.words = data.words.filter((w) => w.addedAt > since).length;
   return counts;
+}
+
+// ===== 다시 쓰기 예약 =====
+
+export function getRewrites() {
+  return load().rewrites;
+}
+
+/** 예약을 쌓는다. id는 여기서 붙인다(도메인 함수 scheduleRewrites를 순수하게 두기 위함). */
+export function addRewrites(items) {
+  if (!items?.length) return 0;
+  const data = load();
+  for (const item of items) data.rewrites.push({ id: crypto.randomUUID(), ...item });
+  save();
+  return items.length;
+}
+
+/** 다시 쓰기 하나의 상태를 바꾼다(done/skipped). 없는 id는 조용히 무시한다. */
+export function setRewriteStatus(id, status) {
+  const row = load().rewrites.find((r) => r.id === id);
+  if (!row) return;
+  row.status = status;
+  row.closedAt = Date.now();
+  save();
 }
 
 // ===== 프로필(설정) =====

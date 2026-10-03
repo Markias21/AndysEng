@@ -15,6 +15,7 @@ export const AREA_OF_RECORD = {
   sixMin: "L",
   writing: "W",
   writingBasic: "W",
+  writingRewrite: "W",
   conversation: "conversation",
   quiz: "review",
 };

@@ -19,3 +19,9 @@ export function weekRange(dateKey) {
   const key = (ms) => new Date(ms).toISOString().slice(0, 10);
   return { start: key(start), end: key(start + 6 * 86400000), dayIndex };
 }
+
+/** 서울 날짜 키에 n일을 더한다. "YYYY-MM-DD" → "YYYY-MM-DD". */
+export function addDays(dateKey, n) {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d) + n * 86400000).toISOString().slice(0, 10);
+}

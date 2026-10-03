@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildQuiz, variantsOf } from "./quiz.js";
+import { buildQuiz } from "./quiz.js";
 
 function card(over = {}) {
   return { term: "pay off", meaning: "성과를 내다", example: "Hard work pays off.", exampleKo: "노력은 성과를 낸다.", ...over };
@@ -52,13 +52,4 @@ test("buildQuiz: 단어 경계를 지킨다 (in이 interesting 안에서 잡히�
   const quiz = buildQuiz(card({ term: "in", example: "This is an interesting point in itself." }));
 
   assert.deepEqual(quiz.parts, ["This is an interesting point ", " itself."]);
-});
-
-test("variantsOf: 원형을 먼저 시도하고 첫 단어·마지막 단어를 굴절시킨다", () => {
-  const forms = variantsOf("pay off");
-
-  assert.equal(forms[0], "pay off");
-  assert.ok(forms.includes("pays off"));
-  assert.ok(forms.includes("pay offs"));
-  assert.deepEqual(variantsOf(""), []);
 });
