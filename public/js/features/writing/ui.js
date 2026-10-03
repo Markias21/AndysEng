@@ -226,6 +226,15 @@ function feedbackHTML(r, mode) {
     <div class="row-end"><button class="btn-secondary" id="writing-next">다음 질문 →</button></div>`;
 }
 
+/**
+ * 🎯 토플 허브·🏠 오늘에서 들어올 때 호출된다(router.js).
+ * mode가 있으면 그 유형으로 바로 시작하고, 없으면 아무것도 하지 않는다 —
+ * 작성 중인 초안을 모드 선택 화면으로 되돌려 날리지 않기 위함이다.
+ */
+export function render(mode) {
+  if (mode) startMode(mode);
+}
+
 export function init() {
   renderModes();
   typingTimer = attachTypingTimer([$("#writing-input")], [$("#writing-timer")]);

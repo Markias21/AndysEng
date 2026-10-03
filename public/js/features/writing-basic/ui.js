@@ -194,6 +194,8 @@ function startPractice(essayId, difficultyId, mode) {
   });
 }
 
-export function render() {
+/** mode가 있으면 그 유형의 지문 목록으로 바로 들어간다(🎯 토플 허브에서 호출). */
+export function render(mode) {
+  if (mode) return renderIntro(mode);
   renderModePicker();
 }

@@ -3,6 +3,9 @@ import { hasVault, createVault, unlockVault, deleteVault } from "./shared/keyvau
 import { syncPayload, purgeExpressionCards, setLastSyncedAt } from "./shared/store.js";
 import * as authSync from "./shared/supabase.js";
 import { $, toast } from "./shared/dom.js";
+import { registerView, showView } from "./shared/router.js";
+import * as today from "./features/today/ui.js";
+import * as toeflHub from "./features/toefl-hub/ui.js";
 import * as conversation from "./features/conversation/ui.js";
 import * as writing from "./features/writing/ui.js";
 import * as writingBasic from "./features/writing-basic/ui.js";
@@ -64,6 +67,7 @@ async function enterIfApproved(nickname) {
   }
 
   showApp();
+  showView("today");
   if (profile.is_admin) admin.render();
 
   // 이 계정으로 처음 승인된 로그인이면(원격 기록이 아직 비어 있으면) 이 기기 기록을 최초 1회 올려 둔다.
@@ -134,22 +138,22 @@ function initGate() {
   });
 }
 
-// ===== 탭 전환 =====
-function initTabs() {
-  document.querySelectorAll(".tab").forEach((tab) => {
-    tab.addEventListener("click", () => {
-      document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
-      document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
-      tab.classList.add("active");
-      $(`#view-${tab.dataset.view}`).classList.add("active");
-      if (tab.dataset.view === "stats") stats.render();
-      if (tab.dataset.view === "srs") srs.render();
-      if (tab.dataset.view === "writing-basic") writingBasic.render();
-      if (tab.dataset.view === "reading") reading.render();
-      if (tab.dataset.view === "listening") listening.render();
-      if (tab.dataset.view === "sixmin") sixmin.render();
-    });
-  });
+// ===== 화면 전환 =====
+// 탭은 5개지만 view는 8개다 — 글쓰기·글쓰기 기본·리딩·3분 학습·리스닝은 탭 없이
+// 🎯 토플 허브나 🏠 오늘의 추천에서 들어간다. 어느 탭을 켤지는 보낸 쪽이 정한다(router.js).
+function initViews() {
+  registerView("today", today.render);
+  registerView("toefl", toeflHub.render);
+  registerView("stats", stats.render);
+  registerView("srs", srs.render);
+  registerView("writing", writing.render);
+  registerView("writing-basic", writingBasic.render);
+  registerView("reading", reading.render);
+  registerView("listening", listening.render);
+  registerView("sixmin", sixmin.render);
+  document.querySelectorAll(".tab").forEach((tab) =>
+    tab.addEventListener("click", () => showView(tab.dataset.view))
+  );
 }
 
 async function init() {
@@ -157,11 +161,13 @@ async function init() {
   purgeExpressionCards();
   settings.init({
     onStudyChange: () => {
+      // 설정(레벨·하루 학습량·주간 목표)이 바뀌면 지금 보고 있는 화면만 다시 그린다.
       if ($("#view-srs").classList.contains("active")) srs.render();
+      if ($("#view-today").classList.contains("active")) today.render();
     },
   });
   initGate();
-  initTabs();
+  initViews();
   conversation.init();
   writing.init();
   report.init();

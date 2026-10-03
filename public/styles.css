@@ -653,3 +653,51 @@ details.history summary { cursor: pointer; font-weight: 700; padding: 8px 0; }
 :root[data-theme="dark"] .mc-option:hover { background: #2a2c44; }
 :root[data-theme="dark"] .mc-correct { background: #163b2c; }
 :root[data-theme="dark"] .mc-wrong { background: #3d1f26; }
+
+/* ===== 전역 뒤로가기 바 (router.js) — .view 섹션들 밖에 있어 기능 화면을 건드리지 않는다 ===== */
+.subnav { margin-bottom: 12px; }
+
+/* ===== 🏠 오늘 ===== */
+.goal-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; }
+.goal-label { flex: 0 0 84px; font-size: 14px; font-weight: 700; }
+.goal-bar { flex: 1; height: 10px; border-radius: 999px; background: #eef0ff; overflow: hidden; }
+.goal-fill { display: block; height: 100%; border-radius: 999px; background: var(--primary); transition: width .3s; }
+.goal-fill.goal-met { background: #2bb673; }
+.goal-count { flex: 0 0 72px; text-align: right; font-size: 13px; font-weight: 700; color: var(--muted); }
+.suggest-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; margin-top: 10px; }
+.suggest-card { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-align: left; padding: 14px 16px; }
+
+/* 설정 모달의 주간 목표 숫자 입력 */
+.goal-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.goal-inputs label { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 700; }
+.goal-input { width: 56px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: inherit; font: inherit; text-align: center; }
+
+/* ===== 🎯 토플 허브 ===== */
+.hub-group { padding-bottom: 8px; }
+.hub-group-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.hub-group-head h3 { margin: 0 0 6px; }
+.task-row { display: flex; flex-direction: column; gap: 2px; width: 100%; padding: 11px 12px; margin-top: 6px;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: inherit;
+  font: inherit; text-align: left; }
+.task-head { display: flex; align-items: center; gap: 8px; }
+.task-open { cursor: pointer; transition: background .15s, border-color .15s; }
+.task-open:hover { background: #eef0ff; border-color: var(--primary); }
+.task-soon { opacity: .55; }
+.task-label { font-weight: 700; font-size: 14px; }
+.task-go { margin-left: auto; color: var(--primary); font-weight: 800; }
+.task-head .chip { margin-left: auto; flex: none; }
+.task-hint { line-height: 1.45; }
+
+/* ===== 📊 기록 탭으로 내린 저장 버튼들 ===== */
+.record-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+
+@media (max-width: 560px) {
+  /* 탭 5개가 390px 한 줄에 들어가게 좁힌다(두 줄로 접히면 세로 공간을 먹는다). */
+  .tabs { width: 100%; gap: 4px; justify-content: center; flex-wrap: nowrap; }
+  .tab { padding: 8px 9px; font-size: 13px; white-space: nowrap; }
+  .goal-label { flex-basis: 70px; font-size: 13px; }
+  .goal-count { flex-basis: 64px; font-size: 12px; }
+}
+
+:root[data-theme="dark"] .goal-bar { background: #2a2c44; }
+:root[data-theme="dark"] .task-open:hover { background: #2a2c44; }

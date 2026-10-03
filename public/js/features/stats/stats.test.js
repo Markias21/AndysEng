@@ -195,3 +195,24 @@ test("streak: 중간이 끊기면 거기서 멈춘다", () => {
 test("streak: 기록이 없으면 0", () => {
   assert.equal(streak([], "2026-07-17"), 0);
 });
+
+test("dailyStats: 글쓰기 기본(writingBasic)도 점수 없이 주제 수·횟수만 센다", () => {
+  // 2026-08-01에 추가된 기록 종류인데 dailyStats 순회에서 누락돼 통계·달력에 전혀 집계되지 않던 버그.
+  const ts = "2026-07-15T03:00:00Z";
+  const records = {
+    writingBasic: [
+      { ts, essayId: "pref-1", template: "preference", difficulty: "mid", total: 8, correct: 6 },
+      { ts, essayId: "email-2", mode: "email", difficulty: "low", total: 5, correct: 5 },
+    ],
+  };
+  const [d] = dailyStats(records);
+  assert.equal(d.topics, 2);
+  assert.equal(d.basicCount, 2);
+  assert.equal(d.avgScore, null, "정답 개수뿐이라 0~100 점수 평균에는 넣지 않는다");
+});
+
+test("calendarMonth: 글쓰기 기본만 한 날도 학습한 날로 보인다", () => {
+  const records = { writingBasic: [{ ts: "2026-07-15T03:00:00Z", essayId: "pref-1", total: 8, correct: 6 }] };
+  const cells = calendarMonth(dailyStats(records), 2026, 7).weeks.flat();
+  assert.equal(cells.find((c) => c.date === "2026-07-15").hasStudy, true);
+});

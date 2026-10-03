@@ -1,5 +1,5 @@
 // 오프라인 앱 셸. 정적 자산만 캐시하고 API 호출(claude-proxy 등)은 절대 캐시하지 않는다.
-const VERSION = "v20";
+const VERSION = "v21";
 const CACHE = `andyseng-${VERSION}`;
 const ASSETS = [
   "./",
@@ -17,6 +17,8 @@ const ASSETS = [
   "js/shared/levels.js",
   "js/shared/scoring.js",
   "js/shared/date.js",
+  "js/shared/router.js",
+  "js/shared/typing-timer.js",
   "js/shared/cloze.js",
   "js/shared/cloze-view.js",
   "js/shared/pick.js",
@@ -24,6 +26,10 @@ const ASSETS = [
   "js/shared/translate.js",
   "js/shared/supabase.js",
   "js/shared/usage.js",
+  "js/features/today/plan.js",
+  "js/features/today/ui.js",
+  "js/features/toefl-hub/sections.js",
+  "js/features/toefl-hub/ui.js",
   "js/features/conversation/ui.js",
   "js/features/conversation/topics.js",
   "js/features/conversation/hobby-topics.js",

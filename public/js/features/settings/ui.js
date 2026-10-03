@@ -3,6 +3,7 @@
 import { getProfile, setProfile, getUsage } from "../../shared/store.js";
 import { setModel, MODELS } from "../../shared/claude.js";
 import { romancePartnersFor } from "../../shared/personas.js";
+import { GOAL_AREAS } from "../today/plan.js";
 import { $ } from "../../shared/dom.js";
 
 // 다른 기능이 학습 설정 변경(레벨·하루 학습량)에 반응해야 할 때 쓰는 콜백(예: 복습 다시 그리기).
@@ -21,6 +22,19 @@ function presetKey(profile) {
     ([, v]) => v.dailyNewLimit === profile.dailyNewLimit && v.dailyReviewLimit === profile.dailyReviewLimit
   );
   return match ? match[0] : "light";
+}
+
+/** 주간 목표 숫자 입력칸을 현재 값으로 채운다. */
+function syncGoalInputs(weeklyGoals) {
+  $("#set-goal-unit").value = weeklyGoals.unit === "counts" ? "counts" : "days";
+  for (const area of GOAL_AREAS) $(`#set-goal-${area.id}`).value = String(weeklyGoals[area.id] ?? 0);
+}
+
+/** 입력칸 하나가 바뀌면 그 영역만 갱신한다(0~21 범위로 자른다 — 하루 3회가 현실적 상한). */
+function saveGoal(areaId, raw) {
+  const value = Math.min(21, Math.max(0, Math.trunc(Number(raw) || 0)));
+  setProfile({ weeklyGoals: { ...getProfile().weeklyGoals, [areaId]: value } });
+  return value;
 }
 
 /** 저장된 테마를 <html>에 반영한다. 게이트 화면부터 적용되도록 가장 먼저 호출한다. */
@@ -63,6 +77,7 @@ export function init(opts = {}) {
   $("#set-expr-count").value = String(profile.exprPerConv);
   $("#set-daily-load").value = presetKey(profile);
   $("#set-gender").value = profile.gender;
+  syncGoalInputs(profile.weeklyGoals);
   renderPartnerOptions(profile.gender, profile.romancePartnerId);
 
   // 열기/닫기
@@ -104,6 +119,20 @@ export function init(opts = {}) {
     setProfile(DAILY_PRESETS[ev.target.value] || DAILY_PRESETS.light);
     onStudyChange();
   });
+
+  // 주간 목표 단위
+  $("#set-goal-unit").addEventListener("change", (ev) => {
+    setProfile({ weeklyGoals: { ...getProfile().weeklyGoals, unit: ev.target.value } });
+    onStudyChange();
+  });
+
+  // 주간 목표 숫자(영역별). 범위를 넘긴 입력은 잘라서 입력칸에도 되돌려 보여 준다.
+  for (const area of GOAL_AREAS) {
+    $(`#set-goal-${area.id}`).addEventListener("change", (ev) => {
+      ev.target.value = String(saveGoal(area.id, ev.target.value));
+      onStudyChange();
+    });
+  }
 
   // 내 성별: 바꾸면 연애 상대 후보(반대 성별)가 바뀌므로 상대 목록을 다시 그리고 첫 후보로 맞춘다.
   $("#set-gender").addEventListener("change", (ev) => {

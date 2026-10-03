@@ -24,6 +24,8 @@ const RECORD_KINDS = [
 // dailyNewLimit/dailyReviewLimit: 하루에 새로 시작할 카드 수 / 하루 복습 총량. 표현이 쌓여도 부담을 고정한다.
 // basicDifficulty: 글쓰기 기본 빈칸 난이도(초급/중급/상급) 마지막 선택값.
 // listenDifficulty: 짧은 학습 받아쓰기 난이도(초급/중급/상급) 마지막 선택값.
+// weeklyGoals: 🏠 오늘의 주간 목표. unit은 세는 방식("days"=그 영역을 공부한 날 수, "counts"=학습 횟수),
+//   나머지 키는 영역별 목표치. 기록 1건의 분량이 영역마다 크게 달라 기본값은 왜곡이 적은 "days"다.
 const DEFAULT_PROFILE = {
   level: "B1",
   exprPerConv: 2,
@@ -35,6 +37,7 @@ const DEFAULT_PROFILE = {
   dailyReviewLimit: 20,
   basicDifficulty: "mid",
   listenDifficulty: "mid",
+  weeklyGoals: { unit: "days", R: 3, L: 3, W: 2, conversation: 3 },
 };
 
 function emptyData() {
@@ -45,7 +48,7 @@ function emptyData() {
   // readingSets: 리딩 지문(기사 id)별 문제 세트 영구 캐시 — 지문 하나에 생성 호출은 평생 1회다.
   // sixMinSets: 리스닝 에피소드별 문제 세트 영구 캐시(같은 이유).
   return {
-    version: 8,
+    version: 9, // 읽히지 않는 메모 — 호환은 normalize()가 담당한다
     records,
     deck: [],
     words: [],
@@ -81,7 +84,12 @@ function normalize(data) {
     romanceMemory: data.romanceMemory && typeof data.romanceMemory === "object" ? data.romanceMemory : {},
     readingSets: data.readingSets && typeof data.readingSets === "object" ? data.readingSets : {},
     sixMinSets: data.sixMinSets && typeof data.sixMinSets === "object" ? data.sixMinSets : {},
-    profile: { ...base.profile, ...(data.profile || {}) },
+    profile: {
+      ...base.profile,
+      ...(data.profile || {}),
+      // profile은 얕은 merge라 중첩 객체는 따로 메운다(옛 데이터에는 weeklyGoals가 아예 없다).
+      weeklyGoals: { ...base.profile.weeklyGoals, ...(data.profile?.weeklyGoals || {}) },
+    },
   };
 }
 

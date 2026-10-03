@@ -53,6 +53,7 @@ export function dailyStats(records) {
         quizCorrect: 0,
         listenCount: 0,
         shortReadCount: 0,
+        basicCount: 0,
         scoreSum: 0,
         scoreCount: 0,
         // 기능별 점수 합/개수 (달력에서 그날의 회화/글쓰기/표현 평균을 보여주기 위해)
@@ -112,6 +113,12 @@ export function dailyStats(records) {
     const d = day(r.ts);
     d.topics += 1;
     d.shortReadCount += 1;
+  }
+  // 글쓰기 기본(빈칸 채우기)도 활동만 센다 — 정답 개수라 0~100 점수 체계에 넣지 않는다.
+  for (const r of records.writingBasic || []) {
+    const d = day(r.ts);
+    d.topics += 1;
+    d.basicCount += 1;
   }
   // 리스닝(BBC 6분)도 짧은 학습과 같이 활동만 센다 — 받아쓰기·객관식은 정답 개수라 0~100 점수 체계에
   // 억지로 끼워 넣지 않는다.

@@ -45,27 +45,34 @@
   <header class="topbar">
     <div class="logo">🦊 AndysEng</div>
     <nav class="tabs">
-      <button class="tab active" data-view="conversation">💬 회화</button>
-      <button class="tab" data-view="writing">✍️ 글쓰기</button>
-      <button class="tab" data-view="writing-basic">📝 글쓰기 기본</button>
-      <button class="tab" data-view="reading">📖 리딩</button>
-      <button class="tab" data-view="listening">🎧 3분 학습</button>
-      <button class="tab" data-view="sixmin">🎙 리스닝</button>
+      <button class="tab active" data-view="today">🏠 오늘</button>
+      <button class="tab" data-view="toefl">🎯 토플</button>
+      <button class="tab" data-view="conversation">💬 회화</button>
       <button class="tab" data-view="srs">🔁 복습</button>
-      <button class="tab" data-view="stats">📊 통계</button>
+      <button class="tab" data-view="stats">📊 기록</button>
     </nav>
     <div class="userbar">
-      <button class="btn-primary finish-btn" id="finish-btn" title="학습 기록을 내 컴퓨터의 AndysEng 폴더에 저장합니다.">🏁 공부 끝내기</button>
-      <button class="btn-secondary" id="sync-save-btn" title="학습 기록을 저장합니다.">☁️ 저장</button>
-      <button class="btn-secondary" id="sync-load-btn" title="저장된 학습 기록을 불러옵니다.">📥 불러오기</button>
       <button class="btn-secondary icon-btn" id="settings-btn" title="설정" aria-label="설정">⚙️</button>
       <button class="btn-secondary logout-btn" id="lock-btn" title="API 키를 메모리에서 지웁니다.">🔒 잠금</button>
     </div>
   </header>
 
   <main>
+    <!-- 전역 뒤로가기 바: .view 섹션들 밖에 있어야 기능 화면을 건드리지 않고 경로만 바꿀 수 있다 -->
+    <div id="subnav" class="subnav hidden"></div>
+
+    <!-- 오늘 (기본 탭) -->
+    <section id="view-today" class="view active">
+      <div id="today-content"></div>
+    </section>
+
+    <!-- 토플 허브 -->
+    <section id="view-toefl" class="view">
+      <div id="toefl-content"></div>
+    </section>
+
     <!-- 회화 -->
-    <section id="view-conversation" class="view active">
+    <section id="view-conversation" class="view">
       <div class="card intro-card" id="conv-intro">
         <h2>💬 회화 공부</h2>
         <p>주제 카테고리를 골라 대화를 시작하세요.<br/>어색하거나 틀린 표현은 바로 알려드려요.</p>
@@ -142,7 +149,15 @@
 
     <!-- 통계 -->
     <section id="view-stats" class="view">
-      <h2 class="page-title">📊 학습 통계</h2>
+      <h2 class="page-title">📊 기록</h2>
+      <div class="card">
+        <div class="hub-group-head"><h3>저장</h3><span class="small muted">학습 중에는 자동으로 저장돼요.</span></div>
+        <div class="record-actions">
+          <button class="btn-secondary" id="sync-save-btn" title="학습 기록을 저장합니다.">☁️ 저장</button>
+          <button class="btn-secondary" id="sync-load-btn" title="저장된 학습 기록을 불러옵니다.">📥 불러오기</button>
+          <button class="btn-primary finish-btn" id="finish-btn" title="학습 기록을 내 컴퓨터의 AndysEng 폴더에 저장합니다.">🏁 공부 끝내기</button>
+        </div>
+      </div>
       <div id="stats-content"><p class="muted">불러오는 중...</p></div>
     </section>
   </main>
@@ -207,6 +222,28 @@
           <option value="normal">보통 (신규 10 / 하루 40)</option>
           <option value="heavy">집중 (신규 20 / 하루 80)</option>
         </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">주간 목표 단위
+          <span class="setting-desc">"공부한 날"은 하루에 몰아 해도 1일로 세요. 영역마다 한 번의 분량이 달라서 왜곡이 적어요.</span>
+        </div>
+        <select id="set-goal-unit" class="setting-select">
+          <option value="days">공부한 날 수</option>
+          <option value="counts">학습 횟수</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-label">이번 주 목표
+          <span class="setting-desc">🏠 오늘 화면의 진행 막대와 추천이 이 숫자를 기준으로 해요. 0으로 두면 목표에서 빠져요.</span>
+        </div>
+        <div class="goal-inputs">
+          <label>📖 리딩<input type="number" id="set-goal-R" class="goal-input" min="0" max="21" step="1" /></label>
+          <label>🎧 리스닝<input type="number" id="set-goal-L" class="goal-input" min="0" max="21" step="1" /></label>
+          <label>✍️ 글쓰기<input type="number" id="set-goal-W" class="goal-input" min="0" max="21" step="1" /></label>
+          <label>💬 회화<input type="number" id="set-goal-conversation" class="goal-input" min="0" max="21" step="1" /></label>
+        </div>
       </div>
 
       <div class="setting-row">

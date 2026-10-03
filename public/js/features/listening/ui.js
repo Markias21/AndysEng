@@ -77,6 +77,8 @@ async function open(articleId) {
   }
 }
 
-export function render() {
+/** mode가 있으면 그 모드로 바로 들어간다(🎯 토플 허브·🏠 오늘에서 호출). */
+export function render(mode) {
+  if (mode) return openMode(mode);
   renderModePicker();
 }
