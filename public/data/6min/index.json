@@ -1,6 +1,14 @@
 {
-  "updatedAt": "2026-10-07T23:55:10.131Z",
+  "updatedAt": "2026-10-09T00:01:32.045Z",
   "episodes": [
+    {
+      "id": "261008",
+      "title": "Are people drinking less alcohol?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-261008",
+      "date": "2026-10-08",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/261008_6_minute_english_are_people_drinking_less_alcohol_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/261008_6_minute_english_are_people_drinking_less_alcohol_transcript.pdf"
+    },
     {
       "id": "261001",
       "title": "Why does heartbreak hurt so much?",
@@ -312,14 +320,6 @@
       "date": "2026-01-01",
       "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260101_6_minute_english_is_it_ok_to_disagree_download.mp3",
       "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260101_6_minute_english__is_it_ok_to_disagree_transcript.pdf"
-    },
-    {
-      "id": "251225",
-      "title": "Was Christmas better in the past?",
-      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2025/ep-251225",
-      "date": "2025-12-25",
-      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251225_6_minute_english_was_Christmas_better_in_the_past_download.mp3",
-      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/251225_6_minute_english_was_Christmas_better_in_the__past_transcript.pdf"
     }
   ]
 }
