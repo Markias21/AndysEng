@@ -1,6 +1,14 @@
 {
-  "updatedAt": "2026-10-20T22:46:35.768Z",
+  "updatedAt": "2026-10-22T22:50:18.167Z",
   "episodes": [
+    {
+      "id": "261022",
+      "title": "What should you eat for a better night’s sleep?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-261022",
+      "date": "2026-10-22",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/261022_6_minute_english_what_should_you_eat_for_a_better_nights_sleep_download.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/261022_6_minute_english_what_should_you_eat_for_a_better_nights_sleep_transcript.pdf"
+    },
     {
       "id": "261015",
       "title": "Why do people buy gold?",
@@ -312,14 +320,6 @@
       "date": "2026-01-15",
       "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260115_6_minute_english_what_english_phrases_really_mean_download.mp3",
       "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260115_6_minute_english_what_english_phrases_really_mean_transcript.pdf"
-    },
-    {
-      "id": "260108",
-      "title": "Is social media dead?",
-      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260108",
-      "date": "2026-01-08",
-      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260108_6_minute_english_is_social_media_dead_download.mp3",
-      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260108_6_minute_english_is_social_media_dead_transcript_.pdf"
     }
   ]
 }
