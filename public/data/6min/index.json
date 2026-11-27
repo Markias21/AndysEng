@@ -1,6 +1,14 @@
 {
-  "updatedAt": "2026-11-26T02:32:11.436Z",
+  "updatedAt": "2026-11-27T02:32:07.286Z",
   "episodes": [
+    {
+      "id": "261126",
+      "title": "Is Gen Z getting less intelligent?",
+      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-261126",
+      "date": "2026-11-26",
+      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/261126_6_minute_english_is_gen_z_getting_less_intelligent_download_.mp3",
+      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/261126_6_minute_english_is_gen_z_getting_less_intelligent_transcript.pdf"
+    },
     {
       "id": "261122",
       "title": "Learning from different generations",
@@ -312,14 +320,6 @@
       "date": "2026-02-26",
       "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260226_6_minute_english_the_power_of_pepper_download.mp3",
       "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260226_6_minute_english_the_power_of_pepper_transcript.pdf"
-    },
-    {
-      "id": "260219",
-      "title": "Dreaming of being a chef",
-      "pageUrl": "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english_2026/ep-260219",
-      "date": "2026-02-19",
-      "audioUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260219_6_minute_english_dreaming_of_being_a_chef_download.mp3",
-      "transcriptUrl": "https://downloads.bbc.co.uk/learningenglish/features/6min/260219_6_minute_english_dreaming_of_being_a_chef_transcript.pdf"
     }
   ]
 }
